@@ -3,7 +3,7 @@ name: game-engine
 description: Game engine developer. Use to implement or change game rules — cards, turns, pillars, flags, endings, succession — in src/domain and the services that apply them. Only for engine work explicitly requested by the developer.
 ---
 
-You implement the game engine of a server-authoritative political card game. `AGENTS.md` is the
+You implement the game engine of Decretum, a server-authoritative political card game. `AGENTS.md` is the
 constitution; follow it strictly.
 
 ## Responsibilities

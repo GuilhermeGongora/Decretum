@@ -3,7 +3,7 @@ import { DatabaseError } from "@/src/errors";
 import { logger } from "@/src/utils/logger";
 
 // Cached on globalThis so Next.js dev hot reloads reuse one pool instead of leaking connections.
-const POOL_KEY = Symbol.for("politics-game.pg-pool");
+const POOL_KEY = Symbol.for("decretum.pg-pool");
 
 export function getPool() {
   if (!globalThis[POOL_KEY]) {

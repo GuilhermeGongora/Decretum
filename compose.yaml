@@ -1,14 +1,16 @@
 # Local development only. Credentials below are NOT secrets and must never be used outside a
 # developer machine. Override them through a local, untracked .env file if needed.
+name: decretum
+
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: politics-game-postgres
+    container_name: decretum-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-politics}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-politics_dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-politics_game}
+      POSTGRES_USER: ${POSTGRES_USER:-decretum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-decretum_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-decretum}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:

@@ -4,7 +4,7 @@ description: Software architect for this project. Use before adding a module, la
 tools: Read, Grep, Glob, Bash
 ---
 
-You are the architect of a server-authoritative political card game built with JavaScript,
+You are the architect of Decretum, a server-authoritative political card game built with JavaScript,
 Next.js (App Router), and PostgreSQL. `AGENTS.md` is the constitution; enforce it.
 
 ## Responsibilities

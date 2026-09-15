@@ -1,7 +1,9 @@
-# Politics Game
+# DECRETUM
 
-A server-authoritative political card game. Players make decisions through cards; the server
-computes every consequence.
+> _Salus Populi Suprema Lex_ — "the welfare of the people shall be the supreme law."
+
+A server-authoritative political card game with a Latin, Roman-inspired tone. Players issue
+decisions through cards; the server computes every consequence.
 
 > **Current stage: project foundation.** This repository currently contains only the technical
 > foundation (framework, database infrastructure, tooling, CI and a health endpoint). The game
@@ -99,7 +101,7 @@ Docker Compose defaults. If you change them, update `DATABASE_URL` accordingly.
 `.env` is git-ignored. The credentials in `.env.example` and `compose.yaml` are for local
 development only.
 
-`.env.test` is versioned and points tests to a separate `politics_game_test` database, so tests never
+`.env.test` is versioned and points tests to a separate `decretum_test` database, so tests never
 touch development data. Jest loads it with priority over `.env`; variables already present in the
 environment (as in CI) win over both files.
 
@@ -110,11 +112,11 @@ npm run db:up     # docker compose up -d --wait postgres
 npm run db:down   # stop and remove the container (data stays in the volume)
 ```
 
-On the first start (empty volume) the container also creates the `politics_game_test` database
+On the first start (empty volume) the container also creates the `decretum_test` database
 (`docker/postgres/init/`). If your volume was created before that script existed, create it once:
 
 ```bash
-docker compose exec postgres psql -U politics -d postgres -c "CREATE DATABASE politics_game_test"
+docker compose exec postgres psql -U decretum -d postgres -c "CREATE DATABASE decretum_test"
 ```
 
 To wipe local data completely: `docker compose down -v`.
@@ -154,7 +156,7 @@ npm run test:integration  # integration tests only
 npm run test:watch        # watch mode
 ```
 
-Integration tests use the `politics_game_test` database configured in `.env.test`. Once schema
+Integration tests use the `decretum_test` database configured in `.env.test`. Once schema
 migrations exist, run `npm run db:migrate:test` before the integration tests.
 
 ## Lint and formatting

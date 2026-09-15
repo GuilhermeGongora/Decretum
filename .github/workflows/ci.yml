@@ -11,19 +11,19 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: politics
-          POSTGRES_PASSWORD: politics_ci_password
-          POSTGRES_DB: politics_game_test
+          POSTGRES_USER: decretum
+          POSTGRES_PASSWORD: decretum_ci_password
+          POSTGRES_DB: decretum_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U politics -d politics_game_test"
+          --health-cmd "pg_isready -U decretum -d decretum_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://politics:politics_ci_password@localhost:5432/politics_game_test
+      DATABASE_URL: postgres://decretum:decretum_ci_password@localhost:5432/decretum_test
 
     steps:
       - uses: actions/checkout@v4

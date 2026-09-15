@@ -1,4 +1,4 @@
-# AGENTS.md — Project Constitution
+# AGENTS.md — Decretum Project Constitution
 
 These rules apply to every contributor, human or AI. When a rule conflicts with a convenience, the
 rule wins. Changing a rule requires an ADR in `docs/adr/`.
@@ -57,7 +57,7 @@ rule wins. Changing a rule requires an ADR in `docs/adr/`.
 - Domain behavior is developed test-first (TDD).
 - Unit tests live in `tests/unit/`, integration tests (real PostgreSQL, HTTP handlers) in
   `tests/integration/`.
-- Integration tests use the `politics_game_test` database (`.env.test`), never the development database.
+- Integration tests use the `decretum_test` database (`.env.test`), never the development database.
 - Never write flaky or probabilistic tests. Control time and randomness explicitly.
 - Do not write artificial tests just to raise coverage.
 

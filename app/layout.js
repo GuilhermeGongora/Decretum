@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Politics Game",
-  description: "Politics Game",
+  title: "DECRETUM: Salus Populi Suprema Lex",
+  description: "Decretum — a political card game. Salus Populi Suprema Lex.",
 };
 
 export default function RootLayout({ children }) {

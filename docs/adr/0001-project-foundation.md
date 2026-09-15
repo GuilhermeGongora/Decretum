@@ -5,7 +5,7 @@
 
 ## Context
 
-We are starting a server-authoritative political card game. Before writing the game engine we need
+We are starting Decretum, a server-authoritative political card game. Before writing the game engine we need
 a stable, simple foundation: runtime, framework, database access, testing and conventions that
 keep business rules out of the UI and HTTP layers.
 
@@ -17,7 +17,7 @@ keep business rules out of the UI and HTTP layers.
   `src/repositories` → `src/database`. Game rules live only in `src/domain`.
 - **Database**: PostgreSQL 17. Local development runs it with Docker Compose while Next.js runs on
   the host. Access through `pg` with one shared pool (`src/database/pool.js`), no ORM.
-- **Test database**: integration tests use a separate `politics_game_test` database (created by
+- **Test database**: integration tests use a separate `decretum_test` database (created by
   `docker/postgres/init/`, configured in the versioned `.env.test`), never development data.
 - **Migrations**: node-pg-migrate, plain JavaScript migration files in `migrations/`.
 - **Environment**: Next.js and Jest load `.env` natively; npm scripts for migrations use Node's
