@@ -4,3 +4,6 @@ build/
 coverage/
 node_modules/
 package-lock.json
+# Product source documents (GDD, UI playbook), kept exactly as authored.
+Decretum_GDD_v1.0.md
+docs/product/

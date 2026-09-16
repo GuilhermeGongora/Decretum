@@ -1,0 +1,290 @@
+.inauguration {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  width: 100%;
+  min-height: 100dvh;
+  padding: 40px 24px;
+}
+
+/* Dimmed, warmer ceremony light over the office (design 2d). */
+.inauguration::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(52% 44% at 50% 52%, rgb(211 174 109 / 0.16), transparent 70%),
+    linear-gradient(180deg, rgb(4 9 16 / 0.72), rgb(4 9 16 / 0.5) 40%, rgb(4 9 16 / 0.86));
+  pointer-events: none;
+  content: "";
+}
+
+.kicker {
+  color: rgb(244 239 227 / 0.74);
+  font: 500 12px/1.4 var(--font-mono);
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.headline {
+  max-width: 900px;
+  margin: 0;
+  font: 600 clamp(27px, 3.4vw, 46px) / 1.28 var(--font-serif);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+  border-top: 1px solid rgb(176 141 79 / 0.4);
+  border-bottom: 1px solid rgb(176 141 79 / 0.4);
+}
+
+.fact {
+  position: relative;
+  padding: 18px 32px;
+  text-align: center;
+}
+
+.fact + .fact::before {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 1px;
+  background: rgb(244 239 227 / 0.16);
+  content: "";
+}
+
+.fact dt {
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fact dd {
+  margin: 9px 0 0;
+  font: 600 18px/1.15 var(--font-serif);
+}
+
+.legacy {
+  width: min(100%, 760px);
+  padding: 18px 22px 20px;
+  border: 1px solid rgb(176 141 79 / 0.42);
+  border-radius: 12px;
+  background: rgb(9 18 31 / 0.86);
+}
+
+.legacyLabel {
+  margin: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.legacyNote {
+  margin: 10px 0 0;
+  color: rgb(244 239 227 / 0.86);
+  font: 400 14px/1.5 var(--font-sans);
+}
+
+.legacyList {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legacyList li {
+  display: flex;
+  gap: 10px;
+  font: 400 15px/1.45 var(--font-serif);
+}
+
+.legacyList li::before {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  background: var(--light-brass);
+  transform: rotate(45deg);
+  content: "";
+}
+
+.oath {
+  position: relative;
+  width: min(100%, 760px);
+  padding: 26px 34px 30px 42px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: linear-gradient(174deg, #f8f4ea, #e7ddc6);
+  box-shadow:
+    0 3px 0 rgb(176 141 79 / 0.5),
+    0 40px 80px -24px rgb(3 7 13 / 0.9);
+  color: var(--deep-navy);
+}
+
+.oath::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--constitutional-red), #6d211c);
+  content: "";
+}
+
+.oathLabel {
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.oathText {
+  max-width: 540px;
+  margin-top: 14px;
+  color: rgb(22 39 63 / 0.9);
+  font: 400 17px/1.55 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.signature {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.signatureLine {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(250px, 62%);
+  color: rgb(22 39 63 / 0.74);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.signatureRule {
+  height: 1px;
+  background: rgb(22 39 63 / 0.45);
+}
+
+.pen {
+  width: 88px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #8a6a2b, #d9b573, #8a6a2b);
+  box-shadow: 0 3px 6px rgb(3 7 13 / 0.35);
+  transform: rotate(-3deg);
+}
+
+.error {
+  padding: 10px 14px;
+  border: 1px solid rgb(224 122 112 / 0.6);
+  border-radius: 10px;
+  background: rgb(58 18 16 / 0.9);
+  color: #fbd9d4;
+  font: 500 14px/1.4 var(--font-sans);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.back {
+  min-height: 60px;
+  padding: 0 26px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.takeOffice {
+  min-width: 300px;
+  min-height: 60px;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hint {
+  color: rgb(244 239 227 / 0.74);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1023px) {
+  .inauguration {
+    gap: 22px;
+    padding: 28px 20px;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .fact {
+    padding: 14px 12px;
+    text-align: left;
+  }
+
+  .fact + .fact::before {
+    display: none;
+  }
+
+  .fact dd {
+    font-size: 15px;
+  }
+
+  .oath {
+    padding: 18px 20px 20px 26px;
+  }
+
+  .oathText {
+    font-size: 15px;
+  }
+
+  .buttons {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .back {
+    padding: 0 16px;
+  }
+
+  .takeOffice {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .hint {
+    display: none;
+  }
+}

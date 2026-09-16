@@ -1,0 +1,288 @@
+.panel {
+  position: relative;
+  width: var(--panel-width, 250px);
+  padding: 20px 22px 22px;
+  border: 1px solid rgb(176 141 79 / 0.4);
+  border-radius: 12px;
+  background: rgb(244 239 227 / 0.055);
+  box-shadow: 0 18px 40px -20px rgb(3 7 13 / 0.7);
+  color: var(--ivory-paper);
+  transition:
+    opacity 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.panel[data-side="right"] {
+  text-align: right;
+}
+
+.panel[data-state="opposite"] {
+  opacity: 0.4;
+}
+
+/* Stays above the dragged dossier so the expected trends remain readable. */
+.panel[data-state="target"] {
+  z-index: 2;
+  border-color: var(--aged-brass);
+  background: var(--ivory-paper);
+  color: var(--deep-navy);
+  box-shadow:
+    0 0 0 3px rgb(211 174 109 / 0.85),
+    0 0 0 6px rgb(11 23 41 / 0.55),
+    0 30px 62px -20px rgb(3 7 13 / 0.8);
+}
+
+.keyRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.panel[data-side="right"] .keyRow {
+  flex-direction: row-reverse;
+}
+
+.keycap {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgb(244 239 227 / 0.45);
+  border-radius: 6px;
+  font: 500 12px/1 var(--font-mono);
+}
+
+.panel[data-state="target"] .keycap {
+  border-color: var(--deep-navy);
+  background: var(--deep-navy);
+  color: var(--ivory-paper);
+}
+
+.hint {
+  color: rgb(244 239 227 / 0.82);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panel[data-state="target"] .hint {
+  color: #6b5a3e;
+}
+
+.title {
+  margin: 14px 0 0;
+  font: 500 var(--choice-title-size, 25px) / 1.2 var(--font-serif);
+}
+
+.rule {
+  display: block;
+  height: 1px;
+  margin-top: 12px;
+  background: rgb(176 141 79 / 0.5);
+}
+
+.trendsLabel {
+  margin: 14px 0 0;
+  color: #6b5a3e;
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.trendRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trendRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 500 13px/1 var(--font-sans);
+}
+
+.trendName {
+  color: rgb(22 39 63 / 0.75);
+  text-transform: uppercase;
+}
+
+.trendValue {
+  color: #6b5220;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.trendRow[data-direction="down"] .trendValue {
+  color: var(--constitutional-red);
+}
+
+.trendRow[data-strength="3"] .trendValue {
+  font-weight: 700;
+}
+
+.noEffect {
+  margin: 12px 0 0;
+  font: 400 13px/1.4 var(--font-sans);
+}
+
+.note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--aged-brass);
+  border-radius: 3px;
+  background: rgb(22 39 63 / 0.06);
+  color: rgb(22 39 63 / 0.82);
+  font: 400 13px/1.45 var(--font-sans);
+  text-align: left;
+}
+
+.chooseButton {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  border: 1px solid rgb(176 141 79 / 0.6);
+  border-radius: 10px;
+  background: rgb(244 239 227 / 0.08);
+  color: inherit;
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.chooseButton:hover:not(:disabled) {
+  background: rgb(244 239 227 / 0.16);
+}
+
+.panel[data-state="target"] .chooseButton {
+  border-color: var(--deep-navy);
+  background: var(--deep-navy);
+  color: var(--ivory-paper);
+}
+
+.chooseButton:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 3px;
+}
+
+.chooseButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.chooseButton:disabled {
+  cursor: progress;
+  opacity: 0.45;
+}
+
+.buttonArrow,
+.buttonChoice {
+  display: none;
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .panel {
+    --panel-width: 236px;
+    padding: 16px 18px 18px;
+  }
+
+  .hint {
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .title {
+    --choice-title-size: 22px;
+    margin-top: 11px;
+  }
+
+  .rule {
+    margin-top: 10px;
+  }
+
+  .trendRows {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .note {
+    margin-top: 12px;
+    padding: 9px 11px;
+  }
+
+  .chooseButton {
+    min-height: 44px;
+    margin-top: 12px;
+  }
+}
+
+/* Mobile: the panel collapses into one thumb-zone button (design 2f mobile). */
+@media (max-width: 1023px) {
+  .panel,
+  .panel[data-state] {
+    width: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  .keyRow,
+  .title,
+  .rule,
+  .trendsLabel,
+  .trendRows,
+  .note,
+  .noEffect,
+  .buttonText {
+    display: none;
+  }
+
+  .chooseButton,
+  .panel[data-state] .chooseButton {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    min-height: 66px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid rgb(176 141 79 / 0.45);
+    border-radius: 12px;
+    background: rgb(244 239 227 / 0.07);
+    color: var(--ivory-paper);
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+  }
+
+  .panel[data-side="right"] .chooseButton {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .panel[data-state="target"] .chooseButton {
+    border-color: var(--light-brass);
+    background: var(--ivory-paper);
+    color: var(--deep-navy);
+  }
+
+  .buttonArrow {
+    display: block;
+    font: 500 12px/1 var(--font-mono);
+    letter-spacing: 0.12em;
+  }
+
+  .buttonChoice {
+    display: block;
+    font: 500 15px/1.15 var(--font-serif);
+  }
+}

@@ -1,0 +1,107 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  height: 78px;
+  padding: 0 60px;
+  background: linear-gradient(180deg, transparent, rgb(5 11 19 / 0.82));
+}
+
+.labels {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgb(244 239 227 / 0.8);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hint {
+  color: rgb(244 239 227 / 0.86);
+  letter-spacing: 0.1em;
+}
+
+.current {
+  color: var(--light-brass);
+}
+
+.track {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 16px;
+}
+
+.segment {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(244 239 227 / 0.16);
+}
+
+.segment[data-state="past"] {
+  background: rgb(244 239 227 / 0.5);
+}
+
+.segment[data-state="current"] {
+  height: 16px;
+  background: var(--light-brass);
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .timeline {
+    gap: 8px;
+    height: 56px;
+    padding: 0 44px;
+  }
+
+  .labels {
+    letter-spacing: 0.1em;
+  }
+
+  .track {
+    gap: 3px;
+    height: 12px;
+  }
+
+  .segment {
+    height: 5px;
+  }
+
+  .segment[data-state="current"] {
+    height: 12px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .timeline {
+    flex-direction: column-reverse;
+    gap: 7px;
+    height: auto;
+    padding: 12px 16px 24px;
+  }
+
+  .labels {
+    letter-spacing: 0.1em;
+  }
+
+  .hint {
+    display: none;
+  }
+
+  .track {
+    gap: 2px;
+    height: 12px;
+  }
+
+  .segment {
+    height: 5px;
+  }
+
+  .segment[data-state="current"] {
+    height: 12px;
+  }
+}

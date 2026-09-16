@@ -1,0 +1,560 @@
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(100%, 680px);
+  margin: auto;
+  animation: feedback-in 200ms ease-out;
+}
+
+.document {
+  position: relative;
+  padding: 28px 32px 30px;
+  border-radius: 4px;
+  background: linear-gradient(174deg, #f8f4ea, #e9e0c9);
+  color: var(--deep-navy);
+  box-shadow:
+    0 3px 0 rgb(176 141 79 / 0.45),
+    0 46px 92px -26px rgb(3 7 13 / 0.85);
+}
+
+.stamp {
+  --stamp-size: 128px;
+  position: absolute;
+  top: 18px;
+  right: 22px;
+}
+
+.meta {
+  margin: 0;
+  padding-right: 140px;
+  color: #6b5a3e;
+  font: 500 12px/1.4 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.decree {
+  margin: 14px 0 0;
+  padding-right: 140px;
+  font: 600 clamp(26px, 2.6vw, 38px) / 1.14 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.consequence {
+  margin: 16px 0 0;
+  padding-right: 140px;
+  color: rgb(22 39 63 / 0.88);
+  font: 400 17px/1.55 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.speaker {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgb(22 39 63 / 0.16);
+  color: rgb(22 39 63 / 0.74);
+  font: 400 13px/1.45 var(--font-sans);
+}
+
+.movement {
+  padding: 18px 22px 20px;
+  border: 1px solid rgb(176 141 79 / 0.4);
+  border-radius: 12px;
+  background: rgb(9 18 31 / 0.84);
+}
+
+.movementLabel {
+  margin: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.movementList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.movementItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgb(244 239 227 / 0.2);
+  border-radius: 12px;
+  background: rgb(244 239 227 / 0.05);
+}
+
+.movementItem[data-direction="up"] {
+  border-color: rgb(211 174 109 / 0.55);
+  background: rgb(201 164 99 / 0.16);
+}
+
+.movementItem[data-direction="down"] {
+  border-color: rgb(224 122 112 / 0.55);
+  background: rgb(142 43 36 / 0.18);
+}
+
+.movementName {
+  color: rgb(244 239 227 / 0.9);
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.movementValues {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.movementValue {
+  font: 700 24px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.movementDelta {
+  color: rgb(244 239 227 / 0.84);
+  font: 600 13px/1 var(--font-sans);
+}
+
+.movementItem[data-direction="up"] .movementDelta {
+  color: var(--brass-chip-text);
+}
+
+.movementItem[data-direction="down"] .movementDelta {
+  color: var(--alert-on-navy);
+}
+
+.movementStatus,
+.movementRange {
+  color: rgb(244 239 227 / 0.8);
+  font: 500 12px/1.3 var(--font-mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.movementRange {
+  margin-top: -4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.continueButton {
+  align-self: center;
+  min-width: min(100%, 340px);
+  min-height: 56px;
+  padding: 0 32px;
+  border: 1px solid var(--light-brass);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ivory-paper), #e7dec9);
+  box-shadow: 0 2px 0 rgb(176 141 79 / 0.6);
+  color: var(--deep-navy);
+  font: 600 15px/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.continueButton:hover {
+  filter: brightness(1.04);
+}
+
+.continueButton:active {
+  transform: translateY(1px);
+}
+
+.continueButton:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 3px;
+}
+
+/* Movement only: the consequence must stay readable even if the animation never runs. */
+@keyframes feedback-in {
+  from {
+    transform: translateY(8px);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .feedback {
+    gap: 12px;
+  }
+
+  .document {
+    padding: 20px 26px 22px;
+  }
+
+  .stamp {
+    --stamp-size: 108px;
+  }
+
+  .movement {
+    padding: 14px 18px 16px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .document {
+    padding: 20px 20px 22px;
+  }
+
+  .stamp {
+    --stamp-size: 92px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .meta,
+  .decree {
+    padding-right: 96px;
+  }
+
+  .consequence {
+    padding-right: 0;
+  }
+
+  .decree {
+    font-size: 24px;
+  }
+
+  .consequence {
+    font-size: 15px;
+  }
+
+  .movementList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .continueButton {
+    align-self: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback {
+    animation: fade-in 150ms ease-out;
+  }
+}
+
+:global([data-reduced-motion="true"]) .feedback {
+  animation: fade-in 150ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Newspaper edition (design 3c): paper and power movement on the left, reaction and action on the right. */
+.edition {
+  display: grid;
+  grid-template-areas:
+    "paper reaction"
+    "movement continue";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  align-items: start;
+  gap: 18px 24px;
+  width: min(100%, 1040px);
+}
+
+.edition .movement {
+  grid-area: movement;
+}
+
+.actions {
+  display: flex;
+  grid-area: continue;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.edition .continueButton {
+  align-self: stretch;
+  min-width: 0;
+}
+
+.note {
+  padding: 14px 18px 16px;
+  border: 1px solid rgb(176 141 79 / 0.35);
+  border-radius: 12px;
+  background: rgb(244 239 227 / 0.055);
+}
+
+.noteLabel {
+  margin: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.noteSection {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(244 239 227 / 0.12);
+}
+
+.noteText {
+  margin: 8px 0 0;
+  color: rgb(244 239 227 / 0.9);
+  font: 400 14px/1.45 var(--font-sans);
+}
+
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.noteList li {
+  display: flex;
+  gap: 10px;
+  color: rgb(244 239 227 / 0.9);
+  font: 400 14px/1.45 var(--font-sans);
+}
+
+.noteList li::before {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  background: var(--light-brass);
+  transform: rotate(45deg);
+  content: "";
+}
+
+.paper {
+  position: relative;
+  grid-area: paper;
+  padding: 24px 30px 28px;
+  border-radius: 4px;
+  background: linear-gradient(174deg, #f8f4ea, #e9e0c9);
+  color: var(--deep-navy);
+  box-shadow:
+    0 3px 0 rgb(176 141 79 / 0.45),
+    0 44px 88px -26px rgb(3 7 13 / 0.85);
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--deep-navy);
+}
+
+.paperName {
+  font: 600 16px/1 var(--font-serif);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.paperDate {
+  color: #6b5a3e;
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.paperStamp {
+  --stamp-size: 100px;
+  top: 58px;
+  right: 22px;
+}
+
+.paperMeta {
+  margin: 16px 0 0;
+  padding-right: 112px;
+  color: #6b5a3e;
+  font: 500 12px/1.4 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin: 10px 0 0;
+  padding-right: 112px;
+  font: 600 clamp(26px, 2.3vw, 34px) / 1.16 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.lead {
+  margin: 14px 0 0;
+  color: rgb(22 39 63 / 0.86);
+  font: 400 16px/1.55 var(--font-sans);
+  text-wrap: pretty;
+}
+
+.reaction {
+  grid-area: reaction;
+  margin: 0;
+  padding: 20px 22px 22px;
+  border: 1px solid rgb(176 141 79 / 0.45);
+  border-radius: 12px;
+  background: linear-gradient(176deg, rgb(16 30 50 / 0.97), rgb(9 18 31 / 0.97));
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reactionLabel {
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.personRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.personName {
+  color: var(--ivory-paper);
+  font: 600 19px/1.15 var(--font-serif);
+}
+
+.personTitle {
+  color: var(--light-brass);
+  font: 500 12px/1.3 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quote {
+  margin: 16px 0 0;
+}
+
+.quote p {
+  margin: 0;
+  color: rgb(244 239 227 / 0.9);
+  font: 400 17px/1.5 var(--font-serif);
+  text-wrap: pretty;
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .edition {
+    gap: 12px 20px;
+  }
+
+  .paper {
+    padding: 18px 24px 20px;
+  }
+
+  .paperStamp {
+    --stamp-size: 88px;
+    top: 50px;
+  }
+
+  .paperMeta,
+  .headline {
+    padding-right: 98px;
+  }
+
+  .headline {
+    font-size: 26px;
+  }
+
+  .lead {
+    margin-top: 10px;
+    font-size: 15px;
+  }
+
+  .reaction {
+    padding: 16px 18px 18px;
+  }
+
+  .quote {
+    margin-top: 12px;
+  }
+
+  .quote p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .edition {
+    grid-template-areas:
+      "paper"
+      "reaction"
+      "movement"
+      "continue";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+  }
+
+  .paper {
+    padding: 18px 18px 20px;
+  }
+
+  .paperName {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+  }
+
+  .paper {
+    display: flow-root;
+  }
+
+  /* In the flow below the masthead, whose height changes with wrapping; text wraps around it. */
+  .paperStamp {
+    --stamp-size: 84px;
+    --stamp-heading-tracking: 0.06em;
+    position: relative;
+    top: auto;
+    right: auto;
+    float: right;
+    margin: 12px -2px 6px 10px;
+  }
+
+  .paperMeta,
+  .headline {
+    padding-right: 0;
+  }
+
+  .headline {
+    font-size: 23px;
+  }
+
+  .lead {
+    font-size: 14px;
+  }
+
+  .reaction {
+    padding: 16px 18px 18px;
+  }
+
+  .personName {
+    font-size: 16px;
+  }
+
+  .quote p {
+    font-size: 15px;
+  }
+}

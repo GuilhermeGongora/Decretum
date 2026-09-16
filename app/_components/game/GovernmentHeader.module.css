@@ -1,0 +1,152 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 58px;
+  padding: 0 34px;
+  border-bottom: 1px solid rgb(244 239 227 / 0.1);
+  background: linear-gradient(180deg, rgb(6 12 21 / 0.85), rgb(6 12 21 / 0));
+  transition: opacity 160ms ease;
+}
+
+.header[data-dimmed] {
+  opacity: 0.7;
+}
+
+.header p {
+  margin: 0;
+}
+
+.country {
+  font: 600 15px/1 var(--font-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  background: rgb(244 239 227 / 0.2);
+}
+
+.office {
+  color: rgb(244 239 227 / 0.82);
+  font: 400 13px/1 var(--font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.date {
+  color: var(--light-brass);
+  font: 500 13px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dateShort {
+  display: none;
+}
+
+.textButton,
+.iconButton {
+  min-height: 44px;
+  border-radius: 10px;
+  color: var(--ivory-paper);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.textButton {
+  padding: 0 16px;
+  border: 1px solid rgb(176 141 79 / 0.5);
+  background: rgb(244 239 227 / 0.06);
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  border: 1px solid rgb(244 239 227 / 0.22);
+  background: transparent;
+}
+
+.textButton:hover,
+.iconButton:hover {
+  background: rgb(244 239 227 / 0.12);
+}
+
+.textButton:focus-visible,
+.iconButton:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 2px;
+}
+
+.gear {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgb(244 239 227 / 0.8);
+  border-radius: 50%;
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .header {
+    gap: 14px;
+    height: 50px;
+    padding: 0 26px;
+  }
+
+  .country {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .header {
+    gap: 10px;
+    height: auto;
+    min-height: 58px;
+    padding: 7px 16px;
+  }
+
+  .office,
+  .divider {
+    display: none;
+  }
+
+  .country {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+  }
+
+  .date {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  .dateLong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .dateShort {
+    display: inline;
+  }
+
+  .textButton {
+    padding: 0 12px;
+  }
+}

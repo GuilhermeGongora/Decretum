@@ -26,6 +26,10 @@ rule wins. Changing a rule requires an ADR in `docs/adr/`.
   No business rules, no SQL.
 - `src/domain/` holds game rules as plain, pure JavaScript. It never imports React, Next.js, `pg`,
   or anything from `app/`.
+- `src/content/` holds game content (cards, flags, endings, epithets) as validated data. Player-facing
+  text is Brazilian Portuguese; code and identifiers stay in English.
+- `src/domain/`, `src/content/`, `src/simulation/` and `src/repositories/` use relative imports with
+  `.js` extensions, because Node scripts (seed, simulator, Jest global setup) import them directly.
 - `src/services/` orchestrates use cases: loads state through repositories, applies domain rules,
   persists results, owns transaction boundaries.
 - `src/repositories/` is the only place that talks to the database.
@@ -45,6 +49,8 @@ rule wins. Changing a rule requires an ADR in `docs/adr/`.
 
 ## Game
 
+- `Decretum_GDD_v1.0.md` is the source of truth for game design. Record every interpretation or
+  simplification of it in `docs/game-rules.md`.
 - The server is authoritative. Never accept game effects, scores or outcomes calculated by the client;
   the client sends intentions, the server computes consequences.
 - Game content (cards, effects, conditions, endings) is data-driven.

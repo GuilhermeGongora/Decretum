@@ -1,0 +1,166 @@
+.shell {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: var(--republic-night);
+  color: var(--ivory-paper);
+}
+
+@media (min-width: 1024px) {
+  .shell:not([data-scrollable]) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+.header,
+.powers,
+.stage,
+.footer {
+  position: relative;
+  min-width: 0;
+}
+
+.stage {
+  display: flex;
+  min-height: 0;
+}
+
+/* Office at midnight: window grid, curtains, desk edge, vignette (design "Cenario"). */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(180deg, #07111d 0%, var(--republic-night) 52%, #050c16 100%);
+}
+
+.window {
+  position: absolute;
+  top: 6%;
+  right: 24%;
+  left: 24%;
+  height: 48%;
+  border: 1px solid rgb(176 141 79 / 0.22);
+  background:
+    radial-gradient(90% 70% at 50% 100%, rgb(201 164 99 / 0.22), transparent 68%),
+    linear-gradient(180deg, #0d1b2e, #0a1424);
+}
+
+.window::before {
+  position: absolute;
+  inset: auto 0 0;
+  height: 46%;
+  opacity: 0.5;
+  background:
+    repeating-linear-gradient(90deg, rgb(226 196 126 / 0.5) 0 2px, transparent 2px 13px),
+    repeating-linear-gradient(0deg, rgb(226 196 126 / 0.28) 0 1px, transparent 1px 11px);
+  content: "";
+}
+
+.window::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent calc(33.3% - 1px),
+      rgb(6 12 21 / 0.85) calc(33.3% - 1px) calc(33.3% + 1px),
+      transparent calc(33.3% + 1px) calc(66.6% - 1px),
+      rgb(6 12 21 / 0.85) calc(66.6% - 1px) calc(66.6% + 1px),
+      transparent calc(66.6% + 1px)
+    ),
+    linear-gradient(
+      180deg,
+      transparent calc(52% - 1px),
+      rgb(6 12 21 / 0.85) calc(52% - 1px) calc(52% + 1px),
+      transparent calc(52% + 1px)
+    ),
+    linear-gradient(118deg, rgb(244 239 227 / 0.07) 0%, transparent 34%);
+  content: "";
+}
+
+.curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 26%;
+  background:
+    linear-gradient(180deg, rgb(6 12 21 / 0.5), transparent 30%, rgb(6 12 21 / 0.7)),
+    repeating-linear-gradient(
+      90deg,
+      rgb(6 12 21 / 0.55) 0 3px,
+      rgb(244 239 227 / 0.035) 3px 8px,
+      rgb(6 12 21 / 0.3) 8px 26px
+    ),
+    linear-gradient(90deg, #0a1525 0%, #0d1c30 68%, #081320 100%);
+}
+
+.curtainLeft {
+  left: 0;
+}
+
+.curtainRight {
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.desk {
+  position: absolute;
+  right: -4%;
+  bottom: 0;
+  left: -4%;
+  height: 26%;
+  border-top: 1px solid rgb(176 141 79 / 0.4);
+  background:
+    linear-gradient(
+        90deg,
+        transparent,
+        rgb(211 174 109 / 0.75) 20%,
+        rgb(211 174 109 / 0.75) 80%,
+        transparent
+      )
+      top / 100% 3px no-repeat,
+    linear-gradient(112deg, rgb(244 239 227 / 0.055) 0%, transparent 38%),
+    linear-gradient(180deg, #132338 0%, #0c1a2c 42%, #070f1b 100%);
+}
+
+.glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 52% at 50% 34%, rgb(201 164 99 / 0.12), transparent 72%);
+}
+
+.shell[data-preview="left"] .glow {
+  background:
+    linear-gradient(90deg, rgb(201 164 99 / 0.16), transparent 42%),
+    radial-gradient(70% 52% at 50% 34%, rgb(201 164 99 / 0.12), transparent 72%);
+}
+
+.shell[data-preview="right"] .glow {
+  background:
+    linear-gradient(270deg, rgb(201 164 99 / 0.16), transparent 42%),
+    radial-gradient(70% 52% at 50% 34%, rgb(201 164 99 / 0.12), transparent 72%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(88% 74% at 50% 46%, transparent 38%, rgb(3 7 13 / 0.76) 100%),
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.017) 0 1px, transparent 1px 3px);
+}
+
+@media (max-width: 1023px) {
+  .window {
+    right: 8%;
+    left: 8%;
+  }
+
+  .curtain {
+    width: 10%;
+  }
+}

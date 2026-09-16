@@ -1,0 +1,271 @@
+.briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+  max-width: 1328px;
+  margin: 0 auto;
+  padding: 32px 56px 44px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.document {
+  position: relative;
+  padding: 30px 34px 34px;
+  border-radius: 4px;
+  background: linear-gradient(174deg, #f6f1e6, #e6dcc5);
+  box-shadow:
+    var(--shadow-paper-edge),
+    0 44px 84px -26px rgb(3 7 13 / 0.85);
+  color: var(--deep-navy);
+}
+
+.stamp {
+  --stamp-size: 112px;
+  --stamp-line-size: 14px;
+  position: absolute;
+  top: 26px;
+  right: 30px;
+}
+
+.eyebrow,
+.sectionLabel {
+  margin: 0;
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.name {
+  max-width: 420px;
+  margin: 12px 0 0;
+  font: 600 clamp(28px, 3vw, 38px) / 1.1 var(--font-serif);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 20px;
+  margin: 24px 0 0;
+}
+
+.facts dt {
+  color: var(--paper-ink-muted);
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 6px 0 0;
+  font: 600 15px/1.25 var(--font-sans);
+}
+
+.sectionLabel {
+  margin-top: 26px;
+}
+
+.summary {
+  margin: 10px 0 0;
+  color: rgb(22 39 63 / 0.9);
+  font: 400 16px/1.5 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.institutions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 22px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.institutions li {
+  position: relative;
+  padding-left: 17px;
+  color: rgb(22 39 63 / 0.85);
+  font: 400 13.5px/1.4 var(--font-sans);
+}
+
+.institutions li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--aged-brass);
+  content: "";
+}
+
+.institutions strong {
+  font-weight: 600;
+}
+
+.panel {
+  padding: 26px 28px 28px;
+  border: 1px solid rgb(176 141 79 / 0.4);
+  border-radius: 12px;
+  background: linear-gradient(176deg, rgb(23 40 64 / 0.94), rgb(12 24 40 / 0.94));
+  box-shadow: var(--shadow-s2);
+}
+
+.panelLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.panelLabel::before {
+  width: 26px;
+  height: 1px;
+  background: var(--light-brass);
+  content: "";
+}
+
+.panelIntro {
+  margin: 16px 0 0;
+  font: 400 19px/1.5 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.pillars {
+  display: grid;
+  gap: 16px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pillar {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 4px 14px;
+}
+
+.pillarMark {
+  grid-row: span 3;
+  width: 40px;
+  height: 40px;
+  fill: rgb(211 174 109 / 0.3);
+  stroke: rgb(211 174 109 / 0.8);
+}
+
+.pillarName {
+  font: 600 14px/1.2 var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pillarDescription {
+  color: rgb(244 239 227 / 0.88);
+  font: 400 14px/1.4 var(--font-sans);
+}
+
+.pillarRisks {
+  color: rgb(244 239 227 / 0.78);
+  font: 500 12px/1.5 var(--font-mono);
+}
+
+.rule {
+  margin: 22px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--constitutional-red);
+  border-radius: 3px;
+  background: rgb(142 43 36 / 0.16);
+  font: 400 14px/1.45 var(--font-sans);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.action {
+  min-height: 56px;
+  padding: 0 26px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.proceed {
+  font-size: 16px;
+}
+
+@media (max-width: 1023px) {
+  .briefing {
+    gap: 18px;
+    padding: 20px 16px 0;
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .document {
+    padding: 20px 20px 22px;
+  }
+
+  .stamp {
+    --stamp-size: 100px;
+    --stamp-line-size: 12px;
+    --stamp-heading-tracking: 0.06em;
+    top: 12px;
+    right: 10px;
+  }
+
+  .name {
+    padding-right: 100px;
+    font-size: 24px;
+  }
+
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+  }
+
+  .institutions {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 18px 18px 20px;
+  }
+
+  .panelIntro {
+    font-size: 16px;
+  }
+
+  .actions {
+    position: sticky;
+    bottom: 0;
+    flex-wrap: nowrap;
+    padding: 14px 0 24px;
+    background: linear-gradient(180deg, rgb(6 12 21 / 0), rgb(6 12 21 / 0.94) 40%);
+  }
+
+  .action {
+    padding: 0 14px;
+    letter-spacing: 0.06em;
+  }
+
+  .proceed {
+    flex: 1;
+    font-size: 14px;
+  }
+}

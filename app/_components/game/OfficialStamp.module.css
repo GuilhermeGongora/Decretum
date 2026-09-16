@@ -1,0 +1,59 @@
+.stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--stamp-size, 152px);
+  height: var(--stamp-size, 152px);
+  border-radius: 50%;
+  color: var(--constitutional-red);
+  text-align: center;
+  pointer-events: none;
+}
+
+.preview {
+  border: 2px dashed rgb(142 43 36 / 0.75);
+  background: rgb(244 239 227 / 0.62);
+  transform: rotate(10deg);
+  animation: stamp-in 160ms ease-out;
+}
+
+.deferred {
+  border: 3px double var(--constitutional-red);
+  background: radial-gradient(circle, rgb(248 244 234 / 0.97), rgb(240 233 217 / 0.94));
+  box-shadow: 0 0 0 7px rgb(244 239 227 / 0.5);
+  transform: rotate(12deg);
+}
+
+/* Archive stamp printed directly on paper (design 2c). */
+.verified {
+  border: 2px double var(--constitutional-red);
+  opacity: 0.9;
+  transform: rotate(-9deg);
+}
+
+.heading {
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: var(--stamp-heading-tracking, 0.2em);
+  text-transform: uppercase;
+}
+
+.rule {
+  width: 62%;
+  max-width: 62px;
+  height: 1px;
+  margin: 7px 0;
+  background: currentcolor;
+  opacity: 0.8;
+}
+
+.line {
+  font: 600 var(--stamp-line-size, 16px) / 1.15 var(--font-serif);
+  text-transform: uppercase;
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+  }
+}

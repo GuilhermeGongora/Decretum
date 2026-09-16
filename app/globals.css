@@ -1,0 +1,260 @@
+/*
+ * DECRETUM v2 design tokens ("gabinete cinematográfico · arquivo constitucional vivo").
+ * Source of truth: docs/design/decretum-v2/UI_HANDOFF.md. Component styles live in CSS Modules.
+ */
+:root {
+  --republic-night: #0b1729;
+  --deep-navy: #16273f;
+  --ivory-paper: #f4efe3;
+  --paper-shadow: #ece5d5;
+  --aged-brass: #b08d4f;
+  --light-brass: #d3ae6d;
+  --constitutional-red: #8e2b24;
+  --heraldic-green: #1d6b4a;
+  --portrait-frame: #152741;
+  --alert-on-navy: #f0b2ac;
+  --brass-chip-text: #f0d9a8;
+  --paper-ink-muted: #6b5a3e;
+
+  --radius-portrait: 20px;
+  --radius-dossier: 14px;
+  --radius-panel: 12px;
+  --radius-button: 10px;
+  --radius-document: 4px;
+  --radius-pill: 999px;
+
+  --shadow-s0: 0 2px 6px rgb(3 7 13 / 0.5);
+  --shadow-s1: 0 18px 40px -20px rgb(3 7 13 / 0.7);
+  --shadow-s2: 0 26px 56px -22px rgb(3 7 13 / 0.8);
+  --shadow-s3: 0 46px 92px -26px rgb(3 7 13 / 0.85);
+  --shadow-paper-edge: 0 3px 0 rgb(176 141 79 / 0.45);
+
+  --font-serif: var(--font-spectral, "Spectral"), Georgia, "Times New Roman", serif;
+  --font-sans:
+    var(--font-archivo, "Archivo"), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-plex-mono, "IBM Plex Mono"), ui-monospace, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--republic-night);
+  color: var(--ivory-paper);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 3px;
+}
+
+/* Pinned to the top: at its static position a live region after a 100dvh shell adds 1px of scroll. */
+.visually-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app {
+  min-height: 100dvh;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 16px 56px;
+}
+
+.loading {
+  padding-block: 36vh;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+/* Buttons shared by screens and dialogs */
+.btn {
+  min-height: 48px;
+  padding: 10px 18px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: var(--radius-button);
+  background: rgb(244 239 227 / 0.06);
+  color: var(--ivory-paper);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgb(244 239 227 / 0.12);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.45;
+}
+
+.btn--primary {
+  border-color: var(--light-brass);
+  background: linear-gradient(180deg, var(--ivory-paper), #e7dec9);
+  box-shadow: 0 2px 0 rgb(176 141 79 / 0.6);
+  color: var(--deep-navy);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fffcf4, #efe6d2);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn--link {
+  align-self: center;
+  border: none;
+  background: none;
+  text-decoration: underline;
+}
+
+/* Dialogs (settings, tutorial) */
+.modal {
+  width: 100%;
+  max-width: min(600px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid rgb(176 141 79 / 0.6);
+  border-radius: var(--radius-document);
+  background: linear-gradient(174deg, #f8f4ea, #e9e0c9);
+  box-shadow: var(--shadow-paper-edge), var(--shadow-s3);
+  color: var(--deep-navy);
+}
+
+.modal::backdrop {
+  background: rgb(5 11 19 / 0.72);
+}
+
+.modal .btn {
+  border-color: rgb(22 39 63 / 0.35);
+  background: transparent;
+  color: var(--deep-navy);
+}
+
+.modal .btn--primary {
+  border-color: var(--deep-navy);
+  background: var(--deep-navy);
+  box-shadow: none;
+  color: var(--ivory-paper);
+}
+
+.modal__header,
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 18px;
+}
+
+.modal__header {
+  border-bottom: 2px solid var(--deep-navy);
+}
+
+.modal__header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal__footer {
+  justify-content: flex-end;
+  border-top: 1px solid rgb(22 39 63 / 0.16);
+}
+
+.modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  overflow: auto;
+}
+
+.setting {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.setting input {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  accent-color: var(--deep-navy);
+}
+
+.tutorial__title {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Reduced motion (system preference or in-game setting): short fades only. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
+}
+
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 150ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 150ms !important;
+}

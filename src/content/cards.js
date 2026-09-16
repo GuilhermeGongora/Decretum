@@ -1,0 +1,892 @@
+// The 30 MVP cards from GDD v1.0 §18. Effects follow Povo / Mercado / Congresso / Instituições.
+// Result texts marked in docs/game-rules.md as provisional were written where the GDD has none.
+// Each choice carries its own authored consequence: a newspaper `headline` and the speaker's `reaction`.
+const fx = (people, market, congress, institutions) => ({ people, market, congress, institutions });
+
+const CRITICAL = (meter) => [
+  { meter, min: 1, max: 18 },
+  { meter, min: 82, max: 99 },
+];
+
+export const cardDefinitions = [
+  // §18.1 Common cards
+  {
+    slug: "emergency_budget",
+    type: "common",
+    speaker: "caio-ferraz",
+    category: "budget",
+    text: "A arrecadação caiu. A Fazenda propõe congelar gastos, enquanto governadores exigem a manutenção dos repasses.",
+    leftChoice: {
+      label: "Congelar gastos",
+      effects: fx(-5, 7, -3, 2),
+      resultText: "O mercado respira; hospitais regionais anunciam cortes.",
+      headline: "Fazenda congela gastos federais e hospitais regionais perdem repasses previstos",
+      reaction:
+        "Não é popular, Presidente, mas é o que mantém o Tesouro de pé. Os números agradecem antes das pessoas.",
+    },
+    rightChoice: {
+      label: "Manter repasses",
+      effects: fx(5, -6, 4, -1),
+      resultText: "Governadores celebram, e a dívida ocupa as manchetes.",
+      headline: "Governo mantém repasses às províncias apesar da queda na arrecadação federal",
+      reaction:
+        "Os governadores saem satisfeitos. Eu saio com uma dívida maior e a obrigação de explicá-la aos credores.",
+    },
+    weight: 10,
+    cooldownTurns: 10,
+    tags: ["budget", "federalism"],
+  },
+  {
+    slug: "teachers_strike",
+    type: "common",
+    speaker: "mara-vilar",
+    category: "education",
+    text: "Professores ameaçam parar as escolas. O reajuste encerra a crise, mas rompe o limite orçamentário.",
+    leftChoice: {
+      label: "Conceder reajuste",
+      effects: fx(7, -4, -2, 0),
+      setFlags: [{ key: "teachers_raise" }],
+      resultText: "As aulas retornam, mas a equipe econômica exige compensações.",
+      headline: "Professores recebem reajuste e aulas são retomadas em todas as redes públicas",
+      reaction:
+        "As escolas voltam a abrir, e isso vale cada centavo. Agora preciso defender o acordo diante da Fazenda.",
+    },
+    rightChoice: {
+      label: "Manter orçamento",
+      effects: fx(-6, 4, 2, 0),
+      setFlags: [{ key: "teachers_strike_active", expiresAfterTurns: 8 }],
+      schedule: [{ cardSlug: "strike_escalation", delayTurns: 3 }],
+      resultText: "Os sindicatos marcam o início da paralisação.",
+      headline: "Governo recusa reajuste e sindicatos de professores aprovam greve nacional",
+      reaction:
+        "Eu avisei que eles não recuariam. Cada dia sem aula vai pesar mais do que o reajuste que negamos.",
+    },
+    weight: 9,
+    cooldownTurns: 14,
+    tags: ["education", "labor"],
+  },
+  {
+    slug: "strategic_port_concession",
+    type: "common",
+    speaker: "tomas-gade",
+    category: "infrastructure",
+    text: "Um consórcio oferece modernizar o maior porto do país em troca de uma concessão de trinta anos.",
+    leftChoice: {
+      label: "Assinar concessão",
+      effects: fx(-3, 8, 2, -4),
+      setFlags: [{ key: "strategic_port_concession" }],
+      resultText: "O consórcio assume o porto, e os estivadores prometem vigiar cada cláusula.",
+      headline: "Consórcio privado assume o maior porto do país em concessão de trinta anos",
+      reaction:
+        "Uma decisão à altura de um país que quer competir. A Federação acompanhará de perto cada etapa das obras.",
+    },
+    rightChoice: {
+      label: "Manter controle estatal",
+      effects: fx(3, -6, -1, 4),
+      resultText: "O porto segue estatal, e investidores anunciam projetos nos países vizinhos.",
+      headline: "Porto permanece sob controle estatal e consórcio retira proposta de modernização",
+      reaction:
+        "Respeito a decisão, Presidente, mas o capital não espera. Os investidores já estudam os portos vizinhos.",
+    },
+    weight: 8,
+    cooldownTurns: 18,
+    uniquePerGame: true,
+    tags: ["infrastructure", "economy"],
+  },
+  {
+    slug: "hospital_queues",
+    type: "common",
+    speaker: "icaro-nunes",
+    category: "health",
+    text: "As filas dobraram. Podemos contratar uma rede privada ou abrir crédito extraordinário para hospitais públicos.",
+    leftChoice: {
+      label: "Contratar a rede",
+      effects: fx(-2, 5, 3, -3),
+      resultText: "As filas diminuem, e os auditores questionam os valores do convênio.",
+      headline: "Ministério da Saúde contrata rede privada para reduzir filas de atendimento",
+      reaction:
+        "As filas precisam cair esta semana, não no próximo orçamento. Vou exigir relatórios de cada leito contratado.",
+    },
+    rightChoice: {
+      label: "Abrir crédito público",
+      effects: fx(6, -5, -2, 2),
+      resultText: "Hospitais públicos reabrem leitos, e a Fazenda revisa as metas do ano.",
+      headline: "Crédito extraordinário reabre leitos em hospitais públicos de todo o país",
+      reaction:
+        "É o caminho certo para o sistema, mas leito sem equipe não salva ninguém. Preciso de contratações já.",
+    },
+    weight: 10,
+    cooldownTurns: 10,
+    tags: ["health", "budget"],
+  },
+  {
+    slug: "coalition_amendment",
+    type: "common",
+    speaker: "raul-mendonca",
+    category: "congress",
+    text: "A coalizão garante aprovar sua agenda se puder indicar a direção das agências reguladoras.",
+    leftChoice: {
+      label: "Aceitar indicações",
+      effects: fx(-2, 2, 8, -6),
+      setFlags: [{ key: "agencies_shared" }],
+      resultText: "A agenda avança na Assembleia, e as agências passam a responder à coalizão.",
+      headline: "Governo cede direção das agências reguladoras à coalizão em troca de votos",
+      reaction:
+        "Uma parceria madura, Presidente. A Assembleia sabe reconhecer quem aceita dividir responsabilidades.",
+    },
+    rightChoice: {
+      label: "Preservar autonomia",
+      effects: fx(1, -1, -7, 6),
+      resultText: "As agências mantêm a autonomia, e a coalizão engaveta seus projetos.",
+      headline: "Palácio veta indicações políticas nas agências e coalizão congela votações",
+      reaction:
+        "Admiro a firmeza, de verdade. Só não espere que meus colegas votem com o mesmo entusiasmo.",
+    },
+    weight: 10,
+    cooldownTurns: 12,
+    tags: ["congress", "justice"],
+  },
+  {
+    slug: "palace_secrecy",
+    type: "common",
+    speaker: "nina-vale",
+    category: "media",
+    text: "A imprensa exige as agendas de ministros após reuniões não registradas com empresários.",
+    leftChoice: {
+      label: "Publicar agendas",
+      effects: fx(4, -3, -2, 6),
+      setFlags: [{ key: "transparent_agendas" }],
+      resultText: "As agendas vêm a público, e alguns empresários cancelam novas reuniões.",
+      headline: "Palácio publica agendas de ministros com empresários após pressão da imprensa",
+      reaction:
+        "Vamos ler cada linha dessas agendas. Transparência só vale se ninguém tiver apagado nada antes.",
+    },
+    rightChoice: {
+      label: "Manter sigilo",
+      effects: fx(-5, 3, 3, -6),
+      setFlags: [{ key: "palace_secrecy_kept" }],
+      resultText: "O sigilo é mantido, e o Correio Cívico promete continuar investigando.",
+      headline: "Governo mantém sigilo sobre reuniões de ministros com empresários",
+      reaction:
+        "O sigilo não encerra a pauta, Presidente. Só nos obriga a procurar os documentos por outros caminhos.",
+    },
+    weight: 8,
+    cooldownTurns: 16,
+    uniquePerGame: true,
+    tags: ["media", "scandal"],
+  },
+  {
+    slug: "security_march",
+    type: "common",
+    speaker: "otavio-leme",
+    category: "security",
+    text: "Após uma onda de violência, manifestantes pedem patrulhamento militar temporário nas grandes cidades.",
+    leftChoice: {
+      label: "Autorizar patrulhas",
+      effects: fx(4, 1, 2, -7),
+      setFlags: [{ key: "military_patrols", expiresAfterTurns: 8 }],
+      resultText:
+        "Blindados ocupam as avenidas, e juristas contestam a medida no Tribunal da Carta.",
+      headline: "Forças de Defesa iniciam patrulhas temporárias nas grandes cidades",
+      reaction:
+        "Ordem recebida. As tropas estarão nas avenidas ao amanhecer. A contestação jurídica é assunto seu.",
+    },
+    rightChoice: {
+      label: "Reforçar polícia civil",
+      effects: fx(-2, -3, -1, 6),
+      resultText: "A polícia civil recebe reforços, mas os resultados demoram a aparecer.",
+      headline: "Governo descarta tropas nas ruas e destina verba extraordinária à polícia civil",
+      reaction:
+        "Registro a decisão, Presidente. Se as ruas piorarem, a conta não será das Forças de Defesa.",
+    },
+    weight: 9,
+    cooldownTurns: 12,
+    tags: ["security", "civil_rights"],
+  },
+  {
+    slug: "forest_mining",
+    type: "common",
+    speaker: "yuri-salcedo",
+    category: "environment",
+    text: "Uma reserva mineral promete empregos no Norte, mas parte dela está sob proteção ambiental.",
+    leftChoice: {
+      label: "Liberar exploração",
+      effects: fx(2, 8, 4, -6),
+      setFlags: [{ key: "forest_mining_allowed" }],
+      resultText: "As mineradoras chegam ao Norte, e ambientalistas anunciam protestos.",
+      headline:
+        "Governo libera mineração em reserva protegida do Norte e ambientalistas convocam atos",
+      reaction:
+        "Hoje o Norte foi ouvido! Os empregos chegam, e eu garanto que o povo daqui não esquecerá este dia.",
+    },
+    rightChoice: {
+      label: "Preservar reserva",
+      effects: fx(3, -7, -3, 5),
+      setFlags: [{ key: "forest_preserved" }],
+      resultText: "A reserva permanece intocada, e o governador acusa o Palácio de travar o Norte.",
+      headline: "Reserva do Norte segue protegida e projeto de mineração é arquivado",
+      reaction:
+        "O Palácio escolheu a floresta e esqueceu quem vive ao redor dela. Vou levar essa conta a cada palanque.",
+    },
+    weight: 8,
+    cooldownTurns: 18,
+    uniquePerGame: true,
+    tags: ["environment", "economy", "federalism"],
+  },
+  {
+    slug: "inheritance_tax",
+    type: "common",
+    speaker: "livia-nogueira",
+    category: "economy",
+    text: "A equipe social propõe elevar o imposto sobre grandes heranças para financiar creches nacionais.",
+    leftChoice: {
+      label: "Enviar o projeto",
+      effects: fx(7, -7, -3, 1),
+      setFlags: [{ key: "inheritance_tax_bill" }],
+      resultText: "O projeto chega à Assembleia, e grandes fortunas começam a deixar o país.",
+      headline: "Projeto que taxa grandes heranças para financiar creches chega à Assembleia",
+      reaction:
+        "O projeto está protocolado. Minha equipe vai calibrar as alíquotas antes que o mercado precifique a fuga de capitais.",
+    },
+    rightChoice: {
+      label: "Arquivar proposta",
+      effects: fx(-5, 6, 3, -1),
+      resultText: "A proposta é arquivada, e movimentos sociais acusam o governo de recuar.",
+      headline:
+        "Governo arquiva taxação de grandes heranças e plano nacional de creches fica sem verba",
+      reaction:
+        "Arquivar acalma os investidores, mas as creches continuam sem fonte de receita no orçamento do ano que vem.",
+    },
+    weight: 9,
+    cooldownTurns: 14,
+    tags: ["economy", "congress"],
+  },
+  {
+    slug: "interest_rate_pressure",
+    type: "common",
+    speaker: "livia-nogueira",
+    category: "economy",
+    text: "O Banco de Aurória elevou os juros. Seus aliados pedem que o governo pressione publicamente pela reversão.",
+    leftChoice: {
+      label: "Criticar o Banco",
+      effects: fx(5, -5, 3, -7),
+      setFlags: [{ key: "central_bank_pressured" }],
+      resultText:
+        "A crítica agrada aliados, mas investidores passam a duvidar da autonomia do Banco.",
+      headline:
+        "Presidente critica publicamente o Banco de Aurória e cobra reversão da alta de juros",
+      reaction:
+        "Com todo o respeito, Presidente, cada frase contra o Banco custa pontos nos títulos do Tesouro amanhã cedo.",
+    },
+    rightChoice: {
+      label: "Respeitar autonomia",
+      effects: fx(-3, 6, -2, 7),
+      resultText: "O Banco mantém os juros, e sua base reclama da falta de firmeza.",
+      headline: "Governo respeita autonomia do Banco de Aurória e juros altos são mantidos",
+      reaction:
+        "Decisão correta. A confiança do mercado se constrói assim, mesmo quando a base não aplaude.",
+    },
+    weight: 9,
+    cooldownTurns: 12,
+    tags: ["economy", "institutions"],
+  },
+  {
+    slug: "minimum_wage",
+    type: "common",
+    speaker: "joana-reis",
+    category: "labor",
+    text: "A Central pede aumento real do salário mínimo. Pequenas empresas alertam que demissões podem seguir.",
+    leftChoice: {
+      label: "Aprovar aumento",
+      effects: fx(8, -6, 2, 0),
+      resultText: "O aumento é celebrado nas fábricas, e pequenos comércios revisam contratações.",
+      headline: "Salário mínimo tem aumento real e pequenas empresas revisam contratações",
+      reaction:
+        "É uma vitória de quem sustenta este país com as próprias mãos. A Central vai cobrar que o aumento chegue a todos.",
+    },
+    rightChoice: {
+      label: "Corrigir só a inflação",
+      effects: fx(-6, 6, -1, 0),
+      resultText: "Os empresários aprovam a cautela, e a Central convoca assembleias.",
+      headline: "Salário mínimo recebe apenas correção da inflação e Central convoca assembleias",
+      reaction:
+        "Correção não é aumento, Presidente. Os trabalhadores vão responder nas fábricas, e não será em silêncio.",
+    },
+    weight: 10,
+    cooldownTurns: 10,
+    tags: ["labor", "economy"],
+  },
+  {
+    slug: "flood_infrastructure",
+    type: "common",
+    speaker: "yuri-salcedo",
+    category: "infrastructure",
+    text: "Governadores pedem liberação imediata de verbas contra enchentes, sem o processo completo de licitação.",
+    leftChoice: {
+      label: "Liberar em emergência",
+      effects: fx(6, -2, 4, -7),
+      setFlags: [{ key: "emergency_procurement" }],
+      resultText: "As obras começam antes das chuvas, e auditores pedem cópias dos contratos.",
+      headline:
+        "Verba contra enchentes é liberada sem licitação completa e obras começam antes das chuvas",
+      reaction:
+        "É assim que se governa para quem está com água na porta. As máquinas começam a trabalhar amanhã cedo.",
+    },
+    rightChoice: {
+      label: "Exigir licitação",
+      effects: fx(-4, -1, -3, 7),
+      resultText: "A licitação segue o rito, enquanto as primeiras enchentes atingem o litoral.",
+      headline:
+        "Governo exige licitação completa e obras contra enchentes ficam para depois das chuvas",
+      reaction:
+        "Os papéis estarão impecáveis quando a água baixar. Vou lembrar disso a cada família desalojada.",
+    },
+    weight: 10,
+    cooldownTurns: 10,
+    tags: ["infrastructure", "institutions"],
+  },
+  {
+    slug: "national_data_registry",
+    type: "common",
+    speaker: "tomas-azevedo",
+    category: "civil_rights",
+    text: "Um cadastro nacional unificado reduziria fraudes, mas concentraria dados sensíveis de toda a população.",
+    leftChoice: {
+      label: "Criar cadastro",
+      effects: fx(2, 5, 3, -8),
+      setFlags: [{ key: "national_data_registry" }],
+      resultText: "O cadastro entra em operação, e juristas alertam para o risco de vazamentos.",
+      headline:
+        "Cadastro nacional unificado entra em operação com dados sensíveis de toda a população",
+      reaction:
+        "O Tribunal registra a decisão e examinará, com a devida atenção, os limites de acesso a esses dados.",
+    },
+    rightChoice: {
+      label: "Manter bases separadas",
+      effects: fx(-2, -4, -1, 7),
+      resultText: "As bases seguem separadas, e as fraudes continuam a desafiar os auditores.",
+      headline: "Governo desiste do cadastro único e mantém bases de dados separadas por órgão",
+      reaction:
+        "A cautela preserva garantias fundamentais. Caberá aos órgãos de controle combater as fraudes pelos meios existentes.",
+    },
+    weight: 7,
+    cooldownTurns: 20,
+    uniquePerGame: true,
+    tags: ["civil_rights", "institutions"],
+  },
+  {
+    slug: "import_tariffs",
+    type: "common",
+    speaker: "tomas-gade",
+    category: "economy",
+    text: "A indústria pede tarifas contra produtos estrangeiros. Consumidores temem preços mais altos.",
+    leftChoice: {
+      label: "Elevar tarifas",
+      effects: fx(2, 5, 4, -1),
+      setFlags: [{ key: "protectionist_tariffs" }],
+      resultText: "A indústria comemora a proteção, e os preços sobem nas prateleiras.",
+      headline: "Governo eleva tarifas sobre produtos importados e preços sobem nas prateleiras",
+      reaction:
+        "A indústria nacional agradece a proteção. Em troca, peço apenas que as regras não mudem no ano que vem.",
+    },
+    rightChoice: {
+      label: "Manter abertura",
+      effects: fx(-4, 4, -2, 1),
+      resultText: "O comércio segue aberto, e fábricas do interior anunciam demissões.",
+      headline: "Tarifas de importação permanecem baixas e fábricas do interior anunciam demissões",
+      reaction:
+        "Respeito a coerência, Presidente, mas voltarei a esta sala com a lista das fábricas que fecharem.",
+    },
+    weight: 9,
+    cooldownTurns: 12,
+    tags: ["economy", "foreign_affairs"],
+  },
+  {
+    slug: "border_refugees",
+    type: "common",
+    speaker: "amira-sol",
+    category: "foreign_affairs",
+    text: "Uma crise no país vizinho leva milhares de refugiados à fronteira. As províncias pedem uma decisão imediata.",
+    leftChoice: {
+      label: "Abrir acolhimento",
+      effects: fx(3, -4, -4, 6),
+      setFlags: [{ key: "refugees_welcomed" }],
+      resultText: "Abrigos são montados na fronteira, e as províncias cobram recursos federais.",
+      headline:
+        "Aurória abre a fronteira a refugiados e províncias cobram recursos para os abrigos",
+      reaction:
+        "Nossos parceiros reconhecerão este gesto. Agora devo pedir a eles que ajudem a dividir o custo do acolhimento.",
+    },
+    rightChoice: {
+      label: "Restringir entrada",
+      effects: fx(1, 3, 5, -6),
+      setFlags: [{ key: "border_restricted" }],
+      resultText: "A fronteira é fechada, e organismos internacionais criticam Aurória.",
+      headline:
+        "Governo fecha a fronteira a refugiados e organismos internacionais condenam Aurória",
+      reaction:
+        "Farei o possível para explicar a decisão às chancelarias, Presidente, mas nossa reputação não sairá intacta.",
+    },
+    weight: 7,
+    cooldownTurns: 18,
+    uniquePerGame: true,
+    tags: ["foreign_affairs", "civil_rights"],
+  },
+  {
+    slug: "rural_debt_relief",
+    type: "common",
+    speaker: "raul-mendonca",
+    category: "congress",
+    text: "A bancada rural condiciona votos ao perdão parcial das dívidas de produtores atingidos pela seca.",
+    leftChoice: {
+      label: "Conceder perdão",
+      effects: fx(3, -4, 8, -3),
+      resultText: "A bancada rural garante os votos, e a Fazenda recalcula o rombo.",
+      headline: "Governo perdoa parte das dívidas de produtores atingidos pela seca",
+      reaction:
+        "A bancada rural não esquece um favor, Presidente. Pode contar com esses votos quando mais precisar deles.",
+    },
+    rightChoice: {
+      label: "Oferecer só crédito",
+      effects: fx(-2, 4, -6, 2),
+      resultText: "O crédito é liberado, e a bancada rural ameaça romper com o governo.",
+      headline: "Produtores atingidos pela seca recebem só crédito e bancada rural ameaça romper",
+      reaction:
+        "Crédito é uma ótima ideia para quem ainda tem colheita. Vou tentar acalmar a bancada, mas não prometo nada.",
+    },
+    weight: 9,
+    cooldownTurns: 12,
+    tags: ["congress", "economy"],
+  },
+  {
+    slug: "police_body_cameras",
+    type: "common",
+    speaker: "joana-reis",
+    category: "security",
+    text: "Organizações civis pedem câmeras corporais obrigatórias. Comandos policiais ameaçam reduzir operações.",
+    leftChoice: {
+      label: "Tornar obrigatórias",
+      effects: fx(5, -1, -3, 7),
+      setFlags: [{ key: "body_cameras_required" }],
+      resultText: "As câmeras chegam às fardas, e comandos policiais reduzem as patrulhas.",
+      headline:
+        "Câmeras corporais passam a ser obrigatórias e comandos policiais reduzem patrulhas",
+      reaction:
+        "Quem trabalha na periferia sabe o valor dessa decisão. Agora ninguém poderá dizer que não viu.",
+    },
+    rightChoice: {
+      label: "Programa voluntário",
+      effects: fx(-4, 1, 4, -4),
+      resultText: "O programa começa sem adesão, e organizações civis protestam.",
+      headline: "Câmeras corporais ficam opcionais e poucas corporações aderem ao programa",
+      reaction:
+        "Programa voluntário é programa no papel. A Central vai marchar com as famílias que esperavam essas câmeras.",
+    },
+    weight: 8,
+    cooldownTurns: 16,
+    uniquePerGame: true,
+    tags: ["security", "civil_rights"],
+  },
+  {
+    slug: "unfinished_bridge",
+    type: "common",
+    speaker: "helena-vasque",
+    category: "infrastructure",
+    text: "A maior obra do governo está atrasada. Trocar a empreiteira encarece o projeto; mantê-la preserva o prazo político.",
+    leftChoice: {
+      label: "Trocar empreiteira",
+      effects: fx(2, -5, -3, 6),
+      resultText: "Uma nova empreiteira assume a ponte, e a inauguração fica para o próximo ano.",
+      headline: "Governo troca a empreiteira da ponte e adia a inauguração para o próximo ano",
+      reaction:
+        "Perdemos a data da inauguração, mas não a obra. Vou preparar a explicação antes que a oposição prepare a dela.",
+    },
+    rightChoice: {
+      label: "Manter contrato",
+      effects: fx(-4, 5, 3, -5),
+      setFlags: [{ key: "questioned_contractor" }],
+      resultText: "A obra segue no prazo, e o contrato vira pauta de investigação na imprensa.",
+      headline: "Empreiteira questionada é mantida e obra da ponte segue no prazo previsto",
+      reaction:
+        "A ponte fica pronta a tempo. Só peço que ninguém do governo assine nada com essa empresa sem me consultar.",
+    },
+    weight: 9,
+    cooldownTurns: 14,
+    tags: ["infrastructure", "scandal"],
+  },
+  {
+    slug: "presidential_broadcast",
+    type: "common",
+    speaker: "helena-vasque",
+    category: "media",
+    text: "Sua equipe propõe transmissões semanais sem entrevistas para falar diretamente com a população.",
+    leftChoice: {
+      label: "Falar toda semana",
+      effects: fx(7, -1, -3, -6),
+      setFlags: [{ key: "direct_broadcasts" }],
+      resultText: "A primeira transmissão bate recordes de audiência e irrita os jornalistas.",
+      headline: "Presidente estreia transmissões semanais sem entrevistas e jornalistas protestam",
+      reaction:
+        "A audiência foi excelente. A imprensa vai tratar cada transmissão como fuga, então cada palavra precisa ser exata.",
+    },
+    rightChoice: {
+      label: "Manter coletivas",
+      effects: fx(-2, 0, 2, 5),
+      resultText: "As coletivas continuam, e perguntas incômodas voltam às manchetes.",
+      headline:
+        "Presidente mantém coletivas abertas e perguntas sobre o governo voltam às manchetes",
+      reaction:
+        "Mais trabalhoso, porém mais seguro. Vou preparar respostas para as perguntas que ninguém quer ouvir.",
+    },
+    weight: 8,
+    cooldownTurns: 16,
+    tags: ["media", "institutions"],
+  },
+  {
+    slug: "tax_reform",
+    type: "common",
+    speaker: "caio-ferraz",
+    category: "economy",
+    text: "Um novo imposto unificado simplifica o sistema, mas retira benefícios de setores e províncias influentes.",
+    leftChoice: {
+      label: "Unificar impostos",
+      effects: fx(2, 8, -7, 5),
+      setFlags: [{ key: "tax_reform_approved" }],
+      schedule: [{ cardSlug: "tax_reform_backlash", delayTurns: 5 }],
+      resultText: "O imposto unificado é aprovado, e as províncias começam a contar as perdas.",
+      headline: "Assembleia aprova imposto unificado e províncias perdem benefícios fiscais",
+      reaction:
+        "Uma reforma que esperamos por décadas. Os governadores vão cobrar a transição, e é bom estarmos preparados.",
+    },
+    rightChoice: {
+      label: "Preservar o sistema",
+      effects: fx(-2, -5, 6, -2),
+      resultText: "O sistema antigo sobrevive, e os investidores voltam a reclamar da burocracia.",
+      headline:
+        "Governo abandona a reforma tributária e benefícios fiscais das províncias são mantidos",
+      reaction:
+        "Perdemos a chance de simplificar o país. Os investidores vão ler essa decisão como falta de coragem.",
+    },
+    conditions: { minTurn: 8 },
+    weight: 6,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["economy", "congress", "federalism"],
+  },
+
+  // §18.2 Conditional and chained cards
+  {
+    slug: "strike_escalation",
+    type: "chained",
+    speaker: "mara-vilar",
+    category: "education",
+    text: "A greve fechou quase todas as escolas. Prefeitos exigem mediação; a Fazenda insiste em não ceder.",
+    leftChoice: {
+      label: "Reabrir negociação",
+      effects: fx(6, -5, 2, 1),
+      removeFlags: ["teachers_strike_active"],
+      resultText: "A mediação reabre as escolas, e a Fazenda cobra o custo do acordo.",
+      headline: "Mediação federal encerra greve dos professores e escolas reabrem nas províncias",
+      reaction:
+        "Os alunos voltam amanhã, e é isso que importa. O acordo custa caro, mas custaria mais um semestre perdido.",
+    },
+    rightChoice: {
+      label: "Cortar os dias parados",
+      effects: fx(-9, 4, 4, -5),
+      setFlags: [{ key: "strike_repressed" }],
+      resultText: "Os salários são cortados, e a greve se transforma em protestos nas ruas.",
+      headline: "Governo corta salários de professores em greve e protestos tomam as ruas",
+      reaction:
+        "Eu não vou defender esse corte em nenhuma escola. Cada professor punido hoje será um adversário amanhã.",
+    },
+    conditions: { allFlags: ["teachers_strike_active"] },
+    weight: 0,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["education", "labor"],
+  },
+  {
+    slug: "contract_investigation",
+    type: "conditional",
+    speaker: "tomas-azevedo",
+    category: "scandal",
+    text: "Auditores encontraram pagamentos incomuns. Suspender contratos interrompe obras; mantê-los preserva entregas.",
+    leftChoice: {
+      label: "Suspender e investigar",
+      effects: fx(3, -5, -4, 9),
+      setFlags: [{ key: "constitutional_precedent" }],
+      resultText: "Os contratos são suspensos, e o Tribunal da Carta firma um precedente.",
+      headline: "Contratos sob suspeita são suspensos e Tribunal da Carta firma precedente",
+      reaction:
+        "O Tribunal registra a colaboração do Executivo. O precedente valerá para este e para os próximos governos.",
+    },
+    rightChoice: {
+      label: "Manter as obras",
+      effects: fx(-6, 5, 4, -8),
+      setFlags: [{ key: "audit_ignored" }],
+      resultText: "As obras seguem, e os auditores levam o caso aos jornais.",
+      headline:
+        "Governo mantém obras sob suspeita e auditores levam pagamentos irregulares à imprensa",
+      reaction:
+        "O Tribunal não se pronuncia sobre obras. Pronuncia-se sobre provas, e elas continuarão sendo examinadas.",
+    },
+    conditions: { anyFlags: ["questioned_contractor", "emergency_procurement"] },
+    weight: 14,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["scandal", "justice"],
+  },
+  {
+    slug: "tax_reform_backlash",
+    type: "chained",
+    speaker: "yuri-salcedo",
+    category: "federalism",
+    text: "Províncias perderam receita durante a transição tributária. Elas pedem compensação federal por dois anos.",
+    leftChoice: {
+      label: "Criar compensação",
+      effects: fx(4, -5, 7, 1),
+      setFlags: [{ key: "transition_fund" }],
+      resultText: "O fundo acalma os governadores, e a dívida federal volta a crescer.",
+      headline:
+        "Governo cria fundo de compensação para províncias que perderam receita com a reforma",
+      reaction:
+        "Isso é respeito com as províncias! Pode dizer à Fazenda que o Norte sabe reconhecer um compromisso cumprido.",
+    },
+    rightChoice: {
+      label: "Cobrar adaptação",
+      effects: fx(-5, 5, -7, 2),
+      resultText: "As províncias cortam serviços, e governadores ameaçam obstruir a Assembleia.",
+      headline:
+        "Províncias ficam sem compensação federal e governadores ameaçam obstruir a Assembleia",
+      reaction:
+        "Adaptação é palavra fácil de dizer no Palácio. No Norte, ela significa escola fechada e posto sem médico.",
+    },
+    conditions: { allFlags: ["tax_reform_approved"] },
+    weight: 0,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["federalism", "budget"],
+  },
+  {
+    slug: "leaked_dossier",
+    type: "conditional",
+    speaker: "nina-vale",
+    category: "scandal",
+    text: "Documentos vazados ligam seu gabinete a decisões reservadas. O país espera uma resposta até o fim do dia.",
+    leftChoice: {
+      label: "Demitir envolvidos",
+      effects: fx(5, -3, -6, 8),
+      removeFlags: ["palace_secrecy_kept", "agencies_shared", "audit_ignored"],
+      resultText: "Os envolvidos deixam o gabinete, e a coalizão perde aliados importantes.",
+      headline:
+        "Presidente demite assessores citados em documentos vazados e coalizão perde aliados",
+      reaction:
+        "As demissões respondem a uma parte das perguntas. O Correio Cívico continuará publicando o restante.",
+    },
+    rightChoice: {
+      label: "Atacar o vazamento",
+      effects: fx(-8, 2, 5, -8),
+      setFlags: [{ key: "press_intimidated" }],
+      resultText: "O Palácio ataca o vazamento, e jornalistas denunciam intimidação.",
+      headline: "Palácio abre ofensiva contra vazamento e jornalistas denunciam intimidação",
+      reaction:
+        "Atacar quem publica não torna os documentos falsos. Amanhã a capa será sobre o que o Palácio quis esconder.",
+    },
+    conditions: {
+      anyFlags: ["palace_secrecy_kept", "agencies_shared", "audit_ignored"],
+      minTurn: 6,
+    },
+    weight: 13,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["scandal", "media"],
+  },
+  {
+    slug: "drought_crisis",
+    type: "conditional",
+    speaker: "icaro-nunes",
+    category: "environment",
+    text: "A seca ameaça energia e abastecimento. Racionar agora reduz o risco futuro, mas atinge famílias e fábricas.",
+    leftChoice: {
+      label: "Iniciar racionamento",
+      effects: fx(-5, -5, 1, 7),
+      setFlags: [{ key: "rationing", expiresAfterTurns: 6 }],
+      resultText: "O racionamento começa, e famílias e fábricas ajustam suas rotinas.",
+      headline: "Governo decreta racionamento de água e energia para enfrentar a seca",
+      reaction:
+        "Vamos proteger primeiro os hospitais. É uma medida dura, mas evita que a seca vire emergência sanitária.",
+    },
+    rightChoice: {
+      label: "Adiar restrições",
+      effects: fx(4, 4, 1, -6),
+      setFlags: [{ key: "reservoir_risk" }],
+      schedule: [{ cardSlug: "blackout", delayTurns: 4 }],
+      resultText: "A vida segue normal por enquanto, e os reservatórios continuam baixando.",
+      headline: "Governo adia racionamento e reservatórios seguem em queda durante a seca",
+      reaction:
+        "Entendo o cálculo político, Presidente, mas reservatório não negocia. Meus hospitais precisam de geradores já.",
+    },
+    conditions: { minTurn: 12, meters: { institutions: { min: 10, max: 90 } } },
+    weight: 6,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["environment", "infrastructure"],
+  },
+  {
+    slug: "blackout",
+    type: "chained",
+    speaker: "helena-vasque",
+    category: "infrastructure",
+    text: "Apagões atingem três províncias. É possível intervir nas distribuidoras ou subsidiar geradores privados.",
+    leftChoice: {
+      label: "Intervir nas empresas",
+      effects: fx(2, -9, -2, 5),
+      setFlags: [{ key: "energy_intervention" }],
+      resultText: "O governo assume as distribuidoras, e investidores retiram capital do setor.",
+      headline: "Governo intervém nas distribuidoras de energia após apagões em três províncias",
+      reaction:
+        "Agora a luz é responsabilidade nossa, integralmente. Vou montar hoje uma equipe para cada distribuidora.",
+    },
+    rightChoice: {
+      label: "Subsidiar geradores",
+      effects: fx(-3, 7, 4, -4),
+      resultText: "Geradores privados religam as cidades, e a conta chega ao orçamento.",
+      headline: "Subsídio a geradores privados religa cidades atingidas por apagões",
+      reaction:
+        "Resolvemos a noite de hoje. A conta dos subsídios vai chegar, e alguém precisa decidir quem vai pagá-la.",
+    },
+    conditions: { allFlags: ["reservoir_risk"] },
+    weight: 0,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["infrastructure", "economy"],
+  },
+  {
+    slug: "green_treaty",
+    type: "conditional",
+    speaker: "amira-sol",
+    category: "foreign_affairs",
+    text: "Países vizinhos propõem metas ambientais comuns. O tratado abre crédito externo, mas limita novos projetos minerais.",
+    leftChoice: {
+      label: "Assinar tratado",
+      effects: fx(4, -4, -3, 7),
+      setFlags: [{ key: "international_green_treaty" }],
+      resultText: "O tratado é assinado, e o crédito externo chega com novas exigências.",
+      headline: "Aurória assina tratado ambiental regional e limita novos projetos de mineração",
+      reaction:
+        "Um dia importante para nossa diplomacia. Os vizinhos passam a nos ver como parceiros, não como problema.",
+    },
+    rightChoice: {
+      label: "Recusar limites",
+      effects: fx(-3, 7, 4, -6),
+      resultText: "Aurória recusa as metas, e os vizinhos adiam acordos comerciais.",
+      headline: "Aurória recusa metas ambientais comuns e vizinhos adiam acordos comerciais",
+      reaction:
+        "Transmitirei a posição com toda a cortesia possível, mas as portas que hoje se fecham demoram a reabrir.",
+    },
+    conditions: { minTurn: 18 },
+    weight: 5,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["foreign_affairs", "environment"],
+  },
+
+  // §18.3 Critical-state cards (pillar in 1–18 or 82–99)
+  {
+    slug: "reconciliation_cabinet",
+    type: "crisis",
+    speaker: "helena-vasque",
+    category: "congress",
+    text: "O gabinete propõe uma reforma ministerial para reduzir a tensão com a Assembleia, mas todos cobrarão espaço.",
+    leftChoice: {
+      label: "Dividir o gabinete",
+      effects: { people: -2, market: 0, institutions: -3 },
+      conditionalEffects: [{ type: "toward_center", meter: "congress", amount: 10 }],
+      resultText: "Novos ministros tomam posse, e cada partido cobra sua parte do orçamento.",
+      headline:
+        "Reforma ministerial entrega pastas aos partidos para reduzir tensão com a Assembleia",
+      reaction:
+        "Ganhamos tempo na Assembleia. Em troca, terei ministros novos disputando a mesma fatia do orçamento.",
+    },
+    rightChoice: {
+      label: "Governar sem reforma",
+      effects: { people: 2, market: 1, institutions: 3 },
+      conditionalEffects: [{ type: "away_from_center", meter: "congress", amount: 4 }],
+      resultText: "O gabinete permanece intacto, e a relação com a Assembleia continua tensa.",
+      headline: "Presidente descarta reforma ministerial e crise com a Assembleia se prolonga",
+      reaction:
+        "O gabinete continua coeso, e isso tem valor. Mas cada votação agora será negociada como se fosse a última.",
+    },
+    conditions: { anyMeters: CRITICAL("congress") },
+    weight: 12,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["congress"],
+  },
+  {
+    slug: "stability_pact",
+    type: "crisis",
+    speaker: "caio-ferraz",
+    category: "economy",
+    text: "Fazenda, sindicatos e empresas aceitam um pacto temporário. Para funcionar, você deve congelar parte da própria agenda.",
+    leftChoice: {
+      label: "Assinar o pacto",
+      effects: { people: -3, congress: 2, institutions: 3 },
+      conditionalEffects: [{ type: "toward_center", meter: "market", amount: 10 }],
+      resultText: "O pacto é assinado, e sua agenda fica congelada por alguns meses.",
+      headline: "Governo, sindicatos e empresas firmam pacto temporário de estabilidade econômica",
+      reaction:
+        "Os mercados vão ler este pacto como sensatez. O preço é engavetar parte da agenda por alguns meses.",
+    },
+    rightChoice: {
+      label: "Manter liberdade",
+      effects: { people: 3, congress: -1, institutions: -2 },
+      conditionalEffects: [{ type: "away_from_center", meter: "market", amount: 4 }],
+      resultText: "O governo mantém as mãos livres, e a desconfiança econômica persiste.",
+      headline: "Presidente recusa pacto de estabilidade e desconfiança econômica persiste",
+      reaction:
+        "Liberdade de ação é ótima até a próxima reunião com credores. Espero que exista um plano, Presidente.",
+    },
+    conditions: { anyMeters: CRITICAL("market") },
+    weight: 12,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["economy", "labor"],
+  },
+  {
+    slug: "address_to_republic",
+    type: "crisis",
+    speaker: "helena-vasque",
+    category: "media",
+    text: "O país aguarda um pronunciamento. Você pode admitir erros e limitar seus poderes, ou convocar apoio contra seus adversários.",
+    leftChoice: {
+      label: "Admitir e limitar",
+      effects: { market: -2, congress: -2 },
+      conditionalEffects: [
+        { type: "toward_center", meter: "people", amount: 10 },
+        { type: "toward_center", meter: "institutions", amount: 8 },
+      ],
+      resultText: "O discurso admite erros, e o país reage com surpresa e cautela.",
+      headline: "Presidente admite erros em pronunciamento e propõe limites aos próprios poderes",
+      reaction:
+        "Poucos governantes teriam dito isso em rede nacional. Agora precisamos cumprir cada limite anunciado.",
+    },
+    rightChoice: {
+      label: "Convocar as ruas",
+      effects: { market: -1, congress: 2 },
+      conditionalEffects: [
+        { type: "by_side", meter: "people", below: 8, above: 4 },
+        { type: "by_side", meter: "institutions", below: -8, above: 4 },
+      ],
+      resultText: "As ruas se enchem de apoiadores, e adversários denunciam uma escalada.",
+      headline: "Presidente convoca apoiadores às ruas e adversários denunciam escalada política",
+      reaction:
+        "As praças estão cheias, Presidente. Só lembre que multidões não assinam decretos nem votam orçamentos.",
+    },
+    conditions: { anyMeters: [...CRITICAL("people"), ...CRITICAL("institutions")] },
+    weight: 12,
+    cooldownTurns: 30,
+    uniquePerGame: true,
+    tags: ["media", "civil_rights"],
+  },
+];

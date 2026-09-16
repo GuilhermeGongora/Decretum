@@ -1,0 +1,51 @@
+.flag {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 24px;
+  overflow: hidden;
+  border: 1px solid rgb(244 239 227 / 0.25);
+  border-radius: 2px;
+  background: var(--heraldic-green);
+}
+
+.band {
+  position: absolute;
+  top: 50%;
+  right: -20%;
+  left: -20%;
+  height: 7px;
+  margin-top: -3.5px;
+  background: var(--ivory-paper);
+  transform: rotate(-24deg);
+}
+
+.disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--light-brass);
+  box-shadow: 0 0 0 2px var(--deep-navy);
+}
+
+@media (max-width: 1023px) {
+  .flag {
+    width: 28px;
+    height: 20px;
+  }
+
+  .band {
+    height: 6px;
+    margin-top: -3px;
+  }
+
+  .disc {
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+  }
+}

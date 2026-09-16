@@ -1,0 +1,18 @@
+.avatar {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--avatar-size, 44px);
+  height: var(--avatar-size, 44px);
+  overflow: hidden;
+  border: 1px solid rgb(22 39 63 / 0.3);
+  border-radius: 50%;
+  background: var(--portrait-frame);
+  color: var(--ivory-paper);
+  font: 600 16px/1 var(--font-serif);
+}
+
+.image {
+  object-fit: cover;
+}

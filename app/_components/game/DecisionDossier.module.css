@@ -1,0 +1,257 @@
+.dossier {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgb(176 141 79 / 0.6);
+  border-radius: 14px;
+  background: linear-gradient(176deg, #f6f1e6, #e9e0cb);
+  color: var(--deep-navy);
+  box-shadow:
+    0 3px 0 rgb(176 141 79 / 0.4),
+    0 46px 92px -26px rgb(3 7 13 / 0.85);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  transition:
+    transform 180ms ease,
+    opacity 200ms ease;
+}
+
+.dossier::before {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(rgb(22 39 63 / 0.045) 0.6px, transparent 0.7px);
+  background-size: 4px 4px;
+  pointer-events: none;
+  content: "";
+}
+
+.dossier:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 4px;
+}
+
+.dossier[data-dragging] {
+  cursor: grabbing;
+  transition: none;
+}
+
+.dossier[data-crisis] {
+  border-color: rgb(142 43 36 / 0.7);
+}
+
+.dossier[data-leaving] {
+  opacity: 0;
+  transition:
+    transform 200ms ease-in,
+    opacity 200ms ease-in;
+}
+
+.dossier[data-leaving="left"] {
+  transform: translateX(-120%) rotate(-4deg);
+}
+
+.dossier[data-leaving="right"] {
+  transform: translateX(120%) rotate(4deg);
+}
+
+.meta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px 0;
+}
+
+.number {
+  color: #6b5a3e;
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: 999px;
+  background: rgb(176 141 79 / 0.14);
+  color: #6b5220;
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.crisisChip {
+  border-color: rgb(142 43 36 / 0.55);
+  background: rgb(142 43 36 / 0.14);
+  color: var(--constitutional-red);
+}
+
+.chipMark {
+  width: 7px;
+  height: 7px;
+  background: var(--constitutional-red);
+}
+
+.portrait {
+  position: relative;
+  margin: 12px 14px 0;
+}
+
+.body {
+  position: relative;
+  padding: 18px 22px 20px;
+}
+
+.dilemma {
+  margin: 0;
+  color: var(--deep-navy);
+  font: 400 var(--dilemma-size, 19px) / 1.45 var(--font-serif);
+  text-wrap: pretty;
+}
+
+.footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(22 39 63 / 0.16);
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  color: rgb(22 39 63 / 0.74);
+  font: 400 12px/1.45 var(--font-sans);
+}
+
+.signatureName {
+  color: var(--deep-navy);
+  font: italic 400 17px/1 var(--font-serif);
+}
+
+.verbs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  color: rgb(22 39 63 / 0.78);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dossier[data-preview] .verbs span:not([data-active]) {
+  opacity: 0.42;
+}
+
+.verbs [data-active] {
+  color: var(--deep-navy);
+  font-weight: 600;
+}
+
+.verbDivider {
+  width: 1px;
+  height: 15px;
+  background: rgb(22 39 63 / 0.22);
+}
+
+/* The preview seal sits on the portrait so it never covers the dilemma text. */
+.seal {
+  --stamp-size: 132px;
+  position: absolute;
+  top: 22px;
+}
+
+.seal[data-side="right"] {
+  right: 22px;
+}
+
+.seal[data-side="left"] {
+  left: 22px;
+  transform: rotate(-10deg);
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .meta {
+    padding: 11px 16px 0;
+  }
+
+  .portrait {
+    margin: 10px 12px 0;
+  }
+
+  .body {
+    padding: 13px 18px 15px;
+  }
+
+  .footer {
+    margin-top: 11px;
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .meta {
+    padding: 12px 14px 0;
+  }
+
+  .number {
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .portrait {
+    margin: 10px 12px 0;
+  }
+
+  .body {
+    padding: 14px 16px 16px;
+  }
+
+  .footer {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .signature {
+    font-size: 0;
+  }
+
+  .signatureName {
+    font-size: 15px;
+  }
+
+  .verbs {
+    gap: 10px;
+  }
+
+  .seal {
+    --stamp-size: 112px;
+    top: 14px;
+  }
+}
+
+/* Reduced motion: no translation or rotation, only a short fade. */
+@media (prefers-reduced-motion: reduce) {
+  .dossier,
+  .dossier[data-leaving] {
+    transform: none;
+    transition: opacity 150ms ease;
+  }
+}
+
+:global([data-reduced-motion="true"]) .dossier,
+:global([data-reduced-motion="true"]) .dossier[data-leaving] {
+  transform: none;
+  transition: opacity 150ms ease;
+}

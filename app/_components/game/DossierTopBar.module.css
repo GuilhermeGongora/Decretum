@@ -1,0 +1,48 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.country {
+  font: 600 15px/1 var(--font-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  background: rgb(244 239 227 / 0.2);
+}
+
+.kicker {
+  color: rgb(244 239 227 / 0.8);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.phase {
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1023px) {
+  .country {
+    font-size: 13px;
+  }
+
+  .divider,
+  .kicker {
+    display: none;
+  }
+}

@@ -42,3 +42,15 @@ The main Claude Code session is the **orchestrator**. There is no orchestrator s
 - The developer writes in Portuguese; reply in Portuguese. Code, identifiers, commits and
   repository docs are in English.
 - Do not create commits unless explicitly asked. Suggest `npm run commit` instead.
+
+## Product documentation
+
+For game rules, read:
+
+- docs/product/Decretum_GDD_v1.0.md
+
+For UI, countries, and modern politics, read:
+
+- docs/product/Decretum_UI_Modern_Politics_Playbook_v1.0.md
+
+Read only the document relevant to the current task unless both are explicitly requested.

@@ -2,12 +2,13 @@
 
 > _Salus Populi Suprema Lex_ — "the welfare of the people shall be the supreme law."
 
-A server-authoritative political card game with a Latin, Roman-inspired tone. Players issue
-decisions through cards; the server computes every consequence.
+A server-authoritative political card game with a Latin, Roman-inspired tone. You govern the
+fictional Republic of Aurória for 48 months; each month a card brings a dilemma, and every decision
+shifts four pillars of power: **Povo, Mercado, Congresso e Instituições**. Both extremes of any pillar
+end the government.
 
-> **Current stage: project foundation.** This repository currently contains only the technical
-> foundation (framework, database infrastructure, tooling, CI and a health endpoint). The game
-> engine has not been implemented yet.
+The game design is defined in [Decretum_GDD_v1.0.md](Decretum_GDD_v1.0.md). Implementation choices
+where the GDD needed interpretation are recorded in [docs/game-rules.md](docs/game-rules.md).
 
 ## Stack
 
@@ -29,25 +30,28 @@ Project rules live in [AGENTS.md](AGENTS.md). Architecture decisions live in [do
 ## Project structure
 
 ```
-app/                  Next.js App Router (pages and thin HTTP route handlers)
-  api/v1/health/      GET /api/v1/health
+app/                     Next.js App Router
+  _components/           React UI (no game rules)
+  _lib/                  API client, local preferences, pt-BR presentation text
+  api/v1/                Thin HTTP route handlers
 src/
-  database/           PostgreSQL pool
-  errors/             AppError, DatabaseError
-  repositories/       All database access
-  services/           Use-case orchestration
-  utils/              Structured logger
-tests/
-  unit/               No database or network
-  integration/        Real PostgreSQL / route handlers
-migrations/           node-pg-migrate migrations
-docker/postgres/init/ SQL run when the local PostgreSQL volume is first created
-docs/adr/             Architecture decision records
-.claude/agents/       Claude Code subagents
-.github/workflows/    CI
+  domain/                Pure game engine: effects, endings, flags, selection, turns, score, succession
+  content/               The 30 cards, characters, flags, endings and epithets + content validator
+  services/              Use cases (transactions) and API views
+  repositories/          All SQL
+  database/              Pool and transaction helper
+  http/                  Response and payload helpers
+  errors/                AppError hierarchy
+  simulation/            Balance simulator (development tool)
+  utils/                 Structured logger
+seeds/                   Loads content into PostgreSQL
+scripts/                 Developer scripts (simulator CLI)
+migrations/              node-pg-migrate migrations
+tests/unit/              Domain, content and simulation tests
+tests/integration/       API tests against a real PostgreSQL
+docker/postgres/init/    SQL run when the local PostgreSQL volume is first created
+docs/                    ADRs and game-rule interpretations
 ```
-
-`src/domain/` (game rules) and `seeds/` will be created when there is content for them.
 
 ## Requirements
 
@@ -121,16 +125,20 @@ docker compose exec postgres psql -U decretum -d postgres -c "CREATE DATABASE de
 
 To wipe local data completely: `docker compose down -v`.
 
-### 5. Migrations
+### 5. Migrations and game content
 
 ```bash
 npm run db:migrate                          # apply pending migrations
+npm run db:seed                             # load/update the 30 cards and endings (idempotent)
 npm run db:rollback                         # revert the last migration
-npm run db:migrate:test                     # apply pending migrations to the test database
-npm run db:create-migration -- create-users # create migrations/<timestamp>_create-users.js
+npm run db:create-migration -- add-something # create migrations/<timestamp>_add-something.js
 ```
 
-There are no schema migrations yet.
+Game content lives in `src/content`. After changing it, run `npm run db:seed` again; the seed
+validates every card before writing and prints editorial-guideline warnings.
+
+The integration test suite migrates and seeds the test database automatically. To do it by hand:
+`npm run db:migrate:test && npm run db:seed:test`.
 
 ### 6. Run the application
 
@@ -138,26 +146,45 @@ There are no schema migrations yet.
 npm run dev
 ```
 
-Check the health endpoint:
+Open http://localhost:3000 to play. The current government id is kept in the browser, so reloading
+returns to the same month and card.
 
-```bash
-curl -i http://localhost:3000/api/v1/health
-```
+## API
 
-- `200 {"status":"ok","database":"ok"}` when PostgreSQL is reachable
-- `503 {"status":"error","database":"unavailable"}` when it is not
+Base path: `/api/v1`. The server calculates every effect; the client sends only its choice.
+
+| Method | Path                   | Description                                                 |
+| ------ | ---------------------- | ----------------------------------------------------------- |
+| GET    | `/health`              | Application and database health                             |
+| POST   | `/games`               | Create a government and its first card (201)                |
+| GET    | `/games/:id`           | Current state and card, or ending and summary when finished |
+| POST   | `/games/:id/decisions` | Body `{ "choice": "left" \| "right", "turn": 1 }`           |
+| GET    | `/games/:id/chronicle` | Decision history and inherited legacies                     |
+| POST   | `/games/:id/successor` | Start a successor after a finished government (201)         |
+
+Errors use `{ "error": { "code", "message" } }`: 400 invalid payload, 404 not found, 409 month
+already decided / government ended / successor exists, 422 invalid choice, 500 unexpected.
 
 ## Tests
 
 ```bash
-npm test                  # all tests (integration tests need PostgreSQL running)
+npm test                  # unit + integration (integration needs PostgreSQL running)
 npm run test:unit         # unit tests only, no database needed
 npm run test:integration  # integration tests only
 npm run test:watch        # watch mode
 ```
 
-Integration tests use the `decretum_test` database configured in `.env.test`. Once schema
-migrations exist, run `npm run db:migrate:test` before the integration tests.
+## Balance simulator
+
+```bash
+npm run simulate                                   # 1000 games for each policy
+npm run simulate -- --games 5000 --policy random   # one policy
+npm run simulate -- --json                         # machine-readable report
+```
+
+Policies: `random`, `center`, `favor_people`, `favor_market`, `favor_congress`,
+`favor_institutions`, `alternate`. The report covers duration, completion rate, endings, card
+frequency, choices and fallback selections.
 
 ## Lint and formatting
 

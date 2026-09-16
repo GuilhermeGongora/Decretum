@@ -1,0 +1,86 @@
+.frame {
+  position: relative;
+  height: var(--portrait-height, 288px);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgb(176 141 79 / 0.42);
+  border-radius: 20px;
+  background:
+    radial-gradient(64% 52% at 26% 14%, rgb(211 174 109 / 0.3), transparent 70%),
+    linear-gradient(162deg, var(--portrait-frame) 0%, #0d1a2c 62%, #0a1524 100%);
+  box-shadow: inset 0 1px 0 rgb(244 239 227 / 0.14);
+}
+
+.frame:not([data-has-image])::before {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    132deg,
+    rgb(244 239 227 / 0.05) 0 7px,
+    transparent 7px 15px
+  );
+  content: "";
+}
+
+.image {
+  object-fit: cover;
+}
+
+.initials {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgb(211 174 109 / 0.6);
+  border-radius: 50%;
+  background: rgb(34 57 92 / 0.85);
+  color: var(--ivory-paper);
+  font: 600 40px/1 var(--font-serif);
+  letter-spacing: 0.04em;
+  transform: translate(-50%, -50%);
+}
+
+.corners {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  --corner: var(--portrait-accent, rgb(211 174 109 / 0.8));
+  background:
+    linear-gradient(var(--corner), var(--corner)) left top / 16px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) left top / 1px 16px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) right top / 16px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) right top / 1px 16px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) left bottom / 16px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) left bottom / 1px 16px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) right bottom / 16px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) right bottom / 1px 16px no-repeat;
+}
+
+.caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 56px 18px 20px;
+  background: linear-gradient(180deg, transparent, rgb(7 15 26 / 0.92) 74%);
+}
+
+.name {
+  margin: 0;
+  color: var(--ivory-paper);
+  font: 600 var(--portrait-name-size, 29px) / 1.08 var(--font-serif);
+  text-shadow: 0 10px 26px rgb(3 7 13 / 0.8);
+}
+
+.title {
+  color: #e2c67f;
+  font: 500 12px/1.2 var(--font-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
