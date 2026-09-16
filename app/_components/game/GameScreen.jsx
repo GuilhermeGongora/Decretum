@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { MANDATE_TURNS } from "@/src/domain/constants";
-import { GOVERNMENT_PROFILE, officeTitle } from "@/app/_lib/government";
 import { formatDossierDate } from "@/app/_lib/text";
 import { DecisionChoice } from "./DecisionChoice";
 import { DecisionDossier } from "./DecisionDossier";
@@ -152,8 +151,8 @@ export function GameScreen({
 
   const header = (
     <GovernmentHeader
-      countryName={GOVERNMENT_PROFILE.countryName}
-      officeTitle={officeTitle(game.role)}
+      country={game.country}
+      officeTitle={game.country?.office.title}
       calendar={game.calendar}
       turn={game.turn}
       totalTurns={MANDATE_TURNS}

@@ -1,51 +1,61 @@
 .flag {
   position: relative;
   flex: none;
-  width: 34px;
-  height: 24px;
+  width: 28px;
+  height: 20px;
   overflow: hidden;
-  border: 1px solid rgb(244 239 227 / 0.25);
-  border-radius: 2px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: 3px;
+}
+
+.field,
+.mark {
+  position: absolute;
+}
+
+.field {
+  inset: 0;
+}
+
+/* Brazil: green field, brass lozenge, night-blue disc. */
+.flag[data-code="BR"] .field {
   background: var(--heraldic-green);
 }
 
-.band {
-  position: absolute;
+.flag[data-code="BR"] .mark {
   top: 50%;
-  right: -20%;
-  left: -20%;
-  height: 7px;
-  margin-top: -3.5px;
-  background: var(--ivory-paper);
-  transform: rotate(-24deg);
+  left: 50%;
+  width: 15px;
+  height: 11px;
+  background: var(--light-brass);
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.86);
 }
 
-.disc {
+.flag[data-code="BR"]::after {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--light-brass);
-  box-shadow: 0 0 0 2px var(--deep-navy);
+  background: var(--republic-night);
+  transform: translate(-50%, -50%);
+  content: "";
 }
 
-@media (max-width: 1023px) {
-  .flag {
-    width: 28px;
-    height: 20px;
-  }
+/* United States: night-blue canton over alternating bands. */
+.flag[data-code="US"] .field {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--constitutional-red) 0 3px,
+    var(--ivory-paper) 3px 6px
+  );
+}
 
-  .band {
-    height: 6px;
-    margin-top: -3px;
-  }
-
-  .disc {
-    width: 8px;
-    height: 8px;
-    margin: -4px 0 0 -4px;
-  }
+.flag[data-code="US"] .mark {
+  top: 0;
+  left: 0;
+  width: 13px;
+  height: 11px;
+  background: var(--portrait-frame);
 }

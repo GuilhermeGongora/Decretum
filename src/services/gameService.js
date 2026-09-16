@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
+import { loadContent } from "@/src/content";
 import { epithetDefinitions } from "@/src/content/epithets";
 import { withTransaction } from "@/src/database/transaction";
 import { EVENT_STATUS, GAME_STATUS, MONTHS_PER_YEAR } from "@/src/domain/constants";
+import { resolveCampaign, resolveCandidateTraits } from "@/src/domain/election";
 import { buildSuccessorStart } from "@/src/domain/successor";
 import { buildGameSummary } from "@/src/domain/summary";
 import { resolveTurn, startGame } from "@/src/domain/turn";
-import { ConflictError, NotFoundError } from "@/src/errors";
+import { ConflictError, DomainRuleError, NotFoundError } from "@/src/errors";
 import { findAllCards } from "@/src/repositories/cardRepository";
 import { findDecisions, insertDecision } from "@/src/repositories/decisionRepository";
 import { findAllEndings } from "@/src/repositories/endingRepository";
@@ -30,6 +32,10 @@ import { logger } from "@/src/utils/logger";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Brazil is the only playable pack, and the deck is Brazilian: governments without an explicit
+// country — including every government created before the country column — are Brazilian.
+const DEFAULT_COUNTRY_CODE = "BR";
+
 function gameNotFound() {
   return new NotFoundError("Government not found", { code: "GAME_NOT_FOUND" });
 }
@@ -43,20 +49,72 @@ function isUniqueViolation(error, constraint) {
   return error?.code === "23505" && error.constraint === constraint;
 }
 
-async function loadLockedGame(client, gameId) {
-  const game = await findGameById(client, gameId, { forUpdate: true });
-  if (!game) throw gameNotFound();
-  return game;
+function findCountry(countryCode) {
+  return loadContent().countries[countryCode ?? DEFAULT_COUNTRY_CODE] ?? null;
+}
+
+function requirePlayableCountry(countryCode) {
+  const country = findCountry(countryCode);
+  if (!country) {
+    throw new DomainRuleError(`Unknown country: ${countryCode}`, { code: "UNKNOWN_COUNTRY" });
+  }
+  if (!country.playable) {
+    throw new DomainRuleError(`${country.name} is still in development`, {
+      code: "COUNTRY_NOT_PLAYABLE",
+    });
+  }
+  return country;
+}
+
+// Flags the campaign produced, in the shape the engine and the database expect.
+function toFlagRecords(keys, catalog) {
+  return Object.fromEntries(
+    keys.map((key) => {
+      const definition = catalog[key];
+      return [
+        key,
+        {
+          value: true,
+          label: definition.label,
+          legacy: definition.legacy ?? false,
+          legacyPriority: definition.legacyPriority ?? 0,
+          successorEffects: definition.legacy ? definition.successorEffects : null,
+          setAtTurn: 1,
+          expiresAtTurn: null,
+          inherited: false,
+        },
+      ];
+    }),
+  );
+}
+
+// Labels are copied so the election night and the chronicle keep reading well even if content changes.
+function buildCandidateSnapshot(country, candidate) {
+  const [treatment, origin, style, party, coalition, promise] = resolveCandidateTraits(
+    country,
+    candidate,
+  );
+
+  return {
+    name: candidate.name,
+    treatment: { key: treatment.key, label: treatment.label },
+    origin: { key: origin.key, label: origin.label },
+    style: { key: style.key, label: style.label },
+    party: { key: party.key, name: party.name, acronym: party.acronym },
+    coalition: { key: coalition.key, label: coalition.label },
+    promise: { key: promise.key, label: promise.label },
+  };
 }
 
 async function loadSnapshot(client, gameId, cards) {
   const game = await findGameById(client, gameId);
   if (!game) throw gameNotFound();
+  const country = findCountry(game.countryCode);
 
   if (game.status === GAME_STATUS.ACTIVE) {
     const card = cards.find((candidate) => candidate.slug === game.currentCardSlug);
     return {
-      game: toGameView(game),
+      game: toGameView(game, country),
       currentCard: toCardView(card, game.meters),
       ending: null,
       summary: null,
@@ -69,14 +127,17 @@ async function loadSnapshot(client, gameId, cards) {
   const summary = buildGameSummary({ state: { ...game, flags }, decisions });
 
   return {
-    game: toGameView(game),
+    game: toGameView(game, country),
     currentCard: null,
     ending: toEndingView(game.endingCode, endings),
     summary: toSummaryView(summary, { endings, epithets: epithetDefinitions }),
   };
 }
 
-async function insertStartedGame(client, { cards, startYear, meters, flags, previousGameId }) {
+async function insertStartedGame(
+  client,
+  { cards, startYear, meters, flags, previousGameId, countryCode, candidate, election },
+) {
   const { state, appearance } = startGame({
     cards,
     rngSeed: randomUUID(),
@@ -87,7 +148,7 @@ async function insertStartedGame(client, { cards, startYear, meters, flags, prev
 
   let gameId;
   try {
-    gameId = await insertGame(client, { state, startYear });
+    gameId = await insertGame(client, { state, startYear, countryCode, candidate, election });
   } catch (error) {
     if (isUniqueViolation(error, "games_one_successor")) {
       throw new ConflictError("A successor government already exists", {
@@ -103,19 +164,34 @@ async function insertStartedGame(client, { cards, startYear, meters, flags, prev
   return gameId;
 }
 
-export async function createGame() {
+// The electoral prologue is optional: without it a government starts with balanced pillars (GDD §7.2).
+export async function createGame({ countryCode, candidate, campaignChoices } = {}) {
+  const country = requirePlayableCountry(countryCode);
+  const start =
+    candidate && campaignChoices
+      ? resolveCampaign({ country, candidate, choices: campaignChoices })
+      : null;
+
   const snapshot = await withTransaction(async (client) => {
     const cards = await findAllCards(client);
     const gameId = await insertStartedGame(client, {
       cards,
       startYear: 1,
-      meters: undefined,
-      flags: {},
+      meters: start?.meters,
+      flags: start ? toFlagRecords(start.flagKeys, loadContent().flags) : {},
+      countryCode: country.countryCode,
+      candidate: start ? buildCandidateSnapshot(country, candidate) : null,
+      election: start?.election ?? null,
     });
     return loadSnapshot(client, gameId, cards);
   });
 
-  logger.info("game.created", { gameId: snapshot.game.id, cardSlug: snapshot.currentCard.slug });
+  logger.info("game.created", {
+    gameId: snapshot.game.id,
+    countryCode: country.countryCode,
+    elected: Boolean(start),
+    cardSlug: snapshot.currentCard.slug,
+  });
   return snapshot;
 }
 
@@ -131,7 +207,8 @@ export async function decide(gameId, { choice, expectedTurn }) {
   assertGameId(gameId);
 
   const { result, snapshot } = await withTransaction(async (client) => {
-    const game = await loadLockedGame(client, gameId);
+    const game = await findGameById(client, gameId, { forUpdate: true });
+    if (!game) throw gameNotFound();
 
     if (game.status !== GAME_STATUS.ACTIVE) {
       throw new ConflictError("This government has already ended", { code: "GAME_NOT_ACTIVE" });
@@ -223,7 +300,8 @@ export async function createSuccessor(previousGameId) {
   assertGameId(previousGameId);
 
   const snapshot = await withTransaction(async (client) => {
-    const previous = await loadLockedGame(client, previousGameId);
+    const previous = await findGameById(client, previousGameId, { forUpdate: true });
+    if (!previous) throw gameNotFound();
     if (previous.status === GAME_STATUS.ACTIVE) {
       throw new ConflictError("The previous government is still active", {
         code: "GAME_STILL_ACTIVE",
@@ -232,12 +310,16 @@ export async function createSuccessor(previousGameId) {
 
     const start = buildSuccessorStart(await findFlags(client, previousGameId));
     const cards = await findAllCards(client);
+    // A successor inherits the country, never the candidate: it is a different president.
     const gameId = await insertStartedGame(client, {
       cards,
       startYear: previous.startYear + Math.ceil(previous.turn / MONTHS_PER_YEAR),
       meters: start.meters,
       flags: start.flags,
       previousGameId,
+      countryCode: previous.countryCode,
+      candidate: null,
+      election: null,
     });
 
     return {

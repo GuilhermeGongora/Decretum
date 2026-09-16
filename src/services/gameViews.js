@@ -11,7 +11,7 @@ export function toMetersView(meters) {
   );
 }
 
-export function toGameView(game) {
+export function toGameView(game, country) {
   return {
     id: game.id,
     role: game.role,
@@ -20,12 +20,96 @@ export function toGameView(game) {
     calendar: getCalendar(game.turn),
     startYear: game.startYear,
     meters: toMetersView(game.meters),
+    // Resolved from the country code at read time; the profile is never copied into the government.
+    country: toCountryView(country),
+    candidate: game.candidate ?? null,
+    election: game.election ?? null,
     mandateCompleted: game.mandateCompleted,
     endingCode: game.endingCode,
     previousGameId: game.previousGameId,
     createdAt: game.createdAt,
     updatedAt: game.updatedAt,
     endedAt: game.endedAt,
+  };
+}
+
+// Public dossier of a country pack: institutions and vocabulary, never the effects of an option.
+export function toCountryView(country) {
+  if (!country) return null;
+
+  const view = {
+    code: country.countryCode,
+    playable: country.playable,
+    name: country.name,
+    longName: country.longName,
+    system: country.system,
+    summary: country.summary,
+    office: {
+      title: country.office.title,
+      shortTitle: country.office.shortTitle ?? country.office.title,
+      headquarters: country.office.headquarters ?? null,
+      termMonths: country.office.termMonths,
+    },
+    legislature: country.legislature ?? null,
+  };
+
+  if (!country.playable) {
+    return { ...view, developmentNote: country.developmentNote ?? null };
+  }
+
+  return {
+    ...view,
+    demonym: country.demonym,
+    systemNote: country.systemNote,
+    oath: country.oath,
+    office: { ...view.office, address: country.office.address, termNote: country.office.termNote },
+    electoralRules: country.electoralRules,
+    powers: country.powers,
+    keyMinistries: country.keyMinistries,
+    removal: {
+      type: country.removal.type,
+      note: country.removal.note,
+      stages: country.removal.stages,
+    },
+    terminology: country.terminology,
+    theme: country.theme,
+    regions: country.regions,
+  };
+}
+
+// Candidate options and campaign questions without meters, flags or vote weights: the player chooses
+// a position, not a known consequence (GDD §9).
+export function toCandidateOptionsView(country) {
+  const pick = ({ key, label, note }) => ({ key, label, note: note ?? null });
+  const { candidateOptions } = country;
+
+  return {
+    treatments: candidateOptions.treatments.map(({ key, label }) => ({ key, label })),
+    origins: candidateOptions.origins.map(pick),
+    styles: candidateOptions.styles.map(pick),
+    parties: candidateOptions.parties.map(({ key, name, acronym, lean }) => ({
+      key,
+      name,
+      acronym,
+      lean,
+    })),
+    coalitions: candidateOptions.coalitions.map(pick),
+    promises: candidateOptions.promises.map(pick),
+  };
+}
+
+export function toCampaignView(country) {
+  const { campaign } = country;
+  const toOption = ({ id, label, note }) => ({ id, label, note });
+
+  return {
+    opponent: campaign.opponent,
+    questions: campaign.questions.map((question) => ({
+      id: question.id,
+      kicker: question.kicker,
+      text: question.text,
+      options: { left: toOption(question.options.left), right: toOption(question.options.right) },
+    })),
   };
 }
 

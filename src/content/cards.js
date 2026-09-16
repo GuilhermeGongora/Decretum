@@ -28,7 +28,7 @@ export const cardDefinitions = [
       label: "Manter repasses",
       effects: fx(5, -6, 4, -1),
       resultText: "Governadores celebram, e a dívida ocupa as manchetes.",
-      headline: "Governo mantém repasses às províncias apesar da queda na arrecadação federal",
+      headline: "Governo mantém repasses aos estados apesar da queda na arrecadação federal",
       reaction:
         "Os governadores saem satisfeitos. Eu saio com uma dívida maior e a obrigação de explicá-la aos credores.",
     },
@@ -129,10 +129,10 @@ export const cardDefinitions = [
       label: "Aceitar indicações",
       effects: fx(-2, 2, 8, -6),
       setFlags: [{ key: "agencies_shared" }],
-      resultText: "A agenda avança na Assembleia, e as agências passam a responder à coalizão.",
+      resultText: "A agenda avança no Congresso, e as agências passam a responder à coalizão.",
       headline: "Governo cede direção das agências reguladoras à coalizão em troca de votos",
       reaction:
-        "Uma parceria madura, Presidente. A Assembleia sabe reconhecer quem aceita dividir responsabilidades.",
+        "Uma parceria madura, Presidente. O Congresso sabe reconhecer quem aceita dividir responsabilidades.",
     },
     rightChoice: {
       label: "Preservar autonomia",
@@ -186,8 +186,8 @@ export const cardDefinitions = [
       effects: fx(4, 1, 2, -7),
       setFlags: [{ key: "military_patrols", expiresAfterTurns: 8 }],
       resultText:
-        "Blindados ocupam as avenidas, e juristas contestam a medida no Tribunal da Carta.",
-      headline: "Forças de Defesa iniciam patrulhas temporárias nas grandes cidades",
+        "Blindados ocupam as avenidas, e juristas contestam a medida no Supremo Tribunal Federal.",
+      headline: "Forças Armadas iniciam patrulhas temporárias nas grandes cidades",
       reaction:
         "Ordem recebida. As tropas estarão nas avenidas ao amanhecer. A contestação jurídica é assunto seu.",
     },
@@ -197,7 +197,7 @@ export const cardDefinitions = [
       resultText: "A polícia civil recebe reforços, mas os resultados demoram a aparecer.",
       headline: "Governo descarta tropas nas ruas e destina verba extraordinária à polícia civil",
       reaction:
-        "Registro a decisão, Presidente. Se as ruas piorarem, a conta não será das Forças de Defesa.",
+        "Registro a decisão, Presidente. Se as ruas piorarem, a conta não será das Forças Armadas.",
     },
     weight: 9,
     cooldownTurns: 12,
@@ -243,8 +243,8 @@ export const cardDefinitions = [
       label: "Enviar o projeto",
       effects: fx(7, -7, -3, 1),
       setFlags: [{ key: "inheritance_tax_bill" }],
-      resultText: "O projeto chega à Assembleia, e grandes fortunas começam a deixar o país.",
-      headline: "Projeto que taxa grandes heranças para financiar creches chega à Assembleia",
+      resultText: "O projeto chega à Câmara, e grandes fortunas começam a deixar o país.",
+      headline: "Projeto que taxa grandes heranças para financiar creches chega à Câmara",
       reaction:
         "O projeto está protocolado. Minha equipe vai calibrar as alíquotas antes que o mercado precifique a fuga de capitais.",
     },
@@ -266,15 +266,14 @@ export const cardDefinitions = [
     type: "common",
     speaker: "livia-nogueira",
     category: "economy",
-    text: "O Banco de Aurória elevou os juros. Seus aliados pedem que o governo pressione publicamente pela reversão.",
+    text: "O Banco Central elevou os juros. Seus aliados pedem que o governo pressione publicamente pela reversão.",
     leftChoice: {
       label: "Criticar o Banco",
       effects: fx(5, -5, 3, -7),
       setFlags: [{ key: "central_bank_pressured" }],
       resultText:
         "A crítica agrada aliados, mas investidores passam a duvidar da autonomia do Banco.",
-      headline:
-        "Presidente critica publicamente o Banco de Aurória e cobra reversão da alta de juros",
+      headline: "Presidente critica publicamente o Banco Central e cobra reversão da alta de juros",
       reaction:
         "Com todo o respeito, Presidente, cada frase contra o Banco custa pontos nos títulos do Tesouro amanhã cedo.",
     },
@@ -282,7 +281,7 @@ export const cardDefinitions = [
       label: "Respeitar autonomia",
       effects: fx(-3, 6, -2, 7),
       resultText: "O Banco mantém os juros, e sua base reclama da falta de firmeza.",
-      headline: "Governo respeita autonomia do Banco de Aurória e juros altos são mantidos",
+      headline: "Governo respeita autonomia do Banco Central e juros altos são mantidos",
       reaction:
         "Decisão correta. A confiança do mercado se constrói assim, mesmo quando a base não aplaude.",
     },
@@ -406,14 +405,13 @@ export const cardDefinitions = [
     type: "common",
     speaker: "amira-sol",
     category: "foreign_affairs",
-    text: "Uma crise no país vizinho leva milhares de refugiados à fronteira. As províncias pedem uma decisão imediata.",
+    text: "Uma crise no país vizinho leva milhares de refugiados à fronteira. Os estados pedem uma decisão imediata.",
     leftChoice: {
       label: "Abrir acolhimento",
       effects: fx(3, -4, -4, 6),
       setFlags: [{ key: "refugees_welcomed" }],
-      resultText: "Abrigos são montados na fronteira, e as províncias cobram recursos federais.",
-      headline:
-        "Aurória abre a fronteira a refugiados e províncias cobram recursos para os abrigos",
+      resultText: "Abrigos são montados na fronteira, e os estados cobram recursos federais.",
+      headline: "Brasil abre a fronteira a refugiados e estados cobram recursos para os abrigos",
       reaction:
         "Nossos parceiros reconhecerão este gesto. Agora devo pedir a eles que ajudem a dividir o custo do acolhimento.",
     },
@@ -421,9 +419,9 @@ export const cardDefinitions = [
       label: "Restringir entrada",
       effects: fx(1, 3, 5, -6),
       setFlags: [{ key: "border_restricted" }],
-      resultText: "A fronteira é fechada, e organismos internacionais criticam Aurória.",
+      resultText: "A fronteira é fechada, e organismos internacionais criticam o país.",
       headline:
-        "Governo fecha a fronteira a refugiados e organismos internacionais condenam Aurória",
+        "Governo fecha a fronteira a refugiados e organismos internacionais condenam o país",
       reaction:
         "Farei o possível para explicar a decisão às chancelarias, Presidente, mas nossa reputação não sairá intacta.",
     },
@@ -547,14 +545,14 @@ export const cardDefinitions = [
     type: "common",
     speaker: "caio-ferraz",
     category: "economy",
-    text: "Um novo imposto unificado simplifica o sistema, mas retira benefícios de setores e províncias influentes.",
+    text: "Um novo imposto unificado simplifica o sistema, mas retira benefícios de setores e estados influentes.",
     leftChoice: {
       label: "Unificar impostos",
       effects: fx(2, 8, -7, 5),
       setFlags: [{ key: "tax_reform_approved" }],
       schedule: [{ cardSlug: "tax_reform_backlash", delayTurns: 5 }],
-      resultText: "O imposto unificado é aprovado, e as províncias começam a contar as perdas.",
-      headline: "Assembleia aprova imposto unificado e províncias perdem benefícios fiscais",
+      resultText: "O imposto unificado é aprovado, e os estados começam a contar as perdas.",
+      headline: "Congresso aprova imposto unificado e estados perdem benefícios fiscais",
       reaction:
         "Uma reforma que esperamos por décadas. Os governadores vão cobrar a transição, e é bom estarmos preparados.",
     },
@@ -563,7 +561,7 @@ export const cardDefinitions = [
       effects: fx(-2, -5, 6, -2),
       resultText: "O sistema antigo sobrevive, e os investidores voltam a reclamar da burocracia.",
       headline:
-        "Governo abandona a reforma tributária e benefícios fiscais das províncias são mantidos",
+        "Governo abandona a reforma tributária e benefícios fiscais dos estados são mantidos",
       reaction:
         "Perdemos a chance de simplificar o país. Os investidores vão ler essa decisão como falta de coragem.",
     },
@@ -586,7 +584,7 @@ export const cardDefinitions = [
       effects: fx(6, -5, 2, 1),
       removeFlags: ["teachers_strike_active"],
       resultText: "A mediação reabre as escolas, e a Fazenda cobra o custo do acordo.",
-      headline: "Mediação federal encerra greve dos professores e escolas reabrem nas províncias",
+      headline: "Mediação federal encerra greve dos professores e escolas reabrem nos estados",
       reaction:
         "Os alunos voltam amanhã, e é isso que importa. O acordo custa caro, mas custaria mais um semestre perdido.",
     },
@@ -615,8 +613,8 @@ export const cardDefinitions = [
       label: "Suspender e investigar",
       effects: fx(3, -5, -4, 9),
       setFlags: [{ key: "constitutional_precedent" }],
-      resultText: "Os contratos são suspensos, e o Tribunal da Carta firma um precedente.",
-      headline: "Contratos sob suspeita são suspensos e Tribunal da Carta firma precedente",
+      resultText: "Os contratos são suspensos, e o Supremo Tribunal Federal firma um precedente.",
+      headline: "Contratos sob suspeita são suspensos e Supremo Tribunal Federal firma precedente",
       reaction:
         "O Tribunal registra a colaboração do Executivo. O precedente valerá para este e para os próximos governos.",
     },
@@ -641,23 +639,21 @@ export const cardDefinitions = [
     type: "chained",
     speaker: "yuri-salcedo",
     category: "federalism",
-    text: "Províncias perderam receita durante a transição tributária. Elas pedem compensação federal por dois anos.",
+    text: "Estados perderam receita durante a transição tributária. Elas pedem compensação federal por dois anos.",
     leftChoice: {
       label: "Criar compensação",
       effects: fx(4, -5, 7, 1),
       setFlags: [{ key: "transition_fund" }],
       resultText: "O fundo acalma os governadores, e a dívida federal volta a crescer.",
-      headline:
-        "Governo cria fundo de compensação para províncias que perderam receita com a reforma",
+      headline: "Governo cria fundo de compensação para estados que perderam receita com a reforma",
       reaction:
-        "Isso é respeito com as províncias! Pode dizer à Fazenda que o Norte sabe reconhecer um compromisso cumprido.",
+        "Isso é respeito com os estados! Pode dizer à Fazenda que o Norte sabe reconhecer um compromisso cumprido.",
     },
     rightChoice: {
       label: "Cobrar adaptação",
       effects: fx(-5, 5, -7, 2),
-      resultText: "As províncias cortam serviços, e governadores ameaçam obstruir a Assembleia.",
-      headline:
-        "Províncias ficam sem compensação federal e governadores ameaçam obstruir a Assembleia",
+      resultText: "Os estados cortam serviços, e governadores ameaçam obstruir o Congresso.",
+      headline: "Estados ficam sem compensação federal e governadores ameaçam obstruir o Congresso",
       reaction:
         "Adaptação é palavra fácil de dizer no Palácio. No Norte, ela significa escola fechada e posto sem médico.",
     },
@@ -737,13 +733,13 @@ export const cardDefinitions = [
     type: "chained",
     speaker: "helena-vasque",
     category: "infrastructure",
-    text: "Apagões atingem três províncias. É possível intervir nas distribuidoras ou subsidiar geradores privados.",
+    text: "Apagões atingem três estados. É possível intervir nas distribuidoras ou subsidiar geradores privados.",
     leftChoice: {
       label: "Intervir nas empresas",
       effects: fx(2, -9, -2, 5),
       setFlags: [{ key: "energy_intervention" }],
       resultText: "O governo assume as distribuidoras, e investidores retiram capital do setor.",
-      headline: "Governo intervém nas distribuidoras de energia após apagões em três províncias",
+      headline: "Governo intervém nas distribuidoras de energia após apagões em três estados",
       reaction:
         "Agora a luz é responsabilidade nossa, integralmente. Vou montar hoje uma equipe para cada distribuidora.",
     },
@@ -772,15 +768,15 @@ export const cardDefinitions = [
       effects: fx(4, -4, -3, 7),
       setFlags: [{ key: "international_green_treaty" }],
       resultText: "O tratado é assinado, e o crédito externo chega com novas exigências.",
-      headline: "Aurória assina tratado ambiental regional e limita novos projetos de mineração",
+      headline: "Brasil assina tratado ambiental regional e limita novos projetos de mineração",
       reaction:
         "Um dia importante para nossa diplomacia. Os vizinhos passam a nos ver como parceiros, não como problema.",
     },
     rightChoice: {
       label: "Recusar limites",
       effects: fx(-3, 7, 4, -6),
-      resultText: "Aurória recusa as metas, e os vizinhos adiam acordos comerciais.",
-      headline: "Aurória recusa metas ambientais comuns e vizinhos adiam acordos comerciais",
+      resultText: "O país recusa as metas, e os vizinhos adiam acordos comerciais.",
+      headline: "Brasil recusa metas ambientais comuns e vizinhos adiam acordos comerciais",
       reaction:
         "Transmitirei a posição com toda a cortesia possível, mas as portas que hoje se fecham demoram a reabrir.",
     },
@@ -797,23 +793,23 @@ export const cardDefinitions = [
     type: "crisis",
     speaker: "helena-vasque",
     category: "congress",
-    text: "O gabinete propõe uma reforma ministerial para reduzir a tensão com a Assembleia, mas todos cobrarão espaço.",
+    text: "O gabinete propõe uma reforma ministerial para reduzir a tensão com o Congresso, mas todos cobrarão espaço.",
     leftChoice: {
       label: "Dividir o gabinete",
       effects: { people: -2, market: 0, institutions: -3 },
       conditionalEffects: [{ type: "toward_center", meter: "congress", amount: 10 }],
       resultText: "Novos ministros tomam posse, e cada partido cobra sua parte do orçamento.",
       headline:
-        "Reforma ministerial entrega pastas aos partidos para reduzir tensão com a Assembleia",
+        "Reforma ministerial entrega pastas aos partidos para reduzir tensão com o Congresso",
       reaction:
-        "Ganhamos tempo na Assembleia. Em troca, terei ministros novos disputando a mesma fatia do orçamento.",
+        "Ganhamos tempo no Congresso. Em troca, terei ministros novos disputando a mesma fatia do orçamento.",
     },
     rightChoice: {
       label: "Governar sem reforma",
       effects: { people: 2, market: 1, institutions: 3 },
       conditionalEffects: [{ type: "away_from_center", meter: "congress", amount: 4 }],
-      resultText: "O gabinete permanece intacto, e a relação com a Assembleia continua tensa.",
-      headline: "Presidente descarta reforma ministerial e crise com a Assembleia se prolonga",
+      resultText: "O gabinete permanece intacto, e a relação com o Congresso continua tensa.",
+      headline: "Presidente descarta reforma ministerial e crise com o Congresso se prolonga",
       reaction:
         "O gabinete continua coeso, e isso tem valor. Mas cada votação agora será negociada como se fosse a última.",
     },

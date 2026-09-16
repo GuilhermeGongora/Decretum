@@ -33,7 +33,10 @@ const gamePath = (id) => `/api/v1/games/${encodeURIComponent(id)}`;
 
 // The client only ever sends the chosen side and the month it was shown in.
 export const api = {
-  createGame: () => request("/api/v1/games", { method: "POST", body: "{}" }),
+  getCountries: () => request("/api/v1/countries"),
+  // Only the country, who the player wants to be and the side taken in each campaign decision.
+  createGame: (payload = {}) =>
+    request("/api/v1/games", { method: "POST", body: JSON.stringify(payload) }),
   getGame: (id) => request(gamePath(id)),
   decide: (id, choice, turn) =>
     request(`${gamePath(id)}/decisions`, {

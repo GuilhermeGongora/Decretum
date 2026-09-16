@@ -37,7 +37,7 @@ describe("GameScreen", () => {
     it("renders the government, powers, dossier and mandate progress from the current state", () => {
       renderScreen();
 
-      expect(screen.getByText("Aurória")).toBeTruthy();
+      expect(screen.getByText("Brasil")).toBeTruthy();
       expect(screen.getByText("Presidente da República")).toBeTruthy();
       expect(screen.getByText("Julho · Ano 1 · Mês 07/48")).toBeTruthy();
 

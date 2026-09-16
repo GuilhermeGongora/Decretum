@@ -3,7 +3,7 @@
 import { updatePreferences } from "@/app/_lib/storage";
 import { Modal } from "./Modal";
 
-export function SettingsDialog({ preferences, onClose, onOpenTutorial }) {
+export function SettingsDialog({ preferences, onClose, onOpenTutorial, onAbandon = null }) {
   return (
     <Modal title="Pausa e configurações" onClose={onClose}>
       <p>O governo aguarda. Não há tempo limite para decidir.</p>
@@ -34,6 +34,12 @@ export function SettingsDialog({ preferences, onClose, onOpenTutorial }) {
       <button type="button" className="btn" onClick={onOpenTutorial}>
         Rever tutorial
       </button>
+      {/* Only offered while a government is open; the confirmation explains what is lost. */}
+      {onAbandon ? (
+        <button type="button" className="btn" onClick={onAbandon}>
+          Abandonar mandato
+        </button>
+      ) : null}
     </Modal>
   );
 }

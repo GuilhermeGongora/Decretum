@@ -1,11 +1,13 @@
 .briefing {
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  justify-content: center;
+  gap: 24px;
   width: 100%;
-  max-width: 1328px;
+  max-width: 1240px;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 32px 56px 44px;
+  padding: 40px clamp(20px, 4vw, 44px);
 }
 
 .columns {

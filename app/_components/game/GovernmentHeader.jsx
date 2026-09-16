@@ -3,7 +3,7 @@ import { CountryFlag } from "./CountryFlag";
 import styles from "./GovernmentHeader.module.css";
 
 export function GovernmentHeader({
-  countryName,
+  country,
   officeTitle,
   calendar,
   turn,
@@ -14,8 +14,8 @@ export function GovernmentHeader({
 }) {
   return (
     <header className={styles.header} data-dimmed={dimmed || undefined}>
-      <CountryFlag />
-      <p className={styles.country}>{countryName}</p>
+      <CountryFlag code={country?.code} />
+      <p className={styles.country}>{country?.name}</p>
       <span className={styles.divider} aria-hidden="true" />
       <p className={styles.office}>{officeTitle}</p>
       <span className={styles.spacer} />

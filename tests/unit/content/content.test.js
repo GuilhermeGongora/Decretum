@@ -1,6 +1,7 @@
 import { loadContent } from "@/src/content";
 import { cardDefinitions } from "@/src/content/cards";
 import { characters } from "@/src/content/characters";
+import { countries } from "@/src/content/countries";
 import { endingDefinitions } from "@/src/content/endings";
 import { epithetDefinitions } from "@/src/content/epithets";
 import { flagCatalog } from "@/src/content/flags";
@@ -14,6 +15,7 @@ function sourceContent() {
     cards: cardDefinitions,
     flags: flagCatalog,
     characters,
+    countries,
     endings: endingDefinitions,
     epithets: epithetDefinitions,
   });

@@ -1,10 +1,20 @@
+import { AtmosphericParticles } from "@/app/_components/atmosphere/AtmosphericParticles";
+import { CursorGlow } from "@/app/_components/atmosphere/CursorGlow";
+import { Scene } from "@/app/_components/atmosphere/Scene";
 import styles from "./GameShell.module.css";
 
-// Full-screen office atmosphere with layout slots. The background is decorative only.
+// Layout slots plus one atmosphere. A screen either sits in a painted scene (`scene`) or in the
+// office at midnight drawn in CSS; never both. Either way the background is decorative, and the
+// light and dust stay quiet here: the mandate and the ending are screens for reading.
 export function GameShell({
   header,
   powers,
   footer,
+  scene = null,
+  sceneIntensity = "normal",
+  scenePriority = false,
+  glow,
+  particles,
   previewSide = null,
   scrollable = false,
   children,
@@ -15,14 +25,26 @@ export function GameShell({
       data-preview={previewSide ?? undefined}
       data-scrollable={scrollable || undefined}
     >
-      <div className={styles.atmosphere} aria-hidden="true">
-        <div className={styles.window} />
-        <div className={`${styles.curtain} ${styles.curtainLeft}`} />
-        <div className={`${styles.curtain} ${styles.curtainRight}`} />
-        <div className={styles.desk} />
-        <div className={styles.glow} />
-        <div className={styles.vignette} />
-      </div>
+      {scene ? (
+        <Scene
+          name={scene}
+          intensity={sceneIntensity}
+          priority={scenePriority}
+          glow={glow}
+          particles={particles}
+        />
+      ) : (
+        <div className={styles.atmosphere} aria-hidden="true">
+          <div className={styles.window} />
+          <div className={`${styles.curtain} ${styles.curtainLeft}`} />
+          <div className={`${styles.curtain} ${styles.curtainRight}`} />
+          <div className={styles.desk} />
+          <div className={styles.glow} />
+          <CursorGlow intensity={glow ?? "soft"} />
+          <AtmosphericParticles intensity={particles ?? "sparse"} />
+          <div className={styles.vignette} />
+        </div>
+      )}
       {header ? <div className={styles.header}>{header}</div> : null}
       {powers ? <div className={styles.powers}>{powers}</div> : null}
       <div className={styles.stage}>{children}</div>

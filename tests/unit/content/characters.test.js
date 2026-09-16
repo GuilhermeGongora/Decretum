@@ -13,7 +13,7 @@ describe("character registry", () => {
   it.each([
     ["helena-vasque", "Helena Vasque", "Ministra-chefe da Casa Civil"],
     ["livia-nogueira", "Lívia Nogueira", "Ministra da Economia"],
-    ["tomas-azevedo", "Tomás Azevedo", "Presidente do Tribunal da Carta"],
+    ["tomas-azevedo", "Tomás Azevedo", "Presidente do Supremo Tribunal Federal"],
     ["raul-mendonca", "Raul Mendonça", "Líder da coalizão"],
   ])("finds %s by its stable id with the canonical name", (id, name, role) => {
     expect(getCharacter(id)).toMatchObject({ name, role });
@@ -165,9 +165,9 @@ describe("character canon across cards", () => {
     for (const category of categories) expect(["economy", "budget"]).toContain(category);
   });
 
-  it("gives the Tribunal da Carta to Tomás Azevedo alone", () => {
+  it("gives the Supremo Tribunal Federal to Tomás Azevedo alone", () => {
     const judges = Object.entries(characters)
-      .filter(([, character]) => /Tribunal da Carta/.test(character.role))
+      .filter(([, character]) => /Supremo Tribunal Federal/.test(character.role))
       .map(([id]) => id);
 
     expect(judges).toEqual(["tomas-azevedo"]);

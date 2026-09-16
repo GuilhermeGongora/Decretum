@@ -47,7 +47,7 @@ export const characters = {
   },
   "tomas-azevedo": {
     name: "Tomás Azevedo",
-    role: "Presidente do Tribunal da Carta",
+    role: "Presidente do Supremo Tribunal Federal",
     sphere: "institutions",
     initials: "TA",
   },
@@ -71,7 +71,7 @@ export const characters = {
   },
   "otavio-leme": {
     name: "General Otávio Leme",
-    role: "Chefe das Forças de Defesa",
+    role: "Chefe do Estado-Maior Conjunto",
     sphere: "institutions",
     initials: "OL",
     portrait: "/assets/characters/otavio-leme.webp",

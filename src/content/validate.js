@@ -1,6 +1,7 @@
 import {
   CARD_CATEGORIES,
   CARD_TYPES,
+  CHOICE_SIDES,
   ENDING_CODES,
   EPITHET_CODES,
   MANDATE_TURNS,
@@ -12,6 +13,7 @@ import {
 import { EFFECT_OPERATIONS } from "../domain/effects.js";
 
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
+const COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/;
 
 const CARD_FIELDS = [
   "slug",
@@ -446,13 +448,159 @@ function validateCharacters(characters, errors) {
   }
 }
 
-export function validateContent({ cards, flags, characters, endings, epithets }) {
+// Campaign options and candidate traits share this shape: a key, a label and optional consequences.
+function validateCountryOption(option, label, context, report) {
+  if (!isPlainObject(option)) return report(`${label} must be an object`);
+  if (!isNonEmptyString(option.key ?? option.id)) report(`${label} needs a key`);
+  if (!isNonEmptyString(option.label ?? option.name)) report(`${label} needs a label`);
+
+  for (const [meter, delta] of Object.entries(option.meters ?? {})) {
+    if (!METERS.includes(meter)) report(`${label} has unknown pillar "${meter}"`);
+    else if (!Number.isInteger(delta)) report(`${label} effect on ${meter} must be an integer`);
+  }
+  for (const key of option.flags ?? []) {
+    if (!Object.hasOwn(context.flags, key)) report(`${label} sets unknown flag "${key}"`);
+  }
+  for (const region of Object.keys(option.regions ?? {})) {
+    if (!context.regions.includes(region)) report(`${label} has unknown region "${region}"`);
+  }
+}
+
+function validateCountryCampaign(campaign, context, report) {
+  if (!isPlainObject(campaign)) return report("campaign must be an object");
+
+  if (!isIntegerAtLeast(campaign.electorate, 1))
+    report("campaign electorate must be a positive integer");
+  for (const field of ["baseShare", "baseTurnout"]) {
+    if (!Number.isFinite(campaign[field])) report(`campaign ${field} must be a number`);
+  }
+  if (!(campaign.validVoteRate > 0 && campaign.validVoteRate <= 1)) {
+    report("campaign validVoteRate must be between 0 and 1");
+  }
+  if (!isPlainObject(campaign.opponent) || !isNonEmptyString(campaign.opponent.name)) {
+    report("campaign needs a named opponent");
+  }
+
+  if (!Array.isArray(campaign.questions) || campaign.questions.length === 0) {
+    report("campaign needs questions");
+  } else {
+    const ids = new Set();
+    for (const question of campaign.questions) {
+      if (!isPlainObject(question)) {
+        report("campaign question must be an object");
+        continue;
+      }
+      if (!isNonEmptyString(question.id)) report("campaign question needs an id");
+      else if (ids.has(question.id)) report(`duplicate campaign question "${question.id}"`);
+      else ids.add(question.id);
+      if (!isNonEmptyString(question.text)) report(`campaign question "${question.id}" needs text`);
+      for (const side of CHOICE_SIDES) {
+        validateCountryOption(
+          question.options?.[side],
+          `campaign question "${question.id}" ${side}`,
+          context,
+          report,
+        );
+      }
+    }
+  }
+
+  // The resolver picks the first headline whose margin is reached, so one must always match.
+  if (!Array.isArray(campaign.headlines) || campaign.headlines.length === 0) {
+    report("campaign needs headlines");
+  } else {
+    for (const headline of campaign.headlines) {
+      if (!isPlainObject(headline) || !isNonEmptyString(headline.text)) {
+        report("campaign headline needs text");
+      } else if (!Number.isFinite(headline.minMargin)) {
+        report(`campaign headline "${headline.text.slice(0, 24)}…" needs a numeric minMargin`);
+      }
+    }
+    if (!campaign.headlines.some((headline) => headline.minMargin <= 0)) {
+      report("campaign headlines must cover a zero margin");
+    }
+  }
+}
+
+function validateCountries(countries, flags, errors) {
+  if (!isPlainObject(countries)) {
+    errors.push("countries must be an object");
+    return;
+  }
+  if (!Object.values(countries).some((country) => country?.playable)) {
+    errors.push("countries must include at least one playable country");
+  }
+
+  for (const [code, country] of Object.entries(countries)) {
+    const report = (message) => errors.push(`country "${code}": ${message}`);
+    if (!COUNTRY_CODE_PATTERN.test(code)) report("code must be two uppercase letters");
+    if (!isPlainObject(country)) {
+      report("must be an object");
+      continue;
+    }
+    if (country.countryCode !== code) report("countryCode must match its key");
+    if (typeof country.playable !== "boolean") report("playable must be a boolean");
+    for (const field of ["name", "longName", "system", "summary"]) {
+      if (!isNonEmptyString(country[field])) report(`${field} must be a non-empty string`);
+    }
+    if (!isPlainObject(country.office) || !isNonEmptyString(country.office.title)) {
+      report("office must name the head of government");
+    } else if (country.office.role !== PRESIDENT_ROLE) {
+      report(`unknown office role "${country.office.role}"`);
+    }
+
+    // A pack that cannot be played carries no rules on purpose; nothing else is required of it.
+    if (!country.playable) continue;
+
+    if (!isNonEmptyString(country.oath)) report("oath must be a non-empty string");
+    if (country.office.termMonths !== MANDATE_TURNS) {
+      report(`termMonths must be ${MANDATE_TURNS} while the engine has a single mandate length`);
+    }
+    if (!Array.isArray(country.regions) || !country.regions.every(isNonEmptyString)) {
+      report("regions must be an array of strings");
+    }
+    const runoff = country.electoralRules?.runoffThreshold;
+    if (!(Number.isFinite(runoff) && runoff > 0 && runoff <= 100)) {
+      report("electoralRules.runoffThreshold must be a percentage");
+    }
+    for (const meter of METERS) {
+      if (!isNonEmptyString(country.terminology?.pillars?.[meter])) {
+        report(`terminology.pillars is missing "${meter}"`);
+      }
+    }
+
+    const context = { flags, regions: Array.isArray(country.regions) ? country.regions : [] };
+    if (!isPlainObject(country.candidateOptions)) {
+      report("candidateOptions must be an object");
+    } else {
+      for (const [group, options] of Object.entries(country.candidateOptions)) {
+        if (!Array.isArray(options) || options.length === 0) {
+          report(`candidateOptions.${group} must be a non-empty array`);
+          continue;
+        }
+        const keys = new Set();
+        for (const option of options) {
+          validateCountryOption(option, `candidate ${group} option`, context, report);
+          if (keys.has(option?.key)) report(`duplicate candidate ${group} option "${option.key}"`);
+          else keys.add(option?.key);
+        }
+      }
+    }
+    validateCountryCampaign(country.campaign, context, report);
+  }
+}
+
+export function validateContent({ cards, flags, characters, endings, epithets, countries }) {
   const errors = [];
   const warnings = [];
 
-  const nonPlain = findNonPlainData({ cards, flags, characters, endings, epithets }, "content");
+  const nonPlain = findNonPlainData(
+    { cards, flags, characters, endings, epithets, countries },
+    "content",
+  );
   if (nonPlain) errors.push(`${nonPlain} must be plain data (no functions or executable values)`);
 
+  validateCountries(countries, isPlainObject(flags) ? flags : {}, errors);
   validateCharacters(characters, errors);
   validateFlags(flags, errors);
   validateTextEntries(endings, ENDING_CODES, ["title", "text"], "ending", errors);

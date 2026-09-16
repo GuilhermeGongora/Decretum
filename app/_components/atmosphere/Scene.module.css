@@ -1,0 +1,117 @@
+/*
+ * The scene sits behind everything, never in the flow: it cannot push layout or cause a shift.
+ * The navy gradient underneath is the fallback, so a screen without its image is still readable.
+ */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(180deg, #07111d 0%, var(--republic-night) 54%, #050c16 100%);
+  pointer-events: none;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 1.5% of drift over a minute: enough to feel alive, far from an animation that asks for attention. */
+  animation: scene-drift 96s ease-in-out infinite alternate;
+  object-position: 50% 45%;
+}
+
+.scene[data-scene="home"] .image {
+  object-position: 72% 42%;
+}
+
+.scene[data-scene="archive"] .image {
+  object-position: 50% 58%;
+}
+
+.scene[data-scene="debate"] .image {
+  object-position: 50% 42%;
+}
+
+.scene[data-scene="count"] .image {
+  object-position: 62% 46%;
+}
+
+.scene[data-scene="ceremony"] .image {
+  object-position: 50% 58%;
+}
+
+/* Protection gradient: the artwork is dark at the edges, so the veil mostly deepens the centre-left
+   where the reading column sits, and lifts the floor so buttons keep their contrast. */
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(4 9 16 / 0.72) 0%, rgb(4 9 16 / 0.32) 34%, rgb(4 9 16 / 0.88) 100%),
+    radial-gradient(120% 90% at 18% 50%, rgb(4 9 16 / 0.82), transparent 62%);
+}
+
+.scene[data-intensity="soft"] .veil {
+  background:
+    linear-gradient(180deg, rgb(4 9 16 / 0.58) 0%, rgb(4 9 16 / 0.2) 38%, rgb(4 9 16 / 0.78) 100%),
+    radial-gradient(120% 90% at 18% 50%, rgb(4 9 16 / 0.62), transparent 66%);
+}
+
+/* For screens whose content covers the whole width (candidate form, briefing). */
+.scene[data-intensity="deep"] .veil {
+  background:
+    linear-gradient(180deg, rgb(4 9 16 / 0.86) 0%, rgb(4 9 16 / 0.72) 40%, rgb(4 9 16 / 0.94) 100%),
+    radial-gradient(130% 100% at 50% 50%, rgb(4 9 16 / 0.72), transparent 74%);
+}
+
+@media (max-width: 767px) {
+  .scene[data-scene="home"] .image {
+    object-position: 62% 34%;
+  }
+
+  .scene[data-scene="archive"] .image {
+    object-position: 50% 52%;
+  }
+
+  .scene[data-scene="debate"] .image {
+    object-position: 50% 38%;
+  }
+
+  .scene[data-scene="count"] .image {
+    object-position: 58% 40%;
+  }
+
+  .scene[data-scene="ceremony"] .image {
+    object-position: 50% 62%;
+  }
+
+  .veil {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(4 9 16 / 0.7) 0%,
+        rgb(4 9 16 / 0.42) 30%,
+        rgb(4 9 16 / 0.92) 100%
+      ),
+      radial-gradient(140% 70% at 50% 60%, rgb(4 9 16 / 0.62), transparent 70%);
+  }
+}
+
+@keyframes scene-drift {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    animation: none;
+  }
+}
+
+:global([data-reduced-motion="true"]) .image {
+  animation: none;
+}

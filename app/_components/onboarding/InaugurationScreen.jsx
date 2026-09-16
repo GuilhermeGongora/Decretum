@@ -1,54 +1,122 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
-import { GOVERNMENT_PROFILE, officeTitle } from "@/app/_lib/government";
-import { MANDATE_TURNS } from "@/src/domain/constants";
+import { useEffect, useId, useRef, useState } from "react";
 import styles from "./InaugurationScreen.module.css";
 import { PresidentialSeal } from "./PresidentialSeal";
 
-// Inauguration ceremony (design 2d). "successor" shows the legacies of the finished government.
+const SIGNING_MS = 1100;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The signature is drawn at runtime from the name the player registered: the hand is a self-hosted
+// font, the ink is real SVG text, and `textLength` keeps a long name inside the paper.
+function Signature({ name, office, state }) {
+  const fitted = Math.min(488, Math.max(180, name.length * 26));
+
+  return (
+    <figure className={styles.signature} data-state={state}>
+      <span className={styles.signatureInk}>
+        <svg
+          viewBox="0 0 520 120"
+          className={styles.signatureSvg}
+          role="img"
+          aria-label={`Assinatura de ${name}`}
+        >
+          <text
+            x="16"
+            y="84"
+            className={styles.signatureText}
+            textLength={fitted}
+            lengthAdjust="spacingAndGlyphs"
+          >
+            {name}
+          </text>
+        </svg>
+      </span>
+      <span className={styles.signatureRule} aria-hidden="true" />
+      <figcaption className={styles.signatureCaption}>
+        {name} · {office}
+      </figcaption>
+    </figure>
+  );
+}
+
+// Inauguration ceremony (design 2d). "successor" shows the legacies of the finished government; an
+// elected president signs the oath of the country that elected them.
 export function InaugurationScreen({
+  country,
+  candidate = null,
+  election = null,
   mode = "new",
   legacyFlags = [],
   pending,
   error,
+  reducedMotion = false,
   onBack,
   onTakeOffice,
 }) {
   const headingId = useId();
   const takeOfficeRef = useRef(null);
+  const signingRef = useRef(false);
+  const [state, setState] = useState("idle");
   const isSuccessor = mode === "successor";
+  const signatoryName = candidate?.name ?? country.office.title;
+  const busy = pending || state !== "idle";
 
   useEffect(() => {
     takeOfficeRef.current?.focus();
   }, []);
+
+  // One signature per click, whatever the browser does with a double tap.
+  async function sign() {
+    if (signingRef.current) return;
+    signingRef.current = true;
+    setState("signing");
+    try {
+      if (!reducedMotion) await wait(SIGNING_MS);
+      setState("signed");
+      // The briefing only opens after the government is confirmed by whoever owns that promise.
+      await onTakeOffice();
+    } finally {
+      signingRef.current = false;
+    }
+  }
 
   return (
     <main className={styles.inauguration} aria-labelledby={headingId}>
       <p className={styles.kicker}>
         {isSuccessor ? "Transmissão de autoridade · Governo sucessor" : "Cerimônia de posse"}
       </p>
-      <PresidentialSeal variant="wax" />
+      <PresidentialSeal variant="wax" size={112} />
       <h1 id={headingId} className={styles.headline}>
-        A Carta lhe concede autoridade. O país lhe cobrará consequências.
+        A Constituição lhe concede autoridade. O país lhe cobrará consequências.
       </h1>
 
       <dl className={styles.facts}>
         <div className={styles.fact}>
           <dt>País</dt>
-          <dd>{GOVERNMENT_PROFILE.countryName}</dd>
+          <dd>{country.name}</dd>
         </div>
         <div className={styles.fact}>
           <dt>Cargo</dt>
-          <dd>{officeTitle("president")}</dd>
+          <dd>{country.office.title}</dd>
         </div>
+        {candidate ? (
+          <div className={styles.fact}>
+            <dt>Empossado</dt>
+            <dd>
+              {candidate.name} · {candidate.party.acronym}
+            </dd>
+          </div>
+        ) : null}
+        {election ? (
+          <div className={styles.fact}>
+            <dt>Eleito com</dt>
+            <dd>{election.share.toFixed(1).replace(".", ",")}% dos válidos</dd>
+          </div>
+        ) : null}
         <div className={styles.fact}>
           <dt>Posse</dt>
           <dd>Janeiro · Ano 1</dd>
-        </div>
-        <div className={styles.fact}>
-          <dt>Mandato</dt>
-          <dd>{MANDATE_TURNS} meses</dd>
         </div>
       </dl>
 
@@ -79,15 +147,13 @@ export function InaugurationScreen({
 
       <article className={styles.oath}>
         <p className={styles.oathLabel}>Termo de posse</p>
-        <p className={styles.oathText}>{GOVERNMENT_PROFILE.oath}</p>
-        <div className={styles.signature} aria-hidden="true">
-          <span className={styles.signatureLine}>
-            <span className={styles.signatureRule} />
-            Assinatura do Presidente
-          </span>
-          <span className={styles.pen} />
-        </div>
+        <p className={styles.oathText}>{country.oath}</p>
+        <Signature name={signatoryName} office={country.office.title} state={state} />
       </article>
+
+      <p className="visually-hidden" role="status">
+        {state === "signed" ? `Termo assinado por ${signatoryName}.` : ""}
+      </p>
 
       {error ? (
         <p className={styles.error} role="alert">
@@ -98,7 +164,7 @@ export function InaugurationScreen({
       <div className={styles.actions}>
         <div className={styles.buttons}>
           {onBack ? (
-            <button type="button" className={`btn ${styles.back}`} onClick={onBack}>
+            <button type="button" className={`btn ${styles.back}`} onClick={onBack} disabled={busy}>
               Voltar
             </button>
           ) : null}
@@ -106,10 +172,10 @@ export function InaugurationScreen({
             ref={takeOfficeRef}
             type="button"
             className={`btn btn--primary ${styles.takeOffice}`}
-            onClick={onTakeOffice}
-            disabled={pending}
+            onClick={sign}
+            disabled={busy}
           >
-            {pending ? "Firmando o termo…" : "Tomar posse"}
+            {busy ? "Firmando o termo…" : "Tomar posse"}
           </button>
         </div>
         <p className={styles.hint}>Enter ou espaço firmam o termo</p>

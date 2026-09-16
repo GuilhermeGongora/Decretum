@@ -1,6 +1,7 @@
 import { METERS, PRESIDENT_ROLE } from "../domain/constants.js";
 import { cardDefinitions } from "./cards.js";
 import { characters } from "./characters.js";
+import { countries } from "./countries/index.js";
 import { endingDefinitions } from "./endings.js";
 import { epithetDefinitions } from "./epithets.js";
 import { flagCatalog } from "./flags.js";
@@ -86,6 +87,7 @@ export function loadContent() {
     characters,
     endings: endingDefinitions,
     epithets: epithetDefinitions,
+    countries,
   };
   const { errors, warnings } = validateContent(source);
   if (errors.length > 0) {
@@ -94,8 +96,10 @@ export function loadContent() {
 
   cachedContent = Object.freeze({
     cards: cardDefinitions.map((definition) => compileCard(definition, source)),
+    flags: flagCatalog,
     endings: endingDefinitions,
     epithets: epithetDefinitions,
+    countries,
     warnings,
   });
 

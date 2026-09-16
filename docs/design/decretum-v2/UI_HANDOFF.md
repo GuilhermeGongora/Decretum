@@ -170,6 +170,61 @@ VERIFICADO, NÃO LIDO · geometric flags 52×36 · office background in 3 layers
 portrait with the same filename (1122×1402 WebP); no code change is needed, only `portraitPosition`
 may need tuning in the registry. Never mirror or distort a face with CSS.
 
+### Scenes (onboarding atmosphere)
+
+Five low-poly scenes, each delivered as a desktop and a mobile crop, in
+`public/assets/scenes/<scene>-{desktop,mobile}.webp` (1600×900 and 900×1599, ~505 KB for all ten).
+The source PNGs are archived in `docs/design/decretum-v2/source/scenes/`.
+
+| Scene      | Screen                                    | Art                                                                |
+| ---------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| `home`     | Cover                                     | Minerva Cívica, figure on the right, dark reading side on the left |
+| `archive`  | Country selection, candidate registration | Constitutional archive hall                                        |
+| `debate`   | Campaign                                  | Debate stage between two lecterns                                  |
+| `count`    | Election night                            | Count room with the map and the press                              |
+| `ceremony` | Inauguration, briefing                    | Ceremonial hall with the open book                                 |
+
+`app/_components/atmosphere/Scene.jsx` is the only way a scene reaches a screen: `GameShell` takes
+`scene`, `sceneIntensity` (`soft` | `normal` | `deep`) and `scenePriority`. The layer is `aria-hidden`,
+fixed behind the content, and always paints a navy gradient underneath, so a blocked or missing image
+costs atmosphere and nothing else. Contrast never depends on the artwork: a protection veil sits over
+every scene, deeper where the reading column is. Motion is a 1.5% scale drift over 96s, removed under
+`prefers-reduced-motion` and under the in-game reduced-motion setting. No video, ever.
+
+### Light and dust
+
+Two decorative layers live inside the scene, between the artwork and the veil:
+
+- **`CursorGlow`** — a brass pool of light (`#B9924B` with an ivory centre, 8–14% alpha, 380–480px
+  radius) that follows the pointer with a small lag. No ring, no trail, no blur filter, and the native
+  cursor is untouched. The pointer never reaches React state: one rAF loop interpolates and writes a
+  `translate3d`, and it stops as soon as the light settles, when the pointer leaves the window and
+  while the tab is hidden. It never renders on `(hover: none)` or `(pointer: coarse)`, and reduced
+  motion removes it.
+- **`AtmosphericParticles`** — 18 motes of dust from a fixed, hand-authored list (never random, so
+  server and client agree): 1–3px, brass/ivory/pale-navy, 6–20% alpha, 68–140s drifts with negative
+  delays. CSS animations only, flat colours, no shadow or filter. A phone shows 8; `sparse` halves the
+  field; reduced motion hides it.
+
+Both are `aria-hidden`, `pointer-events: none`, and sit inside the `z-index: -1` atmosphere, so they
+can never cover a document, a button or any ivory paper. Intensity per screen comes from the scene
+definition (`home`, `debate`, `ceremony`: normal light and dust; `archive`, `count`: soft and sparse;
+the office of the mandate and the ending: soft and sparse), and any screen can override or pass `off`.
+
+### Grid
+
+The window grating is a secondary texture, not a visual element: wide spacing (26–34px), opacity
+around 0.2, confined to the lower half of the office window, and never behind long text. The office
+atmosphere is only used by the mandate and ending screens now — onboarding screens carry a scene.
+
+### Signature
+
+The oath is signed at runtime with the name the player registered: real SVG text in
+**Mrs Saint Delafield**, self-hosted by `next/font/google` at build time (SIL OFL) and exposed as
+`--font-signature`. `textLength` with `lengthAdjust="spacingAndGlyphs"` keeps a 60-character name
+inside the paper. The reveal is a left-to-right clip, skipped under reduced motion; the name is also
+printed as plain text under the rule, and the SVG carries `role="img"` with the name in its label.
+
 ## 14. Dynamic data fields
 
 | UI field                 | Source in the application                                                      |

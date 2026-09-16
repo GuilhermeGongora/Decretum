@@ -1,20 +1,35 @@
 import { useId } from "react";
-import { EMBLEM_PATHS } from "@/app/_components/game/emblems";
 import { DossierTopBar } from "@/app/_components/game/DossierTopBar";
+import { EMBLEM_PATHS } from "@/app/_components/game/emblems";
 import { OfficialStamp } from "@/app/_components/game/OfficialStamp";
-import { GOVERNMENT_PROFILE, officeTitle } from "@/app/_lib/government";
 import { PILLARS } from "@/app/_lib/text";
-import { MANDATE_TURNS } from "@/src/domain/constants";
 import styles from "./BriefingScreen.module.css";
 
-// Pre-mandate state dossier (design 2c), with Aurória's institutions from GDD §4.
-export function BriefingScreen({ onBack, onProceed }) {
+// First presidential briefing, read after the oath: the institutions the government will negotiate
+// with, and the four forces it depends on. Everything here is a label from the country pack.
+export function BriefingScreen({ country, onBack, onProceed }) {
   const headingId = useId();
-  const profile = GOVERNMENT_PROFILE;
+  const { powers, office } = country;
+
+  const institutions = [
+    { name: office.headquarters, role: "sede da Presidência" },
+    { name: powers.lowerHouse.name, role: `${powers.lowerHouse.seats} deputados` },
+    { name: powers.upperHouse.name, role: `${powers.upperHouse.seats} senadores` },
+    {
+      name: powers.supremeCourt.name,
+      role: `${powers.supremeCourt.justices} ministros · fora do gabinete`,
+    },
+    { name: powers.federation.name, role: `${powers.federation.units} unidades federativas` },
+    ...country.keyMinistries.slice(0, 3).map(({ name, note }) => ({ name, role: note })),
+  ];
 
   return (
     <main className={styles.briefing} aria-labelledby={headingId}>
-      <DossierTopBar kicker="Dossiê de Estado · Confidencial" phase="Pré-mandato" />
+      <DossierTopBar
+        country={country}
+        kicker="Briefing presidencial · Confidencial"
+        phase="Primeiro dia"
+      />
 
       <div className={styles.columns}>
         <article className={styles.document}>
@@ -26,40 +41,40 @@ export function BriefingScreen({ onBack, onProceed }) {
           />
           <p className={styles.eyebrow}>Ficha institucional</p>
           <h1 id={headingId} className={styles.name}>
-            {profile.countryLongName}
+            {country.longName}
           </h1>
           <dl className={styles.facts}>
             <div>
               <dt>Cargo</dt>
-              <dd>{officeTitle("president")}</dd>
+              <dd>{office.title}</dd>
             </div>
             <div>
               <dt>Sistema</dt>
-              <dd>{profile.system}</dd>
+              <dd>{country.system}</dd>
             </div>
             <div>
               <dt>Mandato</dt>
               <dd>
-                {MANDATE_TURNS / 12} anos · {MANDATE_TURNS} meses
+                {Math.round(office.termMonths / 12)} anos · {office.termMonths} meses
               </dd>
             </div>
             <div>
               <dt>Sede</dt>
-              <dd>{profile.headquarters}</dd>
+              <dd>{office.headquarters}</dd>
             </div>
             <div>
               <dt>Legislativo</dt>
-              <dd>{profile.legislature}</dd>
+              <dd>{country.legislature.name}</dd>
             </div>
             <div>
               <dt>Corte constitucional</dt>
-              <dd>{profile.constitutionalCourt}</dd>
+              <dd>{powers.supremeCourt.name}</dd>
             </div>
           </dl>
           <p className={styles.sectionLabel}>Resumo institucional</p>
-          <p className={styles.summary}>{profile.summary}</p>
+          <p className={styles.summary}>{country.systemNote}</p>
           <ul className={styles.institutions}>
-            {profile.institutions.map((institution) => (
+            {institutions.map((institution) => (
               <li key={institution.name}>
                 <strong>{institution.name}</strong> — {institution.role}
               </li>
@@ -81,7 +96,7 @@ export function BriefingScreen({ onBack, onProceed }) {
                 <svg className={styles.pillarMark} viewBox="0 0 40 40" aria-hidden="true">
                   <path d={EMBLEM_PATHS[pillar.key]} />
                 </svg>
-                <span className={styles.pillarName}>{pillar.name}</span>
+                <span className={styles.pillarName}>{country.terminology.pillars[pillar.key]}</span>
                 <span className={styles.pillarDescription}>{pillar.description}</span>
                 <span className={styles.pillarRisks}>
                   Baixo: {pillar.risks.low} · Alto: {pillar.risks.high}
@@ -97,15 +112,17 @@ export function BriefingScreen({ onBack, onProceed }) {
       </div>
 
       <div className={styles.actions}>
-        <button type="button" className={`btn ${styles.action}`} onClick={onBack}>
-          Voltar
-        </button>
+        {onBack ? (
+          <button type="button" className={`btn ${styles.action}`} onClick={onBack}>
+            Voltar
+          </button>
+        ) : null}
         <button
           type="button"
           className={`btn btn--primary ${styles.action} ${styles.proceed}`}
           onClick={onProceed}
         >
-          Prosseguir para a posse
+          Abrir o primeiro dossiê
         </button>
       </div>
     </main>

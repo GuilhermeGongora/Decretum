@@ -1,35 +1,35 @@
 import styles from "./CoverScreen.module.css";
 import { PresidentialSeal } from "./PresidentialSeal";
 
-// Title screen (design 2a).
-export function CoverScreen({ pending, error, canResume, onNewMandate, onResume, onOpenSettings }) {
+// Title screen. The reading column sits on the dark side of the Minerva scene, and the saved mandate
+// is a file on the same desk — it carries the actions that belong to it instead of floating apart.
+export function CoverScreen({
+  pending,
+  error,
+  canResume,
+  onNewMandate,
+  onResume,
+  onOpenArchive,
+  onOpenSettings,
+}) {
   return (
     <main className={styles.cover}>
-      <div className={styles.hero}>
-        <PresidentialSeal variant="brass" />
+      <div className={styles.column}>
+        <div className={styles.crest}>
+          <PresidentialSeal variant="brass" />
+          <p className={styles.eyebrow}>Arquivo constitucional da República</p>
+        </div>
+
         <h1 className={styles.title}>Decretum</h1>
         <p className={styles.motto}>Salus Populi Suprema Lex</p>
         <p className={styles.quote}>“Toda decisão cria um governo. Toda concessão cria um dono.”</p>
-      </div>
 
-      <div className={styles.sealedDossier} aria-hidden="true">
-        <span className={styles.dossierLabel}>Arquivo constitucional</span>
-        <span className={styles.dossierTitle}>Dossiê lacrado da República</span>
-        <span className={styles.dossierRule} />
-        <span className={styles.dossierFooter}>
-          <span className={styles.wax}>Lacre</span>
-          <span className={styles.dossierStatus}>
-            {canResume ? "Mandato salvo" : "Sem mandato ativo"}
-          </span>
-        </span>
-      </div>
-
-      <div className={styles.actions}>
         {error ? (
           <p className={styles.error} role="alert">
             {error}
           </p>
         ) : null}
+
         <button
           type="button"
           className={`btn btn--primary ${styles.primary}`}
@@ -38,20 +38,46 @@ export function CoverScreen({ pending, error, canResume, onNewMandate, onResume,
         >
           Novo mandato
         </button>
-        <div className={styles.secondaryRow}>
-          <button
-            type="button"
-            className={`btn ${styles.secondary}`}
-            onClick={onResume}
-            disabled={!canResume || pending}
-          >
-            Continuar
-          </button>
-          <button type="button" className={`btn ${styles.secondary}`} onClick={onOpenSettings}>
-            Configurações
-          </button>
-        </div>
-        {canResume ? null : <p className={styles.note}>Nenhum mandato salvo para continuar</p>}
+
+        <article className={styles.dossier} data-sealed={!canResume || undefined}>
+          <div className={styles.dossierHead}>
+            <span className={styles.dossierLabel}>Dossiê do Palácio</span>
+            <span className={styles.wax} aria-hidden="true">
+              {canResume ? "Ativo" : "Lacre"}
+            </span>
+          </div>
+          <p className={styles.dossierTitle}>
+            {canResume ? "Mandato em curso" : "Nenhum mandato aberto"}
+          </p>
+          <span className={styles.dossierRule} aria-hidden="true" />
+          <div className={styles.dossierActions}>
+            <button
+              type="button"
+              className={`btn ${styles.secondary}`}
+              onClick={onResume}
+              disabled={!canResume || pending}
+            >
+              Continuar
+            </button>
+            <button
+              type="button"
+              className={`btn ${styles.secondary}`}
+              onClick={onOpenArchive}
+              disabled={!canResume}
+            >
+              Crônica
+            </button>
+          </div>
+          {canResume ? null : <p className={styles.note}>Nenhum mandato salvo para continuar</p>}
+        </article>
+
+        <button
+          type="button"
+          className={`btn btn--link ${styles.settings}`}
+          onClick={onOpenSettings}
+        >
+          Configurações
+        </button>
       </div>
     </main>
   );

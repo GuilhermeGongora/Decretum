@@ -18,7 +18,7 @@ export const endingDefinitions = {
   },
   congress_isolated: {
     title: "O Governo Sem Maioria",
-    text: "A Assembleia bloqueia o Executivo e o gabinete cai.",
+    text: "O Congresso bloqueia o Executivo e o gabinete cai.",
   },
   congress_dominant: {
     title: "A Presidência de Cerimônia",

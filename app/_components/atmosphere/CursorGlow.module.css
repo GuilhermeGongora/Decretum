@@ -1,0 +1,57 @@
+/*
+ * A pool of light, not a cursor: no ring, no edge, no trail. The gradient fades to nothing well
+ * inside the box, so there is never a visible circle, and no filter or blur is used.
+ */
+.glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 960px;
+  height: 960px;
+  margin: -480px 0 0 -480px;
+  opacity: 0;
+  background: radial-gradient(
+    closest-side,
+    rgb(244 239 227 / 0.14),
+    rgb(185 146 75 / 0.11) 36%,
+    rgb(185 146 75 / 0.045) 62%,
+    transparent 78%
+  );
+  pointer-events: none;
+  transition: opacity 640ms ease-out;
+  will-change: transform;
+}
+
+.glow[data-lit] {
+  opacity: 1;
+}
+
+.glow[data-intensity="soft"] {
+  width: 760px;
+  height: 760px;
+  margin: -380px 0 0 -380px;
+  background: radial-gradient(
+    closest-side,
+    rgb(244 239 227 / 0.1),
+    rgb(185 146 75 / 0.075) 36%,
+    rgb(185 146 75 / 0.03) 62%,
+    transparent 78%
+  );
+}
+
+/* Touch and pen: there is no hovering pointer to follow. */
+@media (hover: none), (pointer: coarse) {
+  .glow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    display: none;
+  }
+}
+
+:global([data-reduced-motion="true"]) .glow {
+  display: none;
+}

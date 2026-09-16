@@ -1,8 +1,8 @@
 const GAME_SELECT = `
-  SELECT g.id, g.role, g.status, g.turn, g.start_year, g.people, g.market, g.congress,
-         g.institutions, current_card.slug AS current_card_slug, last_card.slug AS last_card_slug,
-         g.previous_game_id, g.mandate_completed, g.ending_code, g.simultaneous_ending_codes,
-         g.rng_seed, g.created_at, g.updated_at, g.ended_at
+  SELECT g.id, g.role, g.status, g.turn, g.start_year, g.country_code, g.candidate, g.election,
+         g.people, g.market, g.congress, g.institutions, current_card.slug AS current_card_slug,
+         last_card.slug AS last_card_slug, g.previous_game_id, g.mandate_completed, g.ending_code,
+         g.simultaneous_ending_codes, g.rng_seed, g.created_at, g.updated_at, g.ended_at
     FROM games g
     LEFT JOIN cards current_card ON current_card.id = g.current_card_id
     LEFT JOIN cards last_card ON last_card.id = g.last_card_id`;
@@ -14,6 +14,10 @@ function toGame(row) {
     status: row.status,
     turn: row.turn,
     startYear: row.start_year,
+    // Governments created before the country column are Brazilian (see migration 1789603200000).
+    countryCode: row.country_code,
+    candidate: row.candidate,
+    election: row.election,
     meters: {
       people: row.people,
       market: row.market,
@@ -41,21 +45,26 @@ export async function findGameById(client, id, { forUpdate = false } = {}) {
   return rows.length > 0 ? toGame(rows[0]) : null;
 }
 
-export async function insertGame(client, { state, startYear }) {
+export async function insertGame(client, { state, startYear, countryCode, candidate, election }) {
   const { rows } = await client.query(
-    `INSERT INTO games (role, status, turn, start_year, people, market, congress, institutions,
+    `INSERT INTO games (role, status, turn, start_year, country_code, candidate, election,
+                        people, market, congress, institutions,
                         current_card_id, last_card_id, previous_game_id, mandate_completed,
                         ending_code, simultaneous_ending_codes, rng_seed)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
-             (SELECT id FROM cards WHERE slug = $9),
-             (SELECT id FROM cards WHERE slug = $10),
-             $11, $12, $13, $14, $15)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+             (SELECT id FROM cards WHERE slug = $12),
+             (SELECT id FROM cards WHERE slug = $13),
+             $14, $15, $16, $17, $18)
      RETURNING id`,
     [
       state.role,
       state.status,
       state.turn,
       startYear,
+      countryCode,
+      // Immutable snapshots written once, never updated; null when there was no electoral prologue.
+      candidate ? JSON.stringify(candidate) : null,
+      election ? JSON.stringify(election) : null,
       state.meters.people,
       state.meters.market,
       state.meters.congress,

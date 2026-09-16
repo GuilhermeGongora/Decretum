@@ -1,0 +1,279 @@
+.screen {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 44px clamp(20px, 4vw, 40px) 56px;
+}
+
+.intro {
+  max-width: 62ch;
+}
+
+.eyebrow {
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 14px 0 0;
+  font: 600 clamp(30px, 3.2vw, 42px) / 1.06 var(--font-serif);
+  text-wrap: balance;
+}
+
+.lead {
+  margin-top: 12px;
+  color: rgb(244 239 227 / 0.8);
+  font: 400 16px/1.55 var(--font-sans);
+  text-wrap: pretty;
+}
+
+.form {
+  margin-top: 28px;
+}
+
+/* Two reading regions and the registration card: the form never becomes one long wall of boxes. */
+.stages {
+  display: grid;
+  gap: 22px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.82fr);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.stageLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ivory-paper);
+  font: 600 13px/1 var(--font-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.stageNumber {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--light-brass);
+  border-radius: 50%;
+  color: var(--light-brass);
+  font: 600 13px/1 var(--font-mono);
+}
+
+.field,
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.legend {
+  display: block;
+  padding: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 10px;
+  padding: 0 14px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: var(--radius-button);
+  background: rgb(7 15 26 / 0.72);
+  color: var(--ivory-paper);
+  font: 500 18px/1.3 var(--font-serif);
+}
+
+.input::placeholder {
+  color: rgb(244 239 227 / 0.38);
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.options[data-inline] {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+.option {
+  display: block;
+  cursor: pointer;
+}
+
+.option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.optionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 48px;
+  padding: 10px 13px;
+  border: 1px solid rgb(244 239 227 / 0.16);
+  border-radius: var(--radius-button);
+  background: rgb(9 18 31 / 0.55);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.option:hover .optionBody {
+  border-color: rgb(211 174 109 / 0.5);
+  background: rgb(16 30 50 / 0.72);
+}
+
+.option input:focus-visible + .optionBody {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 2px;
+}
+
+.option input:checked + .optionBody {
+  border-color: var(--light-brass);
+  background: rgb(201 164 99 / 0.2);
+}
+
+.optionLabel {
+  font: 600 15px/1.25 var(--font-sans);
+}
+
+.optionNote {
+  color: rgb(244 239 227 / 0.7);
+  font: 400 13px/1.35 var(--font-sans);
+}
+
+/* The registration card fills in as the choices are made. */
+.summary {
+  position: sticky;
+  top: 24px;
+  padding: 22px 24px 24px;
+  border-radius: var(--radius-document);
+  background: linear-gradient(174deg, #f8f4ea, #e9e0c9);
+  box-shadow:
+    var(--shadow-paper-edge),
+    0 30px 64px -26px rgb(3 7 13 / 0.85);
+  color: var(--deep-navy);
+}
+
+.summaryLabel {
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--deep-navy);
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.summaryName {
+  margin-top: 14px;
+  font: 600 26px/1.1 var(--font-serif);
+  text-wrap: balance;
+}
+
+.summaryName[data-empty] {
+  color: rgb(22 39 63 / 0.42);
+  font-style: italic;
+}
+
+.summaryParty {
+  margin-top: 6px;
+  color: var(--paper-ink-muted);
+  font: 500 12px/1.3 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.summaryFacts {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid rgb(22 39 63 / 0.18);
+}
+
+.summaryFacts dt {
+  color: var(--paper-ink-muted);
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.summaryFacts dd {
+  margin: 3px 0 0;
+  font: 500 15px/1.35 var(--font-sans);
+}
+
+.summaryNote {
+  margin-top: 18px;
+  color: rgb(22 39 63 / 0.66);
+  font: italic 400 13px/1.45 var(--font-serif);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.proceed {
+  min-height: 56px;
+  padding: 0 30px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hint {
+  color: rgb(244 239 227 / 0.72);
+  font: 400 13px/1.4 var(--font-sans);
+}
+
+@media (max-width: 1180px) {
+  .stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary {
+    position: static;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .screen {
+    padding: 28px 16px 40px;
+  }
+
+  .stages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .actions .btn {
+    flex: 1 1 100%;
+  }
+}

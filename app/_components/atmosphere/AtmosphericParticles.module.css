@@ -1,0 +1,78 @@
+.field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Flat colour only: no shadow and no filter, so eighteen of these cost nothing to composite. */
+.mote {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  opacity: 0;
+  animation: dust var(--duration) linear var(--delay) infinite;
+  will-change: transform;
+}
+
+.mote[data-tone="brass"] {
+  background: rgb(185 146 75);
+}
+
+.mote[data-tone="ivory"] {
+  background: rgb(244 239 227);
+}
+
+.mote[data-tone="navy"] {
+  background: rgb(126 158 199);
+}
+
+/* Sparse keeps every other mote; the rest of the definition stays identical. */
+.field[data-intensity="sparse"] .mote:nth-child(2n) {
+  display: none;
+}
+
+@keyframes dust {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(1);
+  }
+
+  14% {
+    opacity: var(--alpha);
+  }
+
+  82% {
+    opacity: var(--alpha);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), -120px, 0) scale(1.06);
+  }
+}
+
+/* Eight motes on a phone: the field is smaller and the dust should stay a hint, not a texture. */
+@media (max-width: 767px) {
+  .mote:nth-child(n + 9) {
+    display: none;
+  }
+
+  .field[data-intensity="sparse"] .mote:nth-child(n + 7) {
+    display: none;
+  }
+}
+
+/* Reduced motion removes the dust entirely, leaving the static background. */
+@media (prefers-reduced-motion: reduce) {
+  .field {
+    display: none;
+  }
+}
+
+:global([data-reduced-motion="true"]) .field {
+  display: none;
+}

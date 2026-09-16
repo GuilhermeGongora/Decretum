@@ -52,6 +52,48 @@ game designer should review.
   (missing ones only warn) so older content still loads with the compact consequence; a content test
   requires them for every active card.
 
+## Country and setting
+
+- The GDD §4 setting (República de Aurória, a fictional country) was replaced by **Brazil**, following
+  the playbook §3.1 and §3.3: real countries and institutions, fictional people. The 30 cards, the flag
+  labels and one ending text had their proper nouns localized — Assembleia → Congresso/Câmara, Tribunal
+  da Carta → Supremo Tribunal Federal, Banco de Aurória → Banco Central, províncias → estados, Forças
+  de Defesa → Forças Armadas, Aurória → Brasil. **No mechanic changed**: slugs, effects, conditions,
+  flags and schedules are untouched. "Carta" survives where it means the Constitution, which reads
+  naturally in Brazilian Portuguese.
+- Decisions recorded before the change keep the old wording: snapshots are immutable and the chronicle
+  shows what the player actually read.
+- Countries are data in `src/content/countries/`; Brazil is the only playable pack and the United
+  States is announced as in development. See [countries.md](countries.md) and
+  [ADR 0003](adr/0003-multi-country.md).
+- **Provisional**: every institutional label in the Brazilian pack (ministries, impeachment stage
+  names, electorate size, base share and turnout) was written during implementation and should be
+  reviewed by the game designer. The impeachment stages carry no rule yet.
+
+## Electoral prologue
+
+- A government may be opened through a campaign: country → candidate → four decisions → election. It
+  is optional; an empty `POST /api/v1/games` still opens a Brazilian government with every pillar at 50
+  (GDD §7.2).
+- `src/domain/election.js` is pure and uses **no randomness**, so the same campaign always produces the
+  same election. The player always wins in this version; the campaign decides the margin and the
+  opening position.
+- Opening pillars are clamped to **40–60**, the successor rule from GDD §7.2, so no campaign can start
+  a government already in collapse.
+- Candidate traits and campaign choices set real flags at month 1 (`origin_*`, `style_*`, `pledge_*`,
+  `campaign_*`), which cards may condition on later.
+- The candidate and the election result are stored as immutable snapshots on `games`; the institutional
+  profile is resolved from `country_code` at read time and never copied per government.
+- **Abandoning a mandate is a local action only.** The database has no `abandoned` status and no way to
+  list a player's governments, so "Abandonar mandato" just stops this browser from reopening the
+  government: the row, its decisions and its chronicle stay untouched. The confirmation says exactly
+  that. Persisting the state properly would need a new migration and a government list, which this
+  delivery deliberately did not improvise.
+- **Known gap**: creating a government is not idempotent. If the response is lost after the server
+  committed, the campaign can be counted again and leave an orphan government behind (the client keeps
+  the campaign and offers another attempt). The same was already true of `POST /api/v1/games` before
+  this phase; a request key would be the fix and is not implemented.
+
 ## Characters
 
 - The GDD §17 cast was revised to match the approved character bible and artwork:
