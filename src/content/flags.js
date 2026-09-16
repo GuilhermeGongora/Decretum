@@ -90,4 +90,27 @@ export const flagCatalog = {
     label: "A eleição foi decidida em um comício com os movimentos sociais.",
   },
   campaign_market_trust: { label: "A reta final da campanha foi construída com investidores." },
+
+  // Set along the constitutional chain: what the government did while it was being judged.
+  impeachment_petition_filed: { label: "A oposição protocolou um pedido de impeachment." },
+  documents_released: { label: "O governo liberou os documentos pedidos pela investigação." },
+  documents_withheld: { label: "O governo recusou-se a entregar os documentos pedidos." },
+  minister_sacrificed: { label: "Um ministro foi entregue para conter a crise." },
+  minister_shielded: { label: "O governo protegeu o ministro citado na denúncia." },
+  defense_institutional: { label: "A defesa do governo foi conduzida pelo rito, sem ataques." },
+  defense_confrontational: { label: "O governo atacou publicamente quem o julgava." },
+  chamber_deal_struck: { label: "O Planalto negociou votos na Câmara para sobreviver ao pedido." },
+  streets_mobilized: { label: "O governo convocou as ruas contra o processo." },
+  acquitted_of_impeachment: {
+    label: "O governo foi absolvido no Senado e voltou ao cargo.",
+    legacy: true,
+    legacyPriority: 60,
+    successorEffects: { people: -2, market: -1, congress: -3, institutions: 2 },
+  },
+  impeachment_archived: {
+    label: "A Câmara arquivou o pedido de impeachment.",
+    legacy: true,
+    legacyPriority: 45,
+    successorEffects: { people: -1, market: 0, congress: -2, institutions: 1 },
+  },
 };

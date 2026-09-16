@@ -9,6 +9,8 @@ import {
   METER_MIN,
   METERS,
   PRESIDENT_ROLE,
+  PROCEDURE_STAGES,
+  PROCEDURE_TYPES,
 } from "../domain/constants.js";
 import { EFFECT_OPERATIONS } from "../domain/effects.js";
 
@@ -42,7 +44,21 @@ const CHOICE_FIELDS = [
   "resultText",
   "headline",
   "reaction",
+  "procedure",
 ];
+// Pressure a choice puts on a running constitutional procedure. Content moves numbers and may ask for
+// the next step; where that step lands is the engine's decision, never content's.
+const PROCEDURE_EFFECT_FIELDS = [
+  "evidence",
+  "chamber",
+  "senate",
+  "coalitionCohesion",
+  "publicPressure",
+  "institutionalCredibility",
+  "advance",
+  "resolve",
+];
+const PROCEDURE_RESOLUTION_VALUES = ["archived", "acquitted", "removed", "expired"];
 const CHARACTER_FIELDS = [
   "name",
   "role",
@@ -63,7 +79,9 @@ const CONDITION_FIELDS = [
   "maxTurn",
   "meters",
   "anyMeters",
+  "procedure",
 ];
+const PROCEDURE_CONDITION_FIELDS = ["active", "type", "stages", "notStages"];
 const FLAG_FIELDS = ["label", "legacy", "legacyPriority", "successorEffects"];
 
 // Realm-independent: a plain object's prototype is a root prototype (its own prototype is null).
@@ -120,6 +138,34 @@ function validateConditions(conditions, { flags }, report) {
 
   for (const key of Object.keys(conditions)) {
     if (!CONDITION_FIELDS.includes(key)) report(`unknown condition "${key}"`);
+  }
+
+  if (conditions.procedure !== undefined) {
+    const rule = conditions.procedure;
+    if (!isPlainObject(rule)) {
+      report("condition procedure must be an object");
+    } else {
+      rejectUnknownFields(rule, PROCEDURE_CONDITION_FIELDS, report);
+      if (rule.active !== undefined && typeof rule.active !== "boolean") {
+        report("condition procedure active must be a boolean");
+      }
+      if (rule.type !== undefined && !PROCEDURE_TYPES.includes(rule.type)) {
+        report(`condition procedure has unknown type "${rule.type}"`);
+      }
+      for (const field of ["stages", "notStages"]) {
+        const stages = rule[field];
+        if (stages === undefined) continue;
+        if (!Array.isArray(stages) || stages.length === 0) {
+          report(`condition procedure ${field} must be a non-empty array`);
+          continue;
+        }
+        for (const stage of stages) {
+          if (!PROCEDURE_STAGES.includes(stage)) {
+            report(`condition procedure ${field} has unknown stage "${stage}"`);
+          }
+        }
+      }
+    }
   }
 
   for (const field of ["allFlags", "anyFlags", "noneFlags"]) {
@@ -193,6 +239,37 @@ function validateOperation(operation, choice, report) {
   }
 }
 
+// A card may push the numbers of a running procedure and may ask it to take its next step, but it
+// never names the stage that step reaches: the chain and the country's thresholds decide that.
+function validateProcedure(procedure, side, report) {
+  const at = (message) => report(`${side} procedure ${message}`);
+  if (!isPlainObject(procedure)) return at("must be an object");
+
+  rejectUnknownFields(procedure, PROCEDURE_EFFECT_FIELDS, at);
+
+  for (const key of PROCEDURE_EFFECT_FIELDS) {
+    if (key === "advance" || key === "resolve" || procedure[key] === undefined) continue;
+    if (!Number.isInteger(procedure[key]) || Math.abs(procedure[key]) > 100) {
+      at(`${key} must be an integer between -100 and 100`);
+    }
+  }
+
+  if (procedure.advance !== undefined && procedure.advance !== true) {
+    at("advance must be true when present");
+  }
+  if (procedure.resolve !== undefined && !PROCEDURE_RESOLUTION_VALUES.includes(procedure.resolve)) {
+    at(`resolve must be one of: ${PROCEDURE_RESOLUTION_VALUES.join(", ")}`);
+  }
+  if (procedure.advance && procedure.resolve) {
+    at("cannot advance and resolve in the same choice");
+  }
+  // "expired" is the one resolution the engine takes from any stage, because it belongs to the end of
+  // the mandate and to the suspension deadline. Content reaching for it would skip the whole chain.
+  if (procedure.resolve === "expired") {
+    at("cannot expire a procedure; only the mandate or the suspension deadline does that");
+  }
+}
+
 function validateChoice(choice, side, context, report, warn) {
   const at = (message) => report(`${side} ${message}`);
   if (!isPlainObject(choice)) return at("must be an object");
@@ -200,6 +277,7 @@ function validateChoice(choice, side, context, report, warn) {
   rejectUnknownFields(choice, CHOICE_FIELDS, at);
   if (!isNonEmptyString(choice.label)) at("label must be a non-empty string");
   if (!isNonEmptyString(choice.resultText)) at("resultText must be a non-empty string");
+  if (choice.procedure !== undefined) validateProcedure(choice.procedure, side, report);
 
   // Authored consequence of this side. Optional so older content still loads with the compact view.
   for (const field of ["headline", "reaction"]) {
@@ -289,7 +367,13 @@ function validateCards(cards, context, errors, warnings) {
 
   const slugs = new Set(cards.map((card) => card?.slug));
   const seen = new Set();
-  const scheduled = new Set();
+  // A chained card is reachable when some choice schedules it, or when a country pack names it for a
+  // stage the engine summons itself — the links no card can foresee, such as the result of a vote.
+  const scheduled = new Set(
+    Object.values(context.countries ?? {}).flatMap((country) =>
+      Object.values(country?.removal?.cards ?? {}),
+    ),
+  );
 
   cards.forEach((card, index) => {
     const name = `card "${card?.slug ?? `#${index}`}"`;
@@ -610,6 +694,7 @@ export function validateContent({ cards, flags, characters, endings, epithets, c
     {
       flags: isPlainObject(flags) ? flags : {},
       characters: isPlainObject(characters) ? characters : {},
+      countries: isPlainObject(countries) ? countries : {},
     },
     errors,
     warnings,

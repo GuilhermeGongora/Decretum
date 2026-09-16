@@ -22,10 +22,17 @@ import {
   updateScheduledEventStatus,
 } from "@/src/repositories/gameStateRepository";
 import {
+  findActiveProcedure,
+  findProcedures,
+  insertProcedure,
+  updateProcedure,
+} from "@/src/repositories/procedureRepository";
+import {
   toCardView,
   toDecisionView,
   toEndingView,
   toGameView,
+  toProcedureView,
   toSummaryView,
 } from "@/src/services/gameViews";
 import { logger } from "@/src/utils/logger";
@@ -111,11 +118,17 @@ async function loadSnapshot(client, gameId, cards) {
   if (!game) throw gameNotFound();
   const country = findCountry(game.countryCode);
 
+  // The chain a government went through, running or already judged. Null for the governments that
+  // never faced one, which is every government created before the procedures table existed.
+  const procedures = await findProcedures(client, gameId);
+  const procedure = toProcedureView(procedures.at(-1) ?? null, country);
+
   if (game.status === GAME_STATUS.ACTIVE) {
     const card = cards.find((candidate) => candidate.slug === game.currentCardSlug);
     return {
       game: toGameView(game, country),
       currentCard: toCardView(card, game.meters),
+      procedure,
       ending: null,
       summary: null,
     };
@@ -202,6 +215,28 @@ export async function getGame(gameId) {
   );
 }
 
+// The constitutional chain is written in the same transaction as the decision that moved it, so a
+// month never ends with the procedure and the government disagreeing about where the process stands.
+async function persistProcedure(client, gameId, before, after) {
+  if (!after) return;
+  if (before) {
+    await updateProcedure(client, before.id, after);
+    return;
+  }
+
+  try {
+    await insertProcedure(client, gameId, after);
+  } catch (error) {
+    if (isUniqueViolation(error, "political_procedures_one_active")) {
+      throw new ConflictError("A procedure is already running against this government", {
+        code: "PROCEDURE_ALREADY_ACTIVE",
+        cause: error,
+      });
+    }
+    throw error;
+  }
+}
+
 // GDD §12.2: the whole month is resolved inside one transaction holding the game row lock.
 export async function decide(gameId, { choice, expectedTurn }) {
   assertGameId(gameId);
@@ -223,6 +258,8 @@ export async function decide(gameId, { choice, expectedTurn }) {
     const flags = await findFlags(client, gameId);
     const appearances = await findAppearances(client, gameId);
     const scheduledEvents = await findScheduledEvents(client, gameId);
+    // Locked with the game row, so two requests can never move the same chain in parallel.
+    const procedure = await findActiveProcedure(client, gameId, { forUpdate: true });
 
     const turnResult = resolveTurn({
       state: { ...game, flags },
@@ -230,6 +267,9 @@ export async function decide(gameId, { choice, expectedTurn }) {
       choice,
       appearances,
       scheduledEvents,
+      // Institutional numbers and vocabulary come from the country pack, never from the engine.
+      country: findCountry(game.countryCode),
+      procedure,
     });
 
     try {
@@ -252,6 +292,7 @@ export async function decide(gameId, { choice, expectedTurn }) {
     }
     await updateScheduledEventStatus(client, gameId, cancelledSequences, EVENT_STATUS.CANCELLED);
     if (turnResult.appearance) await insertAppearance(client, gameId, turnResult.appearance);
+    await persistProcedure(client, gameId, procedure, turnResult.procedure);
     await updateGame(client, gameId, turnResult.state);
 
     return { result: turnResult, snapshot: await loadSnapshot(client, gameId, cards) };
@@ -288,6 +329,8 @@ export async function decide(gameId, { choice, expectedTurn }) {
     // snapshot was stored with the decision in the transaction above.
     consequence: result.decision.consequence,
     game: snapshot.game,
+    // Where the constitutional chain stands after this month, or null for a government facing none.
+    procedure: snapshot.procedure,
     gameOver: result.gameOver,
   };
 

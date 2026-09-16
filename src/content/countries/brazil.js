@@ -77,18 +77,93 @@ export const brazil = {
     { key: "defesa", name: "Defesa", note: "comando civil das Forças Armadas" },
   ],
 
-  // Names only. The process is documented for a later phase; no impeachment rule is implemented yet.
+  // Impeachment as the Constitution describes it (art. 51, 52 and 86): the Chamber authorises by two
+  // thirds, the Senate opens the trial by an absolute majority and suspends the president for up to
+  // 180 days, and conviction needs two thirds of the senators. The thresholds live here, in the
+  // country pack — the engine only compares numbers it was handed.
   removal: {
     type: "impeachment",
-    note: "Denúncia protocolada na Câmara, admissibilidade por dois terços, afastamento e julgamento no Senado.",
+    note: "Denúncia protocolada na Câmara, autorização por dois terços, instauração e julgamento no Senado, com afastamento de até 180 dias.",
+    chamber: {
+      name: "Câmara dos Deputados",
+      seats: 513,
+      authorizationVotes: 342,
+      presidedBy: "celina-braga",
+    },
+    senate: {
+      name: "Senado Federal",
+      seats: 81,
+      admissibilityVotes: 41,
+      convictionVotes: 54,
+      presidedBy: "tomas-azevedo",
+      presidedByNote: "O julgamento é presidido pelo Presidente do Supremo Tribunal Federal.",
+    },
+    // 180 days of suspension, read on the game's calendar of one month per turn.
+    suspensionTurns: 6,
+    filedBy: "andre-furtado",
+    // Links the deck cannot schedule by itself, because only a count, an opening or an outcome knows
+    // where the process lands. Naming them here keeps every card slug out of the engine.
+    cards: {
+      grounds_emerging: "impeachment_grounds",
+      senate_admissibility: "impeachment_senate_admissibility",
+      suspended: "impeachment_suspension",
+      senate_trial: "impeachment_trial",
+      archived: "impeachment_shelved",
+      acquitted: "impeachment_acquittal",
+    },
     stages: [
-      { key: "stable", label: "Sem processo" },
-      { key: "pressure", label: "Pressão política" },
-      { key: "petition", label: "Pedido protocolado" },
-      { key: "admissibility", label: "Admissibilidade na Câmara" },
-      { key: "lower_house_vote", label: "Votação na Câmara" },
-      { key: "trial", label: "Julgamento no Senado" },
-      { key: "removed", label: "Afastamento definitivo" },
+      { key: "grounds_emerging", label: "Fundamento em formação", note: "Indícios reunidos" },
+      { key: "petition_filed", label: "Denúncia protocolada", note: "Pedido na Câmara" },
+      {
+        key: "speaker_review",
+        label: "Análise da Presidência da Câmara",
+        note: "Admitir ou arquivar",
+      },
+      { key: "chamber_campaign", label: "Articulação na Câmara", note: "Contagem de votos" },
+      { key: "chamber_vote", label: "Votação na Câmara", note: "342 de 513 autorizam" },
+      { key: "senate_admissibility", label: "Instauração no Senado", note: "41 de 81 instauram" },
+      { key: "suspended", label: "Presidência afastada", note: "Até seis meses" },
+      { key: "senate_trial", label: "Julgamento no Senado", note: "54 de 81 condenam" },
+    ],
+    resolutions: [
+      { key: "archived", label: "Pedido arquivado" },
+      { key: "acquitted", label: "Absolvição" },
+      { key: "removed", label: "Perda do cargo" },
+      { key: "expired", label: "Processo extinto com o mandato" },
+    ],
+    // What counts as grounds, and which decisions of this government evidence them. The engine reads
+    // the flags; it never knows what any of them mean.
+    grounds: [
+      {
+        key: "audit_cover_up",
+        label: "Obstrução de auditoria",
+        weight: 34,
+        flags: ["audit_ignored"],
+      },
+      {
+        key: "cabinet_bargain",
+        label: "Barganha de ministérios",
+        weight: 26,
+        flags: ["campaign_cabinet_promised", "agencies_shared"],
+      },
+      {
+        key: "dossier_abuse",
+        label: "Uso de dossiê contra adversários",
+        weight: 30,
+        flags: ["campaign_dossier_used", "press_intimidated"],
+      },
+      {
+        key: "contract_scandal",
+        label: "Contratos sob suspeita",
+        weight: 32,
+        flags: ["questioned_contractor", "emergency_procurement"],
+      },
+      {
+        key: "court_defiance",
+        label: "Descumprimento de decisão judicial",
+        weight: 38,
+        flags: ["palace_secrecy_kept", "documents_withheld"],
+      },
     ],
   },
 

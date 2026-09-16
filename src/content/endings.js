@@ -32,6 +32,10 @@ export const endingDefinitions = {
     title: "O Governo Tutelado",
     text: "Cortes, controles e burocracias imobilizam o Executivo.",
   },
+  removed_from_office: {
+    title: "O Mandato Interrompido",
+    text: "O Senado condena, a faixa muda de ombro antes do prazo e o país descobre que a Constituição tem um procedimento para tudo — inclusive para o fim de um governo.",
+  },
   mandate_completed: {
     title: "Quatro Anos Depois",
     text: "Quarenta e oito meses, centenas de concessões e uma República ainda de pé. O poder será transmitido, mas as consequências permanecerão.",

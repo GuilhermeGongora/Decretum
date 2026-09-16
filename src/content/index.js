@@ -16,6 +16,8 @@ function compileChoice(choice, flags) {
     resultText: choice.resultText,
     headline: choice.headline ?? null,
     reaction: choice.reaction ?? null,
+    // Pressure this side puts on a running constitutional procedure, if any (all plain numbers).
+    procedure: choice.procedure ? { ...choice.procedure } : null,
     effects: fullEffects(choice.effects),
     conditionalEffects: (choice.conditionalEffects ?? []).map((operation) => ({ ...operation })),
     // Catalog metadata is copied into each choice so a decision snapshot is self-contained.
@@ -67,6 +69,9 @@ export function compileCard(definition, { flags, characters: characterMap }) {
       maxTurn: conditions.maxTurn ?? 48,
       meters: structuredClone(conditions.meters ?? {}),
       anyMeters: structuredClone(conditions.anyMeters ?? []),
+      // A card may require the constitutional procedure to stand at a given stage. Absent when the
+      // card does not care, which is what keeps the ordinary deck free of the chain.
+      ...(conditions.procedure ? { procedure: structuredClone(conditions.procedure) } : {}),
     },
     choices: {
       left: compileChoice(definition.leftChoice, flags),

@@ -84,6 +84,20 @@ export const characters = {
     initials: "YS",
   },
   "amira-sol": { name: "Amira Sol", role: "Chanceler", sphere: "institutions", initials: "AS" },
+  // The constitutional chain needs two offices nobody in the cast holds: whoever presides the
+  // Chamber decides whether a petition is even read, and the opposition is the one who files it.
+  "celina-braga": {
+    name: "Celina Braga",
+    role: "Presidente da Câmara dos Deputados",
+    sphere: "congress",
+    initials: "CB",
+  },
+  "andre-furtado": {
+    name: "André Furtado",
+    role: "Líder da oposição",
+    sphere: "congress",
+    initials: "AF",
+  },
 };
 
 export function getCharacter(id) {

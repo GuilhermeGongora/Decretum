@@ -1,9 +1,10 @@
 // Maps engine and persistence shapes to API responses. No game rules are decided here.
 import { getCharacter } from "@/src/content/characters";
 import { getCalendar } from "@/src/domain/calendar";
-import { METERS } from "@/src/domain/constants";
+import { METERS, PROCEDURE_STATUS } from "@/src/domain/constants";
 import { resolveChoiceDeltas } from "@/src/domain/effects";
 import { getMeterBand, getTrend } from "@/src/domain/meters";
+import { countChamberVotes, countSenateVotes, estimateRange } from "@/src/domain/procedure";
 
 export function toMetersView(meters) {
   return Object.fromEntries(
@@ -174,6 +175,66 @@ export function toDecisionView(decision) {
     metersBefore: decision.metersBefore,
     metersAfter: decision.metersAfter,
     flagChanges: decision.flagChanges.map(({ type, key, label }) => ({ type, key, label })),
+  };
+}
+
+// What the player may know about a running procedure. The support the engine counts with is never
+// exposed: before a house votes, the interface gets a band; once it has voted, the confirmed count.
+// Evidence, coalition cohesion and the rest stay on the server, where the outcome is decided.
+function toHouseView(house, { votes, threshold, estimate }) {
+  return {
+    name: house.name,
+    seats: house.seats,
+    threshold,
+    votes: votes ?? null,
+    estimate: votes === null || votes === undefined ? estimate : null,
+  };
+}
+
+export function toProcedureView(procedure, country) {
+  if (!procedure || !country?.removal) return null;
+
+  const { removal } = country;
+  const stage = removal.stages.find((entry) => entry.key === procedure.stage) ?? null;
+  const active = procedure.status === PROCEDURE_STATUS.ACTIVE;
+  const senateThreshold =
+    procedure.stage === "senate_trial"
+      ? removal.senate.convictionVotes
+      : removal.senate.admissibilityVotes;
+
+  return {
+    type: procedure.type,
+    status: procedure.status,
+    stage: { key: procedure.stage, label: stage?.label ?? null, note: stage?.note ?? null },
+    resolution: procedure.resolution,
+    openedAtTurn: procedure.openedAtTurn,
+    calendar: getCalendar(procedure.openedAtTurn),
+    // Only while suspended does a deadline exist; it is the one number the player must plan around.
+    deadlineTurn: procedure.deadlineTurn,
+    turnsLeft:
+      active && procedure.deadlineTurn !== null
+        ? procedure.deadlineTurn - procedure.openedAtTurn
+        : null,
+    chamber: toHouseView(removal.chamber, {
+      votes: procedure.chamberVotes,
+      threshold: removal.chamber.authorizationVotes,
+      estimate: active
+        ? estimateRange(countChamberVotes(procedure, country), removal.chamber.seats)
+        : null,
+    }),
+    senate: toHouseView(removal.senate, {
+      votes: procedure.senateVotes,
+      threshold: senateThreshold,
+      estimate: active
+        ? estimateRange(countSenateVotes(procedure, country), removal.senate.seats)
+        : null,
+    }),
+    timeline: procedure.timeline.map(({ turn, stage: at, note }) => ({
+      turn,
+      calendar: getCalendar(turn),
+      stage: at,
+      note: note ?? null,
+    })),
   };
 }
 

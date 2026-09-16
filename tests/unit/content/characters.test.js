@@ -172,8 +172,10 @@ describe("character canon across cards", () => {
 
     expect(judges).toEqual(["tomas-azevedo"]);
     expect(characters["tomas-azevedo"].sphere).toBe("institutions");
+    // He also presides the Senate trial, which is the one other place the Court speaks.
     expect(speakersOf("tomas-azevedo")).toEqual([
       "contract_investigation",
+      "impeachment_trial",
       "national_data_registry",
     ]);
   });

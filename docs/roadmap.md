@@ -5,23 +5,24 @@ here are decisions already taken about direction, not a backlog of ideas: everyt
 from an earlier phase on purpose.
 
 Delivered so far: the monthly engine with 30 Brazilian cards, authored consequences, the chronicle and
-succession (ADR 0002), the country-pack foundation with the Brazilian onboarding (ADR 0003), and the
-visual pass over that onboarding.
+succession (ADR 0002), the country-pack foundation with the Brazilian onboarding (ADR 0003), the
+visual pass over that onboarding, and the Brazilian impeachment chain (`docs/game-rules.md`).
 
 ## Phase 1 — The constitutional threat
 
-The Brazilian pack already names the institutions and the stages; none of it runs yet.
+The chain itself runs: it opens from the record the government leaves, moves through the stages the
+pack declares, is counted against 342 of 513 and 54 of 81, suspends for six turns and ends in
+archiving, acquittal, removal or expiry. The flags that open it (`campaign_dossier_used`,
+`campaign_cabinet_promised`, `audit_ignored`, `palace_secrecy_kept`, `questioned_contractor`) are the
+ones the earlier phases had already put in the data. What is left is how the player sees it.
 
-1. **Impeachment as a visible chain** (playbook §5): the process object (`stage`, severity, evidence,
-   legislative momentum, institutional support), the stages the country declares
-   (`pressure → petition → admissibility → lower_house_vote → trial → removed`), and the cards that
-   move it. Reacting must cost pillars and leave legacies; surviving must feel as strong as falling.
-2. **Removal interface**: sealed red envelope, side seal with the current stage, colder paper on
+1. **Removal interface**: sealed red envelope, side seal with the current stage, colder paper on
    process cards, a vote screen with the quorum filling, and an outcome that leads to an ending or
-   back to government.
-3. **Sources of risk already in the data**: `campaign_dossier_used`, `campaign_cabinet_promised`,
-   `audit_ignored`, `palace_secrecy_kept` and `questioned_contractor` exist as flags and should be
-   what opens the process.
+   back to government. The API already serves everything it needs — the stage with its label, the
+   suspension deadline, and per house the seats, the threshold and a band before the vote or the
+   confirmed count after it.
+2. **Balance of the chain**: support saturates today, so the votes come out near-unanimous. The
+   margins should be plausible before the interface makes them the centre of a screen.
 
 ## Phase 2 — The people around the government
 

@@ -59,10 +59,34 @@ export const COLLAPSE_ENDING_CODES = Object.freeze({
 
 export const MANDATE_COMPLETED_ENDING_CODE = "mandate_completed";
 
+// A government removed by a constitutional procedure. It is seeded as a collapse ending: the
+// government fell, and the endings table only distinguishes collapse from completion.
+export const REMOVED_ENDING_CODE = "removed_from_office";
+
 export const ENDING_CODES = Object.freeze([
   ...Object.values(COLLAPSE_ENDING_CODES).flatMap(({ low, high }) => [low, high]),
   MANDATE_COMPLETED_ENDING_CODE,
+  REMOVED_ENDING_CODE,
 ]);
+
+// Constitutional procedures (playbook §5). The country pack names the stages; the engine only knows
+// that a procedure moves through an ordered chain and resolves once.
+export const PROCEDURE_TYPES = Object.freeze(["impeachment"]);
+
+export const PROCEDURE_STAGES = Object.freeze([
+  "grounds_emerging",
+  "petition_filed",
+  "speaker_review",
+  "chamber_campaign",
+  "chamber_vote",
+  "senate_admissibility",
+  "suspended",
+  "senate_trial",
+]);
+
+export const PROCEDURE_STATUS = Object.freeze({ ACTIVE: "active", RESOLVED: "resolved" });
+
+export const PROCEDURE_RESOLUTIONS = Object.freeze(["archived", "acquitted", "removed", "expired"]);
 
 export const EPITHET_CODES = Object.freeze([
   "equilibrist",

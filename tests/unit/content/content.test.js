@@ -35,9 +35,17 @@ describe("initial content", () => {
     expect(validateContent(sourceContent()).errors).toEqual([]);
   });
 
-  it("has exactly 30 active cards with unique slugs", () => {
-    expect(cards.filter((card) => card.active)).toHaveLength(30);
-    expect(new Set(cards.map((card) => card.slug)).size).toBe(30);
+  it("has the 30 cards of the GDD deck plus the 10 of the constitutional chain", () => {
+    expect(cards.filter((card) => card.active)).toHaveLength(40);
+    expect(new Set(cards.map((card) => card.slug)).size).toBe(40);
+
+    const chain = cards.filter((card) => card.slug.startsWith("impeachment_"));
+    expect(chain).toHaveLength(10);
+    // The chain never competes with the ordinary deck: it is scheduled, never drawn.
+    for (const card of chain) {
+      expect(card.type).toBe("chained");
+      expect(card.weight).toBe(0);
+    }
   });
 
   it("gives every card two choices whose effects cover only the four pillars", () => {
@@ -53,8 +61,18 @@ describe("initial content", () => {
       [card.choices.left, card.choices.right].flatMap((choice) => choice.schedule),
     );
 
+    // Each link of the chain is scheduled by both sides of the card before it, so neither choice can
+    // break the sequence. The links a card cannot foresee are summoned by the country pack instead.
     expect(scheduled.map((entry) => entry.cardSlug).sort()).toEqual([
       "blackout",
+      "impeachment_chamber_campaign",
+      "impeachment_chamber_campaign",
+      "impeachment_chamber_vote",
+      "impeachment_chamber_vote",
+      "impeachment_petition",
+      "impeachment_petition",
+      "impeachment_speaker_review",
+      "impeachment_speaker_review",
       "strike_escalation",
       "tax_reform_backlash",
     ]);
@@ -77,7 +95,7 @@ describe("initial content", () => {
           .map(([field]) => `${at}.${field}`),
       );
 
-      expect(outcomes).toHaveLength(60);
+      expect(outcomes).toHaveLength(80);
       expect(missing).toEqual([]);
     });
 
@@ -120,14 +138,17 @@ describe("initial content", () => {
     expect(Object.keys(epithetDefinitions).sort()).toEqual([...EPITHET_CODES].sort());
   });
 
-  it("marks as legacy only the flags produced by the 30 cards", () => {
+  it("marks as legacy only the flags produced by a card", () => {
     const legacyKeys = Object.entries(flagCatalog)
       .filter(([, definition]) => definition.legacy)
       .map(([key]) => key)
       .sort();
 
     expect(legacyKeys).toEqual([
+      // What a government that survived the constitutional chain leaves to its successor.
+      "acquitted_of_impeachment",
       "constitutional_precedent",
+      "impeachment_archived",
       "international_green_treaty",
       "national_data_registry",
       "strategic_port_concession",

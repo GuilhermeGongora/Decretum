@@ -167,6 +167,40 @@ game designer should review.
 - `start_year` is 1 for the first government and `previous.start_year + ceil(months / 12)` for a
   successor. The UI calendar shows the mandate year (§7.1), not `start_year`.
 
+### Constitutional procedures (impeachment)
+
+The GDD has no removal procedure; this is the playbook §5 chain, implemented for Brazil only.
+
+- **It is not a fifth pillar.** A procedure is a row in `political_procedures` with its own stage,
+  numbers and timeline, running next to the card loop. A partial unique index
+  (`political_procedures_one_active`) allows one active procedure of a type per government.
+- **The numbers belong to the country pack**, never to the engine: 513 seats and 342 to authorize,
+  81 seats with 41 to open the trial and 54 to convict, 180 days of suspension read as six turns.
+  `src/domain/procedure.js` receives the pack as an argument and would count a different country's
+  thresholds unchanged.
+- **Opening is earned, never rolled.** `evaluateGrounds` needs at least two documented grounds (each
+  evidenced by flags the country lists), evidence ≥ 45, a hostile enough Congress (viability ≥ 50)
+  and turn ≥ 6. One flag or one low pillar is never enough. There is no randomness anywhere.
+- **Every stage change is whitelisted** in `TRANSITIONS`; anything else throws. A card may push the
+  numbers and ask for the next step, but never says which stage that step reaches: the three voting
+  stages are counted against the pack's thresholds, and the rest have a single successor.
+- **`expired` is the engine's alone.** It is the only resolution accepted from any stage, because it
+  belongs to the end of the mandate and to the suspension deadline; the content validator refuses a
+  card that tries to use it.
+- **A conviction outranks a simultaneous pillar collapse.** The choices that carry a government to
+  the Senate usually wreck Congress on the way, so without this `removed_from_office` would be
+  unreachable in practice: the chronicle would record a drift out of governability instead of a
+  verdict. Removal is seeded as a collapse ending, since the endings table only tells collapse from
+  completion.
+- **The chain is 10 cards** (`impeachment_*`), all `chained` with weight 0, so they never compete in
+  the weighted draw. Each card schedules the next link; the links no card can foresee — the opening,
+  the stage a count lands on and the outcomes — are named per stage by `removal.cards` in the pack
+  and scheduled by the engine with priority 100. No card slug appears in the engine.
+- **Known balance debt**: support saturates. A consistently confrontational government reaches ~96%
+  of the Chamber and 100% of the Senate, so the votes come out near-unanimous (492/513, 81/81).
+  The outcomes are correct and earned; the margins are not yet plausible. Left for the balancing
+  phase, with the pillar cost of the chain cards.
+
 ### API
 
 - `GET /api/v1/games/:id/chronicle` was added as the separate chronicle resource suggested by §27.3.
@@ -184,6 +218,12 @@ game designer should review.
   show their `resultText`.
 - Speakers are returned as `{ id, name, title, initials, portrait, accent }`; `portrait` is
   `{ src, position }` resolved from the registry by id, or `null`.
+- Game and decision responses carry `procedure`, or `null` for a government that never faced one.
+  It shows the stage with its label, the deadline while suspended, and per house the seats, the
+  threshold and **either** a band (`estimate`) before that house votes **or** the confirmed count
+  after it. Support, evidence, coalition cohesion and institutional credibility are never exposed:
+  they are what the outcome is computed from. Decisions accept only `choice` and `turn`; a body that
+  also sends votes, a stage or procedure effects is refused with `400 UNKNOWN_FIELDS`.
 
 ### Interface
 

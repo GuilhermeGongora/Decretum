@@ -19,7 +19,7 @@ of the content by `src/content/validate.js`. The registry in `src/content/countr
 | `electoralRules`                             | Rounds, runoff threshold, voting and inauguration notes               |
 | `powers`                                     | Executive, lower house, upper house, supreme court, federation        |
 | `keyMinistries`                              | Ministries the briefing lists                                         |
-| `removal`                                    | Process type, note and the names of its stages                        |
+| `removal`                                    | The whole removal procedure: type, stages, thresholds, cards          |
 | `terminology`                                | Interface vocabulary, including a local name for each pillar          |
 | `theme`, `regions`                           | Accent colour, architecture key and the regions the election reports  |
 | `candidateOptions`                           | Treatments, origins, styles, parties, coalitions, promises            |
@@ -34,8 +34,20 @@ Rules the validator enforces, because breaking them fails silently otherwise:
 - headlines must cover a zero margin, since the resolver always picks one;
 - two countries cannot share a code, and `countryCode` must match its key.
 
+`removal` is what makes a constitutional procedure possible without putting any of it in the engine:
+
+- `chamber` and `senate` carry the seats, the vote each decision needs and who presides;
+- `suspensionTurns` is the suspension read on the game's calendar (180 days = six turns in Brazil);
+- `stages` names and describes each link, and the interface reads its labels from here;
+- `grounds` lists what counts as an impeachable act and which flags evidence it, with a weight;
+- `cards` names the card the engine must summon for a stage or an outcome — the links no card can
+  foresee, such as where a count lands. Everything else is scheduled by the cards themselves. This is
+  why no card slug appears in `src/domain`.
+
 **The engine never imports country content.** `src/domain/election.js` receives the profile as an
-argument; the service resolves it from the code. Route handlers call services, never the registry.
+argument, and so does `src/domain/procedure.js`: it would count a different country's thresholds
+unchanged. The service resolves the pack from the code. Route handlers call services, never the
+registry.
 
 ## Adding a country
 

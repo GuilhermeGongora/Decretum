@@ -5,7 +5,18 @@ function inRange(meters, meter, { min = METER_MIN, max = METER_MAX }) {
   return meters[meter] >= min && meters[meter] <= max;
 }
 
-export function meetsConditions(conditions, { turn, flags, meters }) {
+// A card may require a constitutional procedure to be at a given stage. `procedure` is null when the
+// government has none, which is what makes the ordinary deck the default.
+function matchesProcedure(rule, procedure) {
+  if (rule.active === false) return procedure === null;
+  if (procedure === null) return false;
+  if (rule.type !== undefined && rule.type !== procedure.type) return false;
+  if (rule.stages !== undefined && !rule.stages.includes(procedure.stage)) return false;
+  if (rule.notStages !== undefined && rule.notStages.includes(procedure.stage)) return false;
+  return true;
+}
+
+export function meetsConditions(conditions, { turn, flags, meters, procedure = null }) {
   const {
     allFlags = [],
     anyFlags = [],
@@ -14,9 +25,11 @@ export function meetsConditions(conditions, { turn, flags, meters }) {
     maxTurn = MANDATE_TURNS,
     meters: meterRanges = {},
     anyMeters = [],
+    procedure: procedureRule,
   } = conditions;
 
   if (turn < minTurn || turn > maxTurn) return false;
+  if (procedureRule !== undefined && !matchesProcedure(procedureRule, procedure)) return false;
 
   const active = (key) => isFlagActive(flags, key);
   if (!allFlags.every(active)) return false;
