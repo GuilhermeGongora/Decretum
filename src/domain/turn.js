@@ -353,8 +353,10 @@ export function resolveTurn({
     );
   }
 
-  // With no procedure running, the accumulated record may itself open one.
-  if (!nextProcedure && country) {
+  // With no procedure running, the accumulated record may itself open one. Only where the country
+  // declares a removal procedure at all: a pack without one is valid content, and asking it for
+  // grounds it never defined is how a month ends in a crash instead of a card.
+  if (!nextProcedure && country?.removal) {
     const assessment = evaluateGrounds({ country, flags, meters, turn: nextTurn });
     if (assessment.opens) {
       nextProcedure = openProcedure({ country, assessment, turn: nextTurn });

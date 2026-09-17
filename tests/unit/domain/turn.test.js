@@ -1,3 +1,4 @@
+import { countries } from "@/src/content/countries";
 import { ConflictError, DomainRuleError } from "@/src/errors";
 import { applyEventChanges, resolveTurn, startGame } from "@/src/domain/turn";
 import {
@@ -294,6 +295,21 @@ describe("resolveTurn", () => {
     }
 
     expect(playTenMonths("replay")).toEqual(playTenMonths("replay"));
+  });
+});
+
+// A pack is allowed to declare no removal procedure at all: the content validator returns early for
+// one, and every reader of `country.removal` guards for it. The United States pack is exactly that —
+// real, shipped content with no removal — so nothing here is invented to make the case.
+describe("a country that declares no removal procedure", () => {
+  it("resolves the month instead of seeking grounds the pack never defined", () => {
+    expect(countries.US.removal).toBeUndefined();
+
+    const result = resolve({ country: countries.US });
+
+    expect(result.state.turn).toBe(6);
+    expect(result.procedure).toBeNull();
+    expect(result.gameOver).toBe(false);
   });
 });
 
