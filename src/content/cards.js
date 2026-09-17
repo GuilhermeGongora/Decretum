@@ -1013,6 +1013,9 @@ export const cardDefinitions = [
       label: "Entregar o ministro",
       effects: fx(-2, 4, 7, -3),
       setFlags: [{ key: "minister_sacrificed" }],
+      // Somebody real leaves a real ministry. Which one is not written here: the engine hands over
+      // whoever the government can least afford to defend, and the ones who stayed watch it happen.
+      cabinet: { dismiss: "most_exposed", loyalty: -8 },
       procedure: { advance: true, chamber: -14, evidence: -6, coalitionCohesion: 9 },
       schedule: [{ cardSlug: "impeachment_chamber_vote", delayTurns: 1 }],
       resultText: "O ministro cai antes da votação, e os indecisos voltam à base.",

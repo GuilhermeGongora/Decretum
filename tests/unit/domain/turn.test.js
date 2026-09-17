@@ -1,5 +1,6 @@
 import { countries } from "@/src/content/countries";
 import { ConflictError, DomainRuleError } from "@/src/errors";
+import { createCabinet, findSeat } from "@/src/domain/cabinet";
 import { applyEventChanges, resolveTurn, startGame } from "@/src/domain/turn";
 import {
   buildActiveState,
@@ -310,6 +311,90 @@ describe("a country that declares no removal procedure", () => {
     expect(result.state.turn).toBe(6);
     expect(result.procedure).toBeNull();
     expect(result.gameOver).toBe(false);
+  });
+});
+
+describe("the cabinet across a month", () => {
+  const country = {
+    keyMinistries: [
+      { key: "casa_civil", name: "Casa Civil", note: "coordenação" },
+      { key: "fazenda", name: "Fazenda", note: "orçamento" },
+      { key: "justica", name: "Justiça", note: "ordem legal" },
+    ],
+    cabinet: {
+      defaultLoyalty: 60,
+      holders: [
+        { portfolio: "casa_civil", character: "helena-vasque", loyalty: 72 },
+        { portfolio: "fazenda", character: "caio-ferraz", loyalty: 48 },
+      ],
+    },
+  };
+
+  const handOver = buildCard({
+    slug: "hand_over",
+    choices: {
+      left: {
+        label: "Entregar o ministro",
+        effects: { people: -10 },
+        cabinet: { dismiss: "most_exposed", loyalty: -8 },
+      },
+      right: { label: "Proteger o ministro", effects: { congress: -2 } },
+    },
+  });
+  const cabinetCards = [handOver, ...neutralCards];
+
+  function resolveMonth(overrides = {}) {
+    return resolveTurn({
+      state: buildActiveState({ currentCardSlug: "hand_over" }),
+      cards: cabinetCards,
+      choice: "left",
+      appearances: [{ turn: 5, cardSlug: "hand_over" }],
+      scheduledEvents: [],
+      rng: sequenceRng([0]),
+      country,
+      cabinet: createCabinet(country),
+      ...overrides,
+    });
+  }
+
+  it("carries the cabinet through a month that asks nothing of it", () => {
+    const result = resolveMonth({ choice: "right" });
+
+    expect(result.cabinet).toEqual(createCabinet(country));
+    expect(result.cabinetChanges).toEqual([]);
+  });
+
+  it("hands over the least loyal minister when the card asks for one", () => {
+    const result = resolveMonth();
+
+    expect(findSeat(result.cabinet, "fazenda")).toMatchObject({ holder: null, loyalty: null });
+    expect(result.cabinetChanges).toEqual([
+      expect.objectContaining({ type: "dismissed", portfolio: "fazenda", holder: "caio-ferraz" }),
+    ]);
+  });
+
+  it("costs the ministers who stayed and watched it happen", () => {
+    const result = resolveMonth();
+
+    expect(findSeat(result.cabinet, "casa_civil").loyalty).toBe(64);
+  });
+
+  it("keeps the cabinet of a government the month brings down", () => {
+    const result = resolveMonth({
+      state: buildActiveState({ currentCardSlug: "hand_over", meters: buildMeters({ people: 5 }) }),
+    });
+
+    expect(result.gameOver).toBe(true);
+    expect(findSeat(result.cabinet, "fazenda")).toMatchObject({ holder: null });
+  });
+
+  // Every government created before the cabinet existed still has to be playable.
+  it("runs the month for a government that has no cabinet at all", () => {
+    const result = resolveMonth({ cabinet: null });
+
+    expect(result.cabinet).toBeNull();
+    expect(result.cabinetChanges).toEqual([]);
+    expect(result.state.turn).toBe(6);
   });
 });
 

@@ -21,6 +21,8 @@ import {
   replaceFlags,
   updateScheduledEventStatus,
 } from "@/src/repositories/gameStateRepository";
+import { createCabinet, restoreCabinet } from "@/src/domain/cabinet";
+import { findCabinetSeats, replaceCabinetSeats } from "@/src/repositories/cabinetRepository";
 import {
   findActiveProcedure,
   findProcedures,
@@ -177,6 +179,10 @@ async function insertStartedGame(
   }
 
   await replaceFlags(client, gameId, state.flags);
+  // A government takes office with the cabinet its own country describes. The country is resolved
+  // here rather than passed in, so every way of starting a government — elected or successor —
+  // seats one, and a future caller cannot quietly skip it.
+  await replaceCabinetSeats(client, gameId, createCabinet(findCountry(countryCode)));
   await insertAppearance(client, gameId, appearance);
   return gameId;
 }
@@ -283,6 +289,12 @@ export async function decide(gameId, { choice, expectedTurn }) {
     const scheduledEvents = await findScheduledEvents(client, gameId);
     // Locked with the game row, so two requests can never move the same chain in parallel.
     const procedure = await findActiveProcedure(client, gameId, { forUpdate: true });
+    // Read under the same lock and rebuilt against the pack: the ministries and their names belong
+    // to the country, who sits in them to the stored seats.
+    const cabinet = restoreCabinet(
+      findCountry(game.countryCode),
+      await findCabinetSeats(client, gameId),
+    );
 
     const turnResult = resolveTurn({
       state: { ...game, flags },
@@ -293,6 +305,7 @@ export async function decide(gameId, { choice, expectedTurn }) {
       // Institutional numbers and vocabulary come from the country pack, never from the engine.
       country: findCountry(game.countryCode),
       procedure,
+      cabinet,
     });
 
     try {
@@ -316,6 +329,9 @@ export async function decide(gameId, { choice, expectedTurn }) {
     await updateScheduledEventStatus(client, gameId, cancelledSequences, EVENT_STATUS.CANCELLED);
     if (turnResult.appearance) await insertAppearance(client, gameId, turnResult.appearance);
     await persistProcedure(client, gameId, procedure, turnResult.procedure);
+    // Guarded: replacing the seats deletes them first, so a government that holds no cabinet at all
+    // must not reach this — it would wipe the table row set instead of leaving it untouched.
+    if (turnResult.cabinet) await replaceCabinetSeats(client, gameId, turnResult.cabinet);
     await updateGame(client, gameId, turnResult.state);
 
     // The procedure as it stood before this month, so the response can say what changed.

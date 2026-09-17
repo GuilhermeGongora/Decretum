@@ -77,6 +77,21 @@ export const brazil = {
     { key: "defesa", name: "Defesa", note: "comando civil das Forças Armadas" },
   ],
 
+  // Who takes office with the president, and how much each one owes him. The ministries themselves
+  // are the six above — this only says who sits in them, so a portfolio is never declared twice.
+  // Justiça and Defesa start vacant: the cast has nobody in those chairs, and an empty chair is a
+  // truthful state rather than an invented minister.
+  cabinet: {
+    defaultLoyalty: 60,
+    holders: [
+      // The chief of staff is the closest of them and the one a president loses last.
+      { portfolio: "casa_civil", character: "helena-vasque", loyalty: 74 },
+      { portfolio: "fazenda", character: "caio-ferraz", loyalty: 62 },
+      { portfolio: "saude", character: "icaro-nunes", loyalty: 58 },
+      { portfolio: "educacao", character: "mara-vilar", loyalty: 66 },
+    ],
+  },
+
   // Impeachment as the Constitution describes it (art. 51, 52 and 86): the Chamber authorises by two
   // thirds, the Senate opens the trial by an absolute majority and suspends the president for up to
   // 180 days, and conviction needs two thirds of the senators. The thresholds live here, in the

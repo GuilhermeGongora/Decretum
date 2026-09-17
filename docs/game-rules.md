@@ -221,6 +221,37 @@ The GDD has no removal procedure; this is the playbook §5 chain, implemented fo
   vote it receives the confirmed count and no band. The drive in each house, the cohesion, the
   credibility and the weight of the file never leave the server.
 
+### Cabinet
+
+The GDD has no cabinet; this is roadmap phase 1, implemented for Brazil only. It is state, not yet a
+screen: there is no appointment, no dismissal as a player decision, and no interface.
+
+- **The ministries belong to the country, and are declared once.** The cabinet is exactly the
+  `keyMinistries` the pack lists — six for Brazil. The pack's `cabinet` block only says who starts in
+  them, so a portfolio is never named twice and the engine never carries a ministry of its own.
+- **A vacant seat is a real state.** The cast has nobody for Justiça or Defesa, so those two chairs
+  start empty. An invented minister would be worse than an empty chair, and the engine only knows
+  that a seat is held or not.
+- **The registry disagrees with the ministries, on purpose.** Lívia Nogueira is Ministra da Economia,
+  a role written for the economic cards; Economia is not one of the six declared portfolios, so she
+  holds no seat. Caio Ferraz keeps the Fazenda. Every holder is checked against the character
+  registry by id at content validation, because a typo would otherwise seat nobody in silence.
+- **Loyalty is 0–100**, given per holder by the pack or falling back to its `defaultLoyalty`.
+- **A card never names the minister who falls.** It names a strategy — today only `most_exposed` —
+  and the engine takes the least loyal minister still in office, breaking a tie by the order the
+  country declares its ministries. Same cabinet, same casualty, every time: no randomness.
+- **Dismissal runs before the loyalty shift**, so the minister who was handed over does not pay the
+  price of his own fall; the ones who stayed and watched it do. In `impeachment_chamber_campaign`,
+  "Entregar o ministro" costs the rest of the cabinet 8 points of loyalty.
+- **A cabinet with nobody left in it has nobody to hand over.** That is not an error: it is a
+  government that has already spent everyone.
+- **Once seats are stored, they are the truth.** A declared ministry with no stored seat is vacant,
+  never re-seated with the holder it started with — that is what makes a minister who was handed over
+  stay gone. A government that stored nothing at all predates the table and takes office with the
+  cabinet the country describes, rather than with six empty chairs.
+- **Persistence** is `cabinet_seats`, one row per ministry, replaced wholesale inside the same
+  transaction as the decision that changed it, the same way the flag set is.
+
 ### API
 
 - `GET /api/v1/games/:id/chronicle` was added as the separate chronicle resource suggested by §27.3.

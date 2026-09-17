@@ -65,6 +65,22 @@ describe("country registry", () => {
     expect(brazil.electoralRules.runoffThreshold).toBe(50);
   });
 
+  it("seats only the ministries the cast actually has someone for", () => {
+    const { cabinet, keyMinistries } = countries.BR;
+    const seated = cabinet.holders.map((holder) => holder.portfolio);
+    const declared = keyMinistries.map((ministry) => ministry.key);
+
+    expect(seated).toEqual(["casa_civil", "fazenda", "saude", "educacao"]);
+    // Every holder is somebody the registry knows, by id and not by display name.
+    for (const holder of cabinet.holders) {
+      expect(Object.hasOwn(characters, holder.character)).toBe(true);
+    }
+    // Justiça and Defesa are declared ministries that start empty. An empty chair is the truth; an
+    // invented minister would not be.
+    expect(declared).toEqual(expect.arrayContaining([...seated, "justica", "defesa"]));
+    expect(declared).toHaveLength(6);
+  });
+
   it("offers a form of address that does not gender the candidate by default", () => {
     expect(countries.BR.candidateOptions.treatments[0]).toMatchObject({ key: "neutro" });
   });
@@ -141,6 +157,35 @@ describe("country validation", () => {
       "no playable country at all",
       (content) => (content.countries.BR.playable = false),
       /at least one playable country/,
+    ],
+    [
+      "a minister who is not in the character registry",
+      (content) => (content.countries.BR.cabinet.holders[0].character = "ghost-minister"),
+      /unknown character "ghost-minister"/,
+    ],
+    [
+      "a cabinet seat in a ministry the country does not declare",
+      (content) => (content.countries.BR.cabinet.holders[0].portfolio = "turismo"),
+      /seats "turismo", which is not one of the country's ministries/,
+    ],
+    [
+      "the same ministry seated twice",
+      (content) =>
+        content.countries.BR.cabinet.holders.push({
+          portfolio: "casa_civil",
+          character: "caio-ferraz",
+        }),
+      /seats "casa_civil" twice/,
+    ],
+    [
+      "a loyalty outside its bounds",
+      (content) => (content.countries.BR.cabinet.holders[0].loyalty = 140),
+      /needs a loyalty between 0 and 100/,
+    ],
+    [
+      "a cabinet without a default loyalty for the seats that name none",
+      (content) => delete content.countries.BR.cabinet.defaultLoyalty,
+      /cabinet.defaultLoyalty must be an integer between 0 and 100/,
     ],
   ])("rejects %s", (_, mutate, message) => {
     expect(errorsAfter(mutate)).toContainEqual(expect.stringMatching(message));

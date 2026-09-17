@@ -18,6 +18,10 @@ function compileChoice(choice, flags) {
     reaction: choice.reaction ?? null,
     // Pressure this side puts on a running constitutional procedure, if any (all plain numbers).
     procedure: choice.procedure ? { ...choice.procedure } : null,
+    // What this side does to the cabinet: a named strategy plus plain numbers. A field dropped here
+    // would disarm every cabinet effect without a single error, which is how `conditions.procedure`
+    // was once lost.
+    cabinet: choice.cabinet ? { ...choice.cabinet } : null,
     effects: fullEffects(choice.effects),
     conditionalEffects: (choice.conditionalEffects ?? []).map((operation) => ({ ...operation })),
     // Catalog metadata is copied into each choice so a decision snapshot is self-contained.

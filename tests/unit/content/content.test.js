@@ -255,6 +255,31 @@ describe("validateContent", () => {
       (c) => delete c.endings.people_dominant,
       /ending "people_dominant" is missing/,
     ],
+    [
+      "a cabinet effect the engine does not have",
+      (c) => (c.cards[0].leftChoice.cabinet = { fire: "most_exposed" }),
+      /leftChoice cabinet unknown field "fire"/,
+    ],
+    [
+      "a dismissal strategy the engine cannot run",
+      (c) => (c.cards[0].leftChoice.cabinet = { dismiss: "the_weakest" }),
+      /dismiss must be one of: most_exposed/,
+    ],
+    [
+      "a card naming the minister to be handed over",
+      (c) => (c.cards[0].leftChoice.cabinet = { dismiss: "caio-ferraz" }),
+      /dismiss must be one of: most_exposed/,
+    ],
+    [
+      "a cabinet block that does nothing",
+      (c) => (c.cards[0].leftChoice.cabinet = {}),
+      /must either name a dismissal or move loyalty/,
+    ],
+    [
+      "a loyalty shift that is not a whole number",
+      (c) => (c.cards[0].leftChoice.cabinet = { loyalty: 2.5 }),
+      /loyalty must be an integer between -100 and 100/,
+    ],
   ])("rejects %s", (_, mutate, message) => {
     expect(errorsAfter(mutate)).toContainEqual(expect.stringMatching(message));
   });

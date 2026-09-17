@@ -9,6 +9,7 @@ import {
   PROCEDURE_STATUS,
   REMOVED_ENDING_CODE,
 } from "./constants.js";
+import { applyCabinetOperations } from "./cabinet.js";
 import { getChoiceConsequence } from "./consequence.js";
 import { applyDeltas, resolveChoiceDeltas } from "./effects.js";
 import { evaluateCollapse } from "./endings.js";
@@ -88,11 +89,16 @@ function createScheduledEvents(schedule, existingEvents, turn) {
   });
 }
 
-function finishedResult(state, { decision, created, ending, procedure = null }) {
+function finishedResult(
+  state,
+  { decision, created, ending, procedure = null, cabinet = null, cabinetChanges = [] },
+) {
   return {
     state,
     decision,
     procedure,
+    cabinet,
+    cabinetChanges,
     expiredFlags: [],
     eventChanges: { created, firedSequence: null, cancelledSequences: [] },
     appearance: null,
@@ -198,6 +204,7 @@ export function resolveTurn({
   rng,
   country = null,
   procedure = null,
+  cabinet = null,
 }) {
   if (state.status !== GAME_STATUS.ACTIVE) {
     throw new ConflictError("This government is no longer active", { code: "GAME_NOT_ACTIVE" });
@@ -223,6 +230,12 @@ export function resolveTurn({
     turn,
   );
   const created = createScheduledEvents(option.schedule ?? [], scheduledEvents, turn);
+
+  // The cabinet answers to the same decision. A government created before the cabinet existed holds
+  // none, and the month simply passes it by.
+  const { cabinet: nextCabinet, changes: cabinetChanges } = cabinet
+    ? applyCabinetOperations(cabinet, option, turn)
+    : { cabinet: null, changes: [] };
 
   let nextProcedure = procedure;
   let procedureVotes = null;
@@ -276,6 +289,8 @@ export function resolveTurn({
         decision,
         created,
         procedure: nextProcedure,
+        cabinet: nextCabinet,
+        cabinetChanges,
         ending: {
           code: collapse.primary.endingCode,
           primaryMeter: collapse.primary.meter,
@@ -299,6 +314,8 @@ export function resolveTurn({
         decision,
         created,
         procedure: nextProcedure,
+        cabinet: nextCabinet,
+        cabinetChanges,
         ending: {
           code: REMOVED_ENDING_CODE,
           primaryMeter: null,
@@ -326,6 +343,8 @@ export function resolveTurn({
           nextProcedure && nextProcedure.status === PROCEDURE_STATUS.ACTIVE
             ? resolve(nextProcedure, "expired", turn, "O mandato terminou antes do julgamento.")
             : nextProcedure,
+        cabinet: nextCabinet,
+        cabinetChanges,
         ending: {
           code: MANDATE_COMPLETED_ENDING_CODE,
           primaryMeter: null,
@@ -385,6 +404,8 @@ export function resolveTurn({
     decision,
     procedure: nextProcedure,
     procedureVotes,
+    cabinet: nextCabinet,
+    cabinetChanges,
     expiredFlags: expired,
     eventChanges: {
       created,

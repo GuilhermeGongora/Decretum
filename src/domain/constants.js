@@ -88,6 +88,16 @@ export const PROCEDURE_STATUS = Object.freeze({ ACTIVE: "active", RESOLVED: "res
 
 export const PROCEDURE_RESOLUTIONS = Object.freeze(["archived", "acquitted", "removed", "expired"]);
 
+// The cabinet (roadmap phase 1). The country names its own ministries and who starts in them; the
+// engine only knows that a seat is held or vacant, and how loyal whoever holds it is.
+export const CABINET_LOYALTY_MIN = 0;
+export const CABINET_LOYALTY_MAX = 100;
+
+// How a choice may ask for a minister to be handed over. Content names a strategy, never a person:
+// which seat falls is the engine's decision, taken from the state, and it is always the same one for
+// the same cabinet.
+export const CABINET_DISMISSAL_STRATEGIES = Object.freeze(["most_exposed"]);
+
 export const EPITHET_CODES = Object.freeze([
   "equilibrist",
   "voice_of_the_streets",

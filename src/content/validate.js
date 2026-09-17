@@ -11,6 +11,9 @@ import {
   PRESIDENT_ROLE,
   PROCEDURE_STAGES,
   PROCEDURE_TYPES,
+  CABINET_LOYALTY_MIN,
+  CABINET_LOYALTY_MAX,
+  CABINET_DISMISSAL_STRATEGIES,
 } from "../domain/constants.js";
 import { EFFECT_OPERATIONS } from "../domain/effects.js";
 import { DRIVERS as LEGISLATIVE_DRIVERS } from "../domain/legislature.js";
@@ -46,6 +49,7 @@ const CHOICE_FIELDS = [
   "headline",
   "reaction",
   "procedure",
+  "cabinet",
 ];
 // Pressure a choice puts on a running constitutional procedure. Content moves numbers and may ask for
 // the next step; where that step lands is the engine's decision, never content's.
@@ -60,6 +64,9 @@ const PROCEDURE_EFFECT_FIELDS = [
   "resolve",
 ];
 const PROCEDURE_RESOLUTION_VALUES = ["archived", "acquitted", "removed", "expired"];
+// What a choice may do to the cabinet: ask for a minister to be handed over, and move what the ones
+// who stayed feel about it. Never who falls — that is read from the state.
+const CABINET_EFFECT_FIELDS = ["dismiss", "loyalty"];
 const CHARACTER_FIELDS = [
   "name",
   "role",
@@ -271,6 +278,29 @@ function validateProcedure(procedure, side, report) {
   }
 }
 
+// A choice may hand a minister over and may move what the rest of the cabinet feels about it, but it
+// never names the person who falls: the engine takes that from the state, so the same cabinet always
+// loses the same minister, and a card cannot single out someone the government has already spent.
+function validateCabinetOperations(cabinet, side, report) {
+  const at = (message) => report(`${side} cabinet ${message}`);
+  if (!isPlainObject(cabinet)) return at("must be an object");
+
+  rejectUnknownFields(cabinet, CABINET_EFFECT_FIELDS, at);
+
+  if (cabinet.dismiss !== undefined && !CABINET_DISMISSAL_STRATEGIES.includes(cabinet.dismiss)) {
+    at(`dismiss must be one of: ${CABINET_DISMISSAL_STRATEGIES.join(", ")}`);
+  }
+  if (
+    cabinet.loyalty !== undefined &&
+    (!Number.isInteger(cabinet.loyalty) || Math.abs(cabinet.loyalty) > 100)
+  ) {
+    at("loyalty must be an integer between -100 and 100");
+  }
+  if (cabinet.dismiss === undefined && cabinet.loyalty === undefined) {
+    at("must either name a dismissal or move loyalty");
+  }
+}
+
 function validateChoice(choice, side, context, report, warn) {
   const at = (message) => report(`${side} ${message}`);
   if (!isPlainObject(choice)) return at("must be an object");
@@ -279,6 +309,7 @@ function validateChoice(choice, side, context, report, warn) {
   if (!isNonEmptyString(choice.label)) at("label must be a non-empty string");
   if (!isNonEmptyString(choice.resultText)) at("resultText must be a non-empty string");
   if (choice.procedure !== undefined) validateProcedure(choice.procedure, side, report);
+  if (choice.cabinet !== undefined) validateCabinetOperations(choice.cabinet, side, report);
 
   // Authored consequence of this side. Optional so older content still loads with the compact view.
   for (const field of ["headline", "reaction"]) {
@@ -683,7 +714,59 @@ function validateRemoval(removal, report) {
   }
 }
 
-function validateCountries(countries, flags, errors) {
+// Who takes office with the president. The ministries themselves are declared once, in
+// `keyMinistries`; this only seats people in them. A holder therefore has to name a portfolio the
+// country actually has and a character the registry actually knows — a typo in either would seat
+// nobody at all, and the government would simply start one minister short without a single error.
+function validateCabinet(cabinet, country, characters, report) {
+  if (cabinet === undefined) return;
+  if (!isPlainObject(cabinet)) return report("cabinet must be an object");
+
+  const inLoyaltyRange = (value) =>
+    Number.isInteger(value) && value >= CABINET_LOYALTY_MIN && value <= CABINET_LOYALTY_MAX;
+  const bounds = `between ${CABINET_LOYALTY_MIN} and ${CABINET_LOYALTY_MAX}`;
+
+  if (!inLoyaltyRange(cabinet.defaultLoyalty)) {
+    report(`cabinet.defaultLoyalty must be an integer ${bounds}`);
+  }
+
+  const { holders } = cabinet;
+  if (holders === undefined) return;
+  if (!Array.isArray(holders)) return report("cabinet.holders must be an array");
+
+  const ministries = new Set((country.keyMinistries ?? []).map((ministry) => ministry.key));
+  const seated = new Set();
+
+  for (const holder of holders) {
+    if (!isPlainObject(holder)) {
+      report("cabinet has a holder that is not an object");
+      continue;
+    }
+
+    const where = isNonEmptyString(holder.portfolio) ? holder.portfolio : "?";
+    if (!isNonEmptyString(holder.portfolio)) {
+      report("cabinet has a holder without a portfolio");
+    } else if (!ministries.has(holder.portfolio)) {
+      report(`cabinet seats "${where}", which is not one of the country's ministries`);
+    } else if (seated.has(holder.portfolio)) {
+      report(`cabinet seats "${where}" twice`);
+    } else {
+      seated.add(holder.portfolio);
+    }
+
+    if (!isNonEmptyString(holder.character)) {
+      report(`cabinet holder for "${where}" needs a character id`);
+    } else if (!Object.hasOwn(characters, holder.character)) {
+      report(`cabinet holder for "${where}" is the unknown character "${holder.character}"`);
+    }
+
+    if (holder.loyalty !== undefined && !inLoyaltyRange(holder.loyalty)) {
+      report(`cabinet holder for "${where}" needs a loyalty ${bounds}`);
+    }
+  }
+}
+
+function validateCountries(countries, characters, flags, errors) {
   if (!isPlainObject(countries)) {
     errors.push("countries must be an object");
     return;
@@ -748,6 +831,7 @@ function validateCountries(countries, flags, errors) {
       }
     }
     validateRemoval(country.removal, report);
+    validateCabinet(country.cabinet, country, characters, report);
     validateCountryCampaign(country.campaign, context, report);
   }
 }
@@ -762,7 +846,12 @@ export function validateContent({ cards, flags, characters, endings, epithets, c
   );
   if (nonPlain) errors.push(`${nonPlain} must be plain data (no functions or executable values)`);
 
-  validateCountries(countries, isPlainObject(flags) ? flags : {}, errors);
+  validateCountries(
+    countries,
+    isPlainObject(characters) ? characters : {},
+    isPlainObject(flags) ? flags : {},
+    errors,
+  );
   validateCharacters(characters, errors);
   validateFlags(flags, errors);
   validateTextEntries(endings, ENDING_CODES, ["title", "text"], "ending", errors);
