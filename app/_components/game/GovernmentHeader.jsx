@@ -11,6 +11,7 @@ export function GovernmentHeader({
   totalTurns,
   dimmed = false,
   onOpenChronicle,
+  onOpenCabinet,
   onOpenSettings,
 }) {
   return (
@@ -38,6 +39,12 @@ export function GovernmentHeader({
         </span>
       </p>
       <span className={styles.divider} aria-hidden="true" />
+      {/* Only for a government that actually holds one: a pack without a cabinet shows no door. */}
+      {onOpenCabinet ? (
+        <button type="button" className={styles.textButton} onClick={onOpenCabinet}>
+          Gabinete
+        </button>
+      ) : null}
       <button type="button" className={styles.textButton} onClick={onOpenChronicle}>
         Crônica
       </button>

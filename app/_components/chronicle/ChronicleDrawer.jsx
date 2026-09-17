@@ -127,6 +127,11 @@ export function ChronicleDrawer({ gameId, onClose }) {
     state.status === "ready"
       ? [...(state.chronicle.procedureEntries ?? [])].sort((a, b) => b.turn - a.turn)
       : [];
+  // Who entered and who left the government. A government from before the cabinet existed has none.
+  const cabinetEntries =
+    state.status === "ready"
+      ? [...(state.chronicle.cabinetEntries ?? [])].sort((a, b) => b.turn - a.turn)
+      : [];
   const years = [...new Set(entries.map((entry) => entry.calendar.year))].sort((a, b) => a - b);
   const visibleEntries =
     year === "all" ? entries : entries.filter((entry) => entry.calendar.year === year);
@@ -216,6 +221,23 @@ export function ChronicleDrawer({ gameId, onClose }) {
                   {formatDossierDate(milestone.calendar)} · Mês {padTurn(milestone.turn)} ·{" "}
                   {milestone.label} · {milestone.institution}
                   {milestone.note ? ` — ${milestone.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {cabinetEntries.length > 0 ? (
+          <section className={styles.inheritance} aria-labelledby={`${titleId}-cabinet`}>
+            <h3 id={`${titleId}-cabinet`} className={styles.inheritanceLabel}>
+              Mudanças no gabinete
+            </h3>
+            <ul className={styles.inheritanceList}>
+              {cabinetEntries.map((change) => (
+                <li key={change.id}>
+                  {formatDossierDate(change.calendar)} · Mês {padTurn(change.turn)} · {change.label}{" "}
+                  — {change.summary}
+                  {change.source === "decision" ? " (consequência de uma decisão)" : ""}
                 </li>
               ))}
             </ul>

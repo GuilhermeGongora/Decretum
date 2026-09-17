@@ -12,7 +12,7 @@ import { toSpeakerView } from "@/src/services/gameViews";
 describe("character registry", () => {
   it.each([
     ["helena-vasque", "Helena Vasque", "Ministra-chefe da Casa Civil"],
-    ["livia-nogueira", "Lívia Nogueira", "Ministra da Economia"],
+    ["livia-nogueira", "Lívia Nogueira", "Ministra da Fazenda"],
     ["tomas-azevedo", "Tomás Azevedo", "Presidente do Supremo Tribunal Federal"],
     ["raul-mendonca", "Raul Mendonça", "Líder da coalizão"],
   ])("finds %s by its stable id with the canonical name", (id, name, role) => {
@@ -152,10 +152,16 @@ describe("character canon across cards", () => {
     expect(errors).toContainEqual(expect.stringMatching(/"tomas-azevedo": sphere must be one of/));
   });
 
-  it("keeps Lívia Nogueira, Ministra da Economia, in economic cards only", () => {
+  // She holds the Fazenda now. Caio Ferraz, who held it before, went one floor down to the Tesouro
+  // and remains the alternative name for the pasta — the registry, not a card, says so.
+  it("keeps Lívia Nogueira, Ministra da Fazenda, in economic cards only", () => {
     expect(characters["livia-nogueira"]).toMatchObject({
-      role: "Ministra da Economia",
+      role: "Ministra da Fazenda",
       sphere: "market",
+    });
+    expect(characters["caio-ferraz"]).toMatchObject({
+      role: "Secretário do Tesouro Nacional",
+      cabinet: { eligible: true, ministries: ["fazenda"] },
     });
 
     const categories = cards

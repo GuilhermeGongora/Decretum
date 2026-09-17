@@ -68,13 +68,47 @@ export const brazil = {
     note: "Bicameral: Câmara dos Deputados e Senado Federal.",
   },
 
+  // The ministries this government holds. `name` is the short form the briefing lists; `title` is how
+  // the ministry signs a document, which is what the cabinet room shows. The Casa Civil is not a
+  // "Ministério da Casa Civil", so the two are declared rather than composed from a prefix.
   keyMinistries: [
-    { key: "casa_civil", name: "Casa Civil", note: "coordenação do governo" },
-    { key: "fazenda", name: "Fazenda", note: "política econômica e orçamento" },
-    { key: "justica", name: "Justiça", note: "segurança pública e ordem legal" },
-    { key: "saude", name: "Saúde", note: "sistema público de saúde" },
-    { key: "educacao", name: "Educação", note: "redes de ensino e universidades" },
-    { key: "defesa", name: "Defesa", note: "comando civil das Forças Armadas" },
+    { key: "casa_civil", name: "Casa Civil", title: "Casa Civil", note: "coordenação do governo" },
+    {
+      key: "fazenda",
+      name: "Fazenda",
+      title: "Ministério da Fazenda",
+      note: "política econômica e orçamento",
+    },
+    {
+      key: "justica",
+      name: "Justiça",
+      title: "Ministério da Justiça",
+      note: "segurança pública e ordem legal",
+    },
+    {
+      key: "saude",
+      name: "Saúde",
+      title: "Ministério da Saúde",
+      note: "sistema público de saúde",
+    },
+    {
+      key: "educacao",
+      name: "Educação",
+      title: "Ministério da Educação",
+      note: "redes de ensino e universidades",
+    },
+    {
+      key: "defesa",
+      name: "Defesa",
+      title: "Ministério da Defesa",
+      note: "comando civil das Forças Armadas",
+    },
+    {
+      key: "meio_ambiente",
+      name: "Meio Ambiente",
+      title: "Ministério do Meio Ambiente",
+      note: "clima, florestas e licenciamento",
+    },
   ],
 
   // Who takes office with the president, and how much each one owes him. The ministries themselves
@@ -83,12 +117,172 @@ export const brazil = {
   // truthful state rather than an invented minister.
   cabinet: {
     defaultLoyalty: 60,
+    // How many appointments, dismissals or replacements the Presidency may sign in one month. The
+    // country owns the number; a pack with another constitutional practice may allow more.
+    maxActionsPerTurn: 1,
+    // A suspended president does not reorganise the government. Changes a constitutional card forces
+    // still happen: those are not the Presidency acting.
+    allowActionsWhileSuspended: false,
+    // What reorganising the government costs, before the person involved is taken into account.
+    // Signing a name calms the Congress a little and reassures the institutions; taking one down
+    // costs the base far more than it buys in propriety.
+    effects: {
+      appoint: { congress: 1, institutions: 1 },
+      dismiss: { congress: -4, institutions: 2, people: -1 },
+    },
+    // What the ministers who stayed lose when the president sacrifices one of them.
+    dismissalLoyaltyCost: 6,
+    // What each trait is worth when its owner takes office. The engine adds these up; it never knows
+    // what a "fiscalista" is.
+    traitEffects: {
+      tecnico: { institutions: 2 },
+      articulador: { congress: 3 },
+      linha_dura: { institutions: 1, people: -2 },
+      fiscalista: { market: 3 },
+      desenvolvimentista: { market: -2, people: 3 },
+      institucionalista: { institutions: 3 },
+      popular: { people: 3 },
+      independente: { institutions: 2, congress: -2 },
+    },
+    // How the engine's reading of a number is said out loud. Loyalty has its own vocabulary on
+    // purpose: the Presidency is never shown the score, only how safe the person feels.
+    attributeLabels: {
+      competence: { low: "baixa", moderate: "moderada", high: "alta" },
+      influence: { low: "baixa", moderate: "moderada", high: "alta" },
+      loyalty: { wavering: "vacilante", uncertain: "incerta", loyal: "leal" },
+    },
+    traits: [
+      { key: "tecnico", label: "Técnico" },
+      { key: "articulador", label: "Articulador" },
+      { key: "linha_dura", label: "Linha-dura" },
+      { key: "fiscalista", label: "Fiscalista" },
+      { key: "desenvolvimentista", label: "Desenvolvimentista" },
+      { key: "institucionalista", label: "Institucionalista" },
+      { key: "popular", label: "Popular" },
+      { key: "independente", label: "Independente" },
+    ],
+    // Everyone the Presidency can reach for, with their attributes declared once. A holder names a
+    // candidate, never a character with numbers of its own, so a minister and the person who could
+    // replace him are described in exactly the same place.
+    //
+    // Nobody is good at everything: the competent are less loyal, the loyal are less competent, and
+    // the ones with influence in Congress pay for it somewhere else.
+    candidates: [
+      {
+        id: "casa-civil-helena",
+        character: "helena-vasque",
+        competence: 80,
+        loyalty: 74,
+        influence: 72,
+        traits: ["articulador", "institucionalista"],
+        biography:
+          "Coordena o governo desde a posse e conhece cada voto da base pelo primeiro nome.",
+      },
+      {
+        id: "fazenda-livia",
+        character: "livia-nogueira",
+        competence: 84,
+        loyalty: 64,
+        influence: 60,
+        traits: ["fiscalista", "independente"],
+        biography:
+          "Economista de carreira, respeitada no mercado e pouco disposta a ceder ao Congresso.",
+      },
+      {
+        id: "fazenda-caio",
+        character: "caio-ferraz",
+        competence: 68,
+        loyalty: 80,
+        influence: 45,
+        traits: ["fiscalista", "tecnico"],
+        biography:
+          "Ficou no Tesouro quando perdeu a pasta e nunca deixou de atender o telefone do Planalto.",
+      },
+      {
+        id: "saude-icaro",
+        character: "icaro-nunes",
+        competence: 76,
+        loyalty: 58,
+        influence: 44,
+        traits: ["tecnico"],
+        biography:
+          "Sanitarista de hospital público, competente e sem qualquer paciência para política.",
+      },
+      {
+        id: "saude-helio",
+        character: "helio-barbosa",
+        competence: 62,
+        loyalty: 72,
+        influence: 66,
+        traits: ["popular", "desenvolvimentista"],
+        biography:
+          "Ficou conhecido coordenando mutirões no interior e tem trânsito fácil entre prefeitos.",
+      },
+      {
+        id: "educacao-mara",
+        character: "mara-vilar",
+        competence: 72,
+        loyalty: 66,
+        influence: 50,
+        traits: ["tecnico", "institucionalista"],
+        biography: "Professora de rede pública que chegou ao ministério pela porta da carreira.",
+      },
+      {
+        id: "educacao-renata",
+        character: "renata-pires",
+        competence: 80,
+        loyalty: 55,
+        influence: 40,
+        traits: ["tecnico", "independente"],
+        biography: "Reitora premiada, com autoridade acadêmica e pouco apetite por negociação.",
+      },
+      {
+        id: "defesa-otavio",
+        character: "otavio-leme",
+        competence: 74,
+        loyalty: 61,
+        influence: 68,
+        traits: ["linha_dura", "institucionalista"],
+        biography:
+          "Deixou o Estado-Maior para assumir uma pasta civil e carrega a farda em cada reunião.",
+      },
+      {
+        id: "meio-ambiente-sofia",
+        character: "sofia-amaral",
+        competence: 70,
+        loyalty: 70,
+        influence: 38,
+        traits: ["institucionalista"],
+        biography: "Fiscal ambiental de carreira, discreta e inflexível quanto ao licenciamento.",
+      },
+      {
+        id: "justica-bruno",
+        character: "bruno-tavares",
+        competence: 82,
+        loyalty: 45,
+        influence: 52,
+        traits: ["institucionalista", "independente"],
+        biography: "Procurador de carreira com reputação impecável e nenhuma lealdade prometida.",
+      },
+      {
+        id: "justica-dalva",
+        character: "dalva-moreno",
+        competence: 64,
+        loyalty: 74,
+        influence: 60,
+        traits: ["popular", "linha_dura"],
+        biography:
+          "Criminalista de tribunal do júri, popular na televisão e muito difícil de calar.",
+      },
+    ],
+    // Who takes office with the president. Justiça is not here: it starts vacant.
     holders: [
-      // The chief of staff is the closest of them and the one a president loses last.
-      { portfolio: "casa_civil", character: "helena-vasque", loyalty: 74 },
-      { portfolio: "fazenda", character: "caio-ferraz", loyalty: 62 },
-      { portfolio: "saude", character: "icaro-nunes", loyalty: 58 },
-      { portfolio: "educacao", character: "mara-vilar", loyalty: 66 },
+      { portfolio: "casa_civil", candidate: "casa-civil-helena" },
+      { portfolio: "fazenda", candidate: "fazenda-livia" },
+      { portfolio: "saude", candidate: "saude-icaro" },
+      { portfolio: "educacao", candidate: "educacao-mara" },
+      { portfolio: "defesa", candidate: "defesa-otavio" },
+      { portfolio: "meio_ambiente", candidate: "meio-ambiente-sofia" },
     ],
   },
 

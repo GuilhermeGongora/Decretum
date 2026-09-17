@@ -98,6 +98,10 @@ export const CABINET_LOYALTY_MAX = 100;
 // the same cabinet.
 export const CABINET_DISMISSAL_STRATEGIES = Object.freeze(["most_exposed"]);
 
+// What the Presidency itself may sign. A card forcing a minister out is not one of these: it is a
+// consequence, and it does not spend the month's manual action.
+export const CABINET_ACTIONS = Object.freeze(["appoint", "dismiss", "replace"]);
+
 export const EPITHET_CODES = Object.freeze([
   "equilibrist",
   "voice_of_the_streets",

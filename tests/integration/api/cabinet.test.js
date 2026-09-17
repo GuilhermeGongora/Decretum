@@ -58,18 +58,20 @@ describe("the cabinet a government takes office with", () => {
 
     const { rows } = await readCabinet(game.id);
 
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(7);
     const held = rows.filter((row) => row.holder_character_id !== null);
     const vacant = rows.filter((row) => row.holder_character_id === null);
 
     expect(held.map((row) => row.portfolio)).toEqual([
       "casa_civil",
+      "defesa",
       "educacao",
       "fazenda",
+      "meio_ambiente",
       "saude",
     ]);
-    // The cast has nobody for Justice or Defence, so those chairs start empty rather than invented.
-    expect(vacant.map((row) => row.portfolio)).toEqual(["defesa", "justica"]);
+    // The cast has nobody for Justice, so that chair starts empty rather than invented.
+    expect(vacant.map((row) => row.portfolio)).toEqual(["justica"]);
     for (const row of vacant) expect(row.loyalty).toBeNull();
   });
 
@@ -81,6 +83,10 @@ describe("the cabinet a government takes office with", () => {
     expect(rows.find((row) => row.portfolio === "casa_civil")).toMatchObject({
       holder_character_id: "helena-vasque",
       loyalty: 74,
+    });
+    expect(rows.find((row) => row.portfolio === "fazenda")).toMatchObject({
+      holder_character_id: "livia-nogueira",
+      loyalty: 64,
     });
   });
 });
@@ -96,11 +102,16 @@ describe("when the coalition demands a name", () => {
     const { rows } = await readCabinet(game.id);
     const seat = (portfolio) => rows.find((row) => row.portfolio === portfolio);
 
-    // Saúde is the least loyal of the four the president took office with: 58 against 62, 66 and 74.
+    // Saúde is the least loyal of the six the president took office with: 58 against 61, 64, 66,
+    // 70 and 74.
     expect(seat("saude")).toMatchObject({ holder_character_id: null, loyalty: null });
     expect(seat("casa_civil")).toMatchObject({ holder_character_id: "helena-vasque", loyalty: 66 });
-    expect(seat("fazenda").loyalty).toBe(54);
+    expect(seat("fazenda")).toMatchObject({ holder_character_id: "livia-nogueira", loyalty: 56 });
     expect(seat("educacao").loyalty).toBe(58);
+    expect(seat("defesa").loyalty).toBe(53);
+    expect(seat("meio_ambiente").loyalty).toBe(62);
+    // The empty chair is untouched by a loyalty shift: there is nobody in it to lose faith.
+    expect(seat("justica")).toMatchObject({ holder_character_id: null, loyalty: null });
   });
 
   it("leaves the cabinet alone when the president protects the minister", async () => {
@@ -111,7 +122,7 @@ describe("when the coalition demands a name", () => {
 
     const { rows } = await readCabinet(game.id);
 
-    expect(rows.filter((row) => row.holder_character_id !== null)).toHaveLength(4);
+    expect(rows.filter((row) => row.holder_character_id !== null)).toHaveLength(6);
     expect(rows.find((row) => row.portfolio === "saude").loyalty).toBe(58);
   });
 
@@ -130,6 +141,44 @@ describe("when the coalition demands a name", () => {
       holder_character_id: null,
       loyalty: null,
     });
-    expect(rows.filter((row) => row.holder_character_id !== null)).toHaveLength(3);
+    expect(rows.filter((row) => row.holder_character_id !== null)).toHaveLength(5);
+  });
+});
+
+// The two guarantees the reconciliation of a newly declared ministry has to keep, end to end.
+describe("a government whose stored cabinet predates the ministries it holds now", () => {
+  it("brings a ministry declared later back as an empty chair, and moves nobody else", async () => {
+    const { game } = await createGame();
+    // Exactly the state a government created before the portfolio existed is left in.
+    await queryTestDatabase(
+      `DELETE FROM cabinet_seats WHERE game_id = $1 AND portfolio = 'meio_ambiente'`,
+      [game.id],
+    );
+    await faceTheCampaignCard(game.id);
+
+    await decide(game.id, { choice: "right", turn: 12 });
+
+    const { rows } = await readCabinet(game.id);
+    const seat = (portfolio) => rows.find((row) => row.portfolio === portfolio);
+
+    expect(rows).toHaveLength(7);
+    expect(seat("meio_ambiente")).toMatchObject({ holder_character_id: null, loyalty: null });
+    expect(seat("casa_civil")).toMatchObject({ holder_character_id: "helena-vasque", loyalty: 74 });
+    expect(seat("saude")).toMatchObject({ holder_character_id: "icaro-nunes", loyalty: 58 });
+  });
+
+  it("gives a government that stored no cabinet at all the one its country describes", async () => {
+    const { game } = await createGame();
+    await queryTestDatabase(`DELETE FROM cabinet_seats WHERE game_id = $1`, [game.id]);
+    await faceTheCampaignCard(game.id);
+
+    await decide(game.id, { choice: "right", turn: 12 });
+
+    const { rows } = await readCabinet(game.id);
+
+    // Seven empty chairs would be the wrong reading of "nothing was stored".
+    expect(rows).toHaveLength(7);
+    expect(rows.filter((row) => row.holder_character_id !== null)).toHaveLength(6);
+    expect(rows.find((row) => row.portfolio === "justica").holder_character_id).toBeNull();
   });
 });

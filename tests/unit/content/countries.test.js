@@ -70,15 +70,30 @@ describe("country registry", () => {
     const seated = cabinet.holders.map((holder) => holder.portfolio);
     const declared = keyMinistries.map((ministry) => ministry.key);
 
-    expect(seated).toEqual(["casa_civil", "fazenda", "saude", "educacao"]);
-    // Every holder is somebody the registry knows, by id and not by display name.
+    expect(seated).toEqual([
+      "casa_civil",
+      "fazenda",
+      "saude",
+      "educacao",
+      "defesa",
+      "meio_ambiente",
+    ]);
+    // Every holder names a candidate the pack declares, whose character the registry knows by id and
+    // not by display name, and whom the registry allows in that very pasta.
+    const candidateOf = (id) => cabinet.candidates.find((candidate) => candidate.id === id);
     for (const holder of cabinet.holders) {
-      expect(Object.hasOwn(characters, holder.character)).toBe(true);
+      const candidate = candidateOf(holder.candidate);
+      expect(candidate).toBeDefined();
+      expect(Object.hasOwn(characters, candidate.character)).toBe(true);
+      expect(characters[candidate.character].cabinet).toMatchObject({
+        eligible: true,
+        ministries: expect.arrayContaining([holder.portfolio]),
+      });
     }
-    // Justiça and Defesa are declared ministries that start empty. An empty chair is the truth; an
-    // invented minister would not be.
-    expect(declared).toEqual(expect.arrayContaining([...seated, "justica", "defesa"]));
-    expect(declared).toHaveLength(6);
+    // Justiça is a declared ministry that starts empty. An empty chair is the truth; an invented
+    // minister would not be.
+    expect(declared).toEqual(expect.arrayContaining([...seated, "justica"]));
+    expect(declared).toHaveLength(7);
   });
 
   it("offers a form of address that does not gender the candidate by default", () => {
@@ -160,8 +175,13 @@ describe("country validation", () => {
     ],
     [
       "a minister who is not in the character registry",
-      (content) => (content.countries.BR.cabinet.holders[0].character = "ghost-minister"),
+      (content) => (content.countries.BR.cabinet.candidates[0].character = "ghost-minister"),
       /unknown character "ghost-minister"/,
+    ],
+    [
+      "a candidate the registry lets nowhere near a ministry",
+      (content) => (content.countries.BR.cabinet.candidates[0].character = "tomas-azevedo"),
+      /who may not hold a ministry/,
     ],
     [
       "a cabinet seat in a ministry the country does not declare",
@@ -169,18 +189,52 @@ describe("country validation", () => {
       /seats "turismo", which is not one of the country's ministries/,
     ],
     [
+      "a seat filled by a candidate the pack never declared",
+      (content) => (content.countries.BR.cabinet.holders[0].candidate = "ghost-candidate"),
+      /names the unknown candidate "ghost-candidate"/,
+    ],
+    [
       "the same ministry seated twice",
       (content) =>
         content.countries.BR.cabinet.holders.push({
           portfolio: "casa_civil",
-          character: "caio-ferraz",
+          candidate: "casa-civil-helena",
         }),
       /seats "casa_civil" twice/,
     ],
     [
+      "one person holding two ministries at once",
+      (content) =>
+        content.countries.BR.cabinet.holders.push({
+          portfolio: "justica",
+          candidate: "casa-civil-helena",
+        }),
+      /seats "helena-vasque" in more than one ministry/,
+    ],
+    [
       "a loyalty outside its bounds",
-      (content) => (content.countries.BR.cabinet.holders[0].loyalty = 140),
+      (content) => (content.countries.BR.cabinet.candidates[0].loyalty = 140),
       /needs a loyalty between 0 and 100/,
+    ],
+    [
+      "a trait the pack never declared",
+      (content) => content.countries.BR.cabinet.candidates[0].traits.push("carismatico"),
+      /has the unknown trait "carismatico"/,
+    ],
+    [
+      "a consequence attached to a trait the pack never declared",
+      (content) => (content.countries.BR.cabinet.traitEffects.carismatico = { people: 2 }),
+      /traitEffects has the unknown trait "carismatico"/,
+    ],
+    [
+      "a cabinet consequence on something that is not a pillar",
+      (content) => (content.countries.BR.cabinet.effects.appoint.popularity = 3),
+      /cabinet.effects.appoint has unknown pillar "popularity"/,
+    ],
+    [
+      "a cabinet that lets the Presidency sign any number of changes in a month",
+      (content) => delete content.countries.BR.cabinet.maxActionsPerTurn,
+      /maxActionsPerTurn must be a positive integer/,
     ],
     [
       "a cabinet without a default loyalty for the seats that name none",

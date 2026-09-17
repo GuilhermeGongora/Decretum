@@ -1,5 +1,5 @@
 import { AppError, DomainRuleError, ValidationError } from "@/src/errors";
-import { CHOICE_SIDES } from "@/src/domain/constants";
+import { CABINET_ACTIONS, CHOICE_SIDES } from "@/src/domain/constants";
 import { logger } from "@/src/utils/logger";
 
 export function jsonResponse(body, status = 200) {
@@ -70,6 +70,59 @@ export function parseDecisionPayload(body) {
   }
 
   return { choice: body.choice, expectedTurn: body.turn };
+}
+
+const CABINET_ACTION_FIELDS = ["turn", "action", "ministryKey", "candidateId"];
+
+/**
+ * The client sends an intention and nothing else: which operation, which ministry, which candidate.
+ *
+ * What a change costs — pillars, loyalty, who is the most exposed minister — belongs to the server,
+ * so a body carrying effects, loyalty, competence, influence, an occupant, flags or a country is
+ * refused outright rather than quietly ignored. `turn` is a concurrency guard, never an effect.
+ */
+export function parseCabinetActionPayload(body) {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    throw new ValidationError("Request body must be a JSON object");
+  }
+
+  const unknownFields = Object.keys(body).filter((key) => !CABINET_ACTION_FIELDS.includes(key));
+  if (unknownFields.length > 0) {
+    throw new ValidationError(`Unknown fields: ${unknownFields.join(", ")}`, {
+      code: "UNKNOWN_FIELDS",
+    });
+  }
+
+  if (typeof body.action !== "string") {
+    throw new ValidationError("action is required and must be a string");
+  }
+  if (!CABINET_ACTIONS.includes(body.action)) {
+    throw new DomainRuleError(`action must be one of: ${CABINET_ACTIONS.join(", ")}`, {
+      code: "UNKNOWN_CABINET_ACTION",
+    });
+  }
+  if (typeof body.ministryKey !== "string" || body.ministryKey.trim() === "") {
+    throw new ValidationError("ministryKey is required and must be a string");
+  }
+
+  // Dismissing names no successor, and appointing without one would be a change that changes nothing.
+  const needsCandidate = body.action !== "dismiss";
+  if (needsCandidate && (typeof body.candidateId !== "string" || body.candidateId.trim() === "")) {
+    throw new ValidationError(`${body.action} requires a candidateId`);
+  }
+  if (!needsCandidate && body.candidateId !== undefined) {
+    throw new ValidationError("dismiss does not take a candidateId");
+  }
+  if (body.turn !== undefined && !(Number.isInteger(body.turn) && body.turn >= 1)) {
+    throw new ValidationError("turn must be a positive integer");
+  }
+
+  return {
+    turn: body.turn,
+    action: body.action,
+    ministryKey: body.ministryKey,
+    candidateId: needsCandidate ? body.candidateId : undefined,
+  };
 }
 
 const GAME_FIELDS = ["countryCode", "candidate", "campaign"];

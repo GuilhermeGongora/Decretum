@@ -49,6 +49,7 @@ export function GameScreen({
   onDecide,
   onContinue,
   onOpenChronicle,
+  onOpenCabinet,
   onOpenSettings,
 }) {
   const [focusedSide, setFocusedSide] = useState(null);
@@ -255,6 +256,7 @@ export function GameScreen({
       totalTurns={MANDATE_TURNS}
       dimmed={previewSide !== null}
       onOpenChronicle={onOpenChronicle}
+      onOpenCabinet={onOpenCabinet}
       onOpenSettings={onOpenSettings}
     />
   );

@@ -45,4 +45,11 @@ export const api = {
     }),
   createSuccessor: (id) => request(`${gamePath(id)}/successor`, { method: "POST", body: "{}" }),
   getChronicle: (id) => request(`${gamePath(id)}/chronicle`),
+  // Only the operation, the ministry and the name. Never an effect, a loyalty or an occupant: what a
+  // change costs is decided by the server and comes back in the snapshot.
+  cabinetAction: (id, payload) =>
+    request(`${gamePath(id)}/cabinet/actions`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };

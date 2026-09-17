@@ -13,6 +13,7 @@ import {
   updatePreferences,
 } from "@/app/_lib/storage";
 import { PILLARS, errorMessage, formatDelta } from "@/app/_lib/text";
+import { CabinetRoom } from "./cabinet/CabinetRoom";
 import { ChronicleDrawer } from "./chronicle/ChronicleDrawer";
 import { EndingScreen } from "./ending/EndingScreen";
 import { GameScreen } from "./game/GameScreen";
@@ -35,6 +36,9 @@ function toSnapshot(response) {
     // Where the constitutional process stands, as the server describes it in public terms. Null for
     // a government facing none, which is every government until one is opened against it.
     procedure: response.procedure ?? null,
+    // The government the president holds, in public words. Null for a government created before the
+    // cabinet existed and never read since.
+    cabinet: response.cabinet ?? null,
     ending: response.ending ?? null,
     summary: response.summary ?? null,
   };
@@ -188,6 +192,8 @@ export default function DecretumApp() {
         // What the constitutional chain did this month, as the server reported it. The interface
         // opens a vote screen because of this event, never because it recognised a headline.
         procedureEvent: response.procedureEvent ?? null,
+        // Who left the government because of this decision, already in public words.
+        cabinetChanges: response.cabinetChanges ?? [],
       });
       setSnapshot(toSnapshot(response));
       setInheritance(null);
@@ -195,6 +201,41 @@ export default function DecretumApp() {
       return true;
     } catch (requestError) {
       if (requestError.code === "TURN_ALREADY_DECIDED" || requestError.code === "GAME_NOT_ACTIVE") {
+        const fresh = await api.getGame(snapshot.game.id).catch(() => null);
+        if (fresh) setSnapshot(toSnapshot(fresh));
+      }
+      setError(errorMessage(requestError));
+      return false;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  // One change to the cabinet. The browser sends the intention and nothing else; what it costs comes
+  // back already decided, inside the snapshot.
+  async function actOnCabinet({ action, ministryKey, candidateId }) {
+    if (pending || !snapshot) return false;
+    setPending(true);
+    setError(null);
+    try {
+      const response = await api.cabinetAction(snapshot.game.id, {
+        turn: snapshot.game.turn,
+        action,
+        ministryKey,
+        candidateId,
+      });
+      setSnapshot(toSnapshot(response));
+      return true;
+    } catch (requestError) {
+      // The board moved under the screen — another tab, or a month that has already turned. Show it
+      // as it now is instead of arguing with it.
+      if (
+        ["TURN_ALREADY_DECIDED", "GAME_NOT_ACTIVE", "CABINET_ACTION_ALREADY_USED"].includes(
+          requestError.code,
+        ) ||
+        requestError.code === "MINISTRY_ALREADY_HELD" ||
+        requestError.code === "MINISTRY_ALREADY_VACANT"
+      ) {
         const fresh = await api.getGame(snapshot.game.id).catch(() => null);
         if (fresh) setSnapshot(toSnapshot(fresh));
       }
@@ -395,6 +436,7 @@ export default function DecretumApp() {
         onDecide={decide}
         onContinue={() => setFeedback(null)}
         onOpenChronicle={() => setDialog("chronicle")}
+        onOpenCabinet={snapshot.cabinet ? () => setDialog("cabinet") : null}
         onOpenSettings={() => setDialog("settings")}
       />
     );
@@ -425,6 +467,19 @@ export default function DecretumApp() {
 
       {dialog === "chronicle" && chronicleGameId ? (
         <ChronicleDrawer gameId={chronicleGameId} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === "cabinet" && snapshot?.cabinet ? (
+        <CabinetRoom
+          cabinet={snapshot.cabinet}
+          turn={snapshot.game.turn}
+          pending={pending}
+          error={error}
+          onAct={actOnCabinet}
+          onClose={() => {
+            setError(null);
+            setDialog(null);
+          }}
+        />
       ) : null}
       {dialog === "settings" ? (
         <SettingsDialog

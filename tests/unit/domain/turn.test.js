@@ -323,9 +323,13 @@ describe("the cabinet across a month", () => {
     ],
     cabinet: {
       defaultLoyalty: 60,
+      candidates: [
+        { id: "cc-helena", character: "helena-vasque", loyalty: 72 },
+        { id: "fz-caio", character: "caio-ferraz", loyalty: 48 },
+      ],
       holders: [
-        { portfolio: "casa_civil", character: "helena-vasque", loyalty: 72 },
-        { portfolio: "fazenda", character: "caio-ferraz", loyalty: 48 },
+        { portfolio: "casa_civil", candidate: "cc-helena" },
+        { portfolio: "fazenda", candidate: "fz-caio" },
       ],
     },
   };

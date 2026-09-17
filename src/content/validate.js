@@ -75,7 +75,9 @@ const CHARACTER_FIELDS = [
   "portrait",
   "portraitPosition",
   "accent",
+  "cabinet",
 ];
+const CHARACTER_CABINET_FIELDS = ["eligible", "ministries", "reason"];
 const CHARACTER_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const PORTRAIT_PATTERN = /^\/assets\/characters\/[a-z0-9-]+\.(?:webp|png|jpg)$/;
 const ACCENT_PATTERN = /^#[0-9a-f]{6}$/i;
@@ -561,6 +563,33 @@ function validateCharacters(characters, errors) {
     }
     if (character.accent !== undefined && !ACCENT_PATTERN.test(String(character.accent)))
       report("accent must be a #rrggbb color");
+
+    // Being in the cast is not a qualification. Every character states, explicitly, whether they may
+    // hold a ministry and which — so adding someone to the registry never quietly makes them
+    // appointable, and refusing someone carries the reason with it.
+    const { cabinet } = character;
+    if (cabinet === undefined) {
+      report("cabinet must say whether this character may hold a ministry");
+    } else if (!isPlainObject(cabinet)) {
+      report("cabinet must be an object");
+    } else {
+      rejectUnknownFields(cabinet, CHARACTER_CABINET_FIELDS, report);
+      if (typeof cabinet.eligible !== "boolean") {
+        report("cabinet.eligible must be a boolean");
+      } else if (cabinet.eligible) {
+        if (!Array.isArray(cabinet.ministries) || cabinet.ministries.length === 0) {
+          report("an eligible character needs the ministries they may hold");
+        } else if (!cabinet.ministries.every((key) => isNonEmptyString(key))) {
+          report("cabinet.ministries must be ministry keys");
+        }
+        if (cabinet.reason !== undefined) report("only an ineligible character carries a reason");
+      } else {
+        if (!isNonEmptyString(cabinet.reason)) report("an ineligible character needs a reason");
+        if (cabinet.ministries !== undefined) {
+          report("an ineligible character cannot list ministries");
+        }
+      }
+    }
   }
 }
 
@@ -714,20 +743,160 @@ function validateRemoval(removal, report) {
   }
 }
 
-// Who takes office with the president. The ministries themselves are declared once, in
-// `keyMinistries`; this only seats people in them. A holder therefore has to name a portfolio the
-// country actually has and a character the registry actually knows — a typo in either would seat
-// nobody at all, and the government would simply start one minister short without a single error.
+// Who takes office with the president, and everyone who could. The ministries are declared once, in
+// `keyMinistries`; the candidates carry the people and their numbers; a holder only says which
+// candidate sits where. Nothing is described twice, so a minister and whoever could replace him are
+// always read from the same place.
 function validateCabinet(cabinet, country, characters, report) {
   if (cabinet === undefined) return;
   if (!isPlainObject(cabinet)) return report("cabinet must be an object");
 
-  const inLoyaltyRange = (value) =>
+  const inRange = (value) =>
     Number.isInteger(value) && value >= CABINET_LOYALTY_MIN && value <= CABINET_LOYALTY_MAX;
   const bounds = `between ${CABINET_LOYALTY_MIN} and ${CABINET_LOYALTY_MAX}`;
 
-  if (!inLoyaltyRange(cabinet.defaultLoyalty)) {
+  if (!inRange(cabinet.defaultLoyalty)) {
     report(`cabinet.defaultLoyalty must be an integer ${bounds}`);
+  }
+  if (!isIntegerAtLeast(cabinet.maxActionsPerTurn, 1)) {
+    report("cabinet.maxActionsPerTurn must be a positive integer");
+  }
+  if (typeof cabinet.allowActionsWhileSuspended !== "boolean") {
+    report("cabinet.allowActionsWhileSuspended must be a boolean");
+  }
+  if (
+    cabinet.dismissalLoyaltyCost !== undefined &&
+    !isIntegerAtLeast(cabinet.dismissalLoyaltyCost, 0)
+  ) {
+    report("cabinet.dismissalLoyaltyCost must be a non-negative integer");
+  }
+
+  // What an operation costs, in pillars. Content declares the consequences; the engine only adds.
+  const validatePillars = (deltas, label) => {
+    if (!isPlainObject(deltas)) return report(`${label} must be an object`);
+    for (const [meter, delta] of Object.entries(deltas)) {
+      if (!METERS.includes(meter)) report(`${label} has unknown pillar "${meter}"`);
+      else if (!Number.isInteger(delta)) report(`${label} effect on ${meter} must be an integer`);
+    }
+  };
+
+  if (cabinet.effects !== undefined) {
+    if (!isPlainObject(cabinet.effects)) {
+      report("cabinet.effects must be an object");
+    } else {
+      for (const [operation, deltas] of Object.entries(cabinet.effects)) {
+        if (!["appoint", "dismiss"].includes(operation)) {
+          report(`cabinet.effects has unknown operation "${operation}"`);
+        } else {
+          validatePillars(deltas, `cabinet.effects.${operation}`);
+        }
+      }
+    }
+  }
+
+  // The vocabulary a candidate may be described with. Traits are keys with labels, so the interface
+  // never has to translate or gender a word the engine invented.
+  const traitKeys = new Set();
+  const traits = cabinet.traits ?? [];
+  if (!Array.isArray(traits)) {
+    report("cabinet.traits must be an array");
+  } else {
+    for (const trait of traits) {
+      if (!isPlainObject(trait) || !isNonEmptyString(trait.key) || !isNonEmptyString(trait.label)) {
+        report("cabinet has a trait without a key and a label");
+        continue;
+      }
+      if (traitKeys.has(trait.key)) report(`cabinet declares the trait "${trait.key}" twice`);
+      else traitKeys.add(trait.key);
+    }
+  }
+
+  // What each trait is worth when its owner takes office. Checked against the same vocabulary the
+  // candidates are described with, so a trait nobody declared cannot quietly carry a consequence.
+  if (cabinet.traitEffects !== undefined) {
+    if (!isPlainObject(cabinet.traitEffects)) {
+      report("cabinet.traitEffects must be an object");
+    } else {
+      for (const [key, deltas] of Object.entries(cabinet.traitEffects)) {
+        if (!traitKeys.has(key)) report(`cabinet.traitEffects has the unknown trait "${key}"`);
+        else validatePillars(deltas, `cabinet.traitEffects.${key}`);
+      }
+    }
+  }
+
+  // Every reading the engine can produce needs a word in this country's own language, or the screen
+  // would have to invent one.
+  const ATTRIBUTE_KEYS = {
+    competence: ["low", "moderate", "high"],
+    influence: ["low", "moderate", "high"],
+    loyalty: ["wavering", "uncertain", "loyal"],
+  };
+  if (cabinet.attributeLabels !== undefined) {
+    if (!isPlainObject(cabinet.attributeLabels)) {
+      report("cabinet.attributeLabels must be an object");
+    } else {
+      for (const [attribute, labels] of Object.entries(cabinet.attributeLabels)) {
+        if (!Object.hasOwn(ATTRIBUTE_KEYS, attribute)) {
+          report(`cabinet.attributeLabels has unknown attribute "${attribute}"`);
+          continue;
+        }
+        if (!isPlainObject(labels)) {
+          report(`cabinet.attributeLabels.${attribute} must be an object`);
+          continue;
+        }
+        for (const key of ATTRIBUTE_KEYS[attribute]) {
+          if (!isNonEmptyString(labels[key])) {
+            report(`cabinet.attributeLabels.${attribute} is missing a word for "${key}"`);
+          }
+        }
+        for (const key of Object.keys(labels)) {
+          if (!ATTRIBUTE_KEYS[attribute].includes(key)) {
+            report(`cabinet.attributeLabels.${attribute} has unknown reading "${key}"`);
+          }
+        }
+      }
+    }
+  }
+
+  const candidates = Array.isArray(cabinet.candidates) ? cabinet.candidates : [];
+  if (!Array.isArray(cabinet.candidates)) report("cabinet.candidates must be an array");
+
+  const candidateIds = new Set();
+  for (const candidate of candidates) {
+    if (!isPlainObject(candidate)) {
+      report("cabinet has a candidate that is not an object");
+      continue;
+    }
+
+    const who = isNonEmptyString(candidate.id) ? candidate.id : "?";
+    if (!isNonEmptyString(candidate.id)) report("cabinet has a candidate without an id");
+    else if (candidateIds.has(candidate.id)) report(`cabinet declares "${who}" twice`);
+    else candidateIds.add(candidate.id);
+
+    if (!isNonEmptyString(candidate.character)) {
+      report(`candidate "${who}" needs a character id`);
+    } else if (!Object.hasOwn(characters, candidate.character)) {
+      report(`candidate "${who}" is the unknown character "${candidate.character}"`);
+    } else if (!characters[candidate.character].cabinet?.eligible) {
+      // Being in the cast is not a qualification, and a pack cannot overrule the registry.
+      report(`candidate "${who}" is "${candidate.character}", who may not hold a ministry`);
+    }
+
+    for (const field of ["competence", "loyalty", "influence"]) {
+      if (candidate[field] !== undefined && !inRange(candidate[field])) {
+        report(`candidate "${who}" needs a ${field} ${bounds}`);
+      }
+    }
+    if (candidate.traits !== undefined && !Array.isArray(candidate.traits)) {
+      report(`candidate "${who}" traits must be an array`);
+    } else {
+      for (const key of candidate.traits ?? []) {
+        if (!traitKeys.has(key)) report(`candidate "${who}" has the unknown trait "${key}"`);
+      }
+    }
+    if (candidate.biography !== undefined && !isNonEmptyString(candidate.biography)) {
+      report(`candidate "${who}" biography must be a non-empty string`);
+    }
   }
 
   const { holders } = cabinet;
@@ -735,7 +904,13 @@ function validateCabinet(cabinet, country, characters, report) {
   if (!Array.isArray(holders)) return report("cabinet.holders must be an array");
 
   const ministries = new Set((country.keyMinistries ?? []).map((ministry) => ministry.key));
+  const candidateBy = new Map(
+    candidates
+      .filter((candidate) => isPlainObject(candidate) && isNonEmptyString(candidate.id))
+      .map((candidate) => [candidate.id, candidate]),
+  );
   const seated = new Set();
+  const inOffice = new Set();
 
   for (const holder of holders) {
     if (!isPlainObject(holder)) {
@@ -754,14 +929,30 @@ function validateCabinet(cabinet, country, characters, report) {
       seated.add(holder.portfolio);
     }
 
-    if (!isNonEmptyString(holder.character)) {
-      report(`cabinet holder for "${where}" needs a character id`);
-    } else if (!Object.hasOwn(characters, holder.character)) {
-      report(`cabinet holder for "${where}" is the unknown character "${holder.character}"`);
+    if (!isNonEmptyString(holder.candidate)) {
+      report(`cabinet holder for "${where}" needs a candidate id`);
+      continue;
+    }
+    const candidate = candidateBy.get(holder.candidate) ?? null;
+    if (!candidate) {
+      report(`cabinet holder for "${where}" names the unknown candidate "${holder.candidate}"`);
+      continue;
     }
 
-    if (holder.loyalty !== undefined && !inLoyaltyRange(holder.loyalty)) {
-      report(`cabinet holder for "${where}" needs a loyalty ${bounds}`);
+    // Nobody holds two ministries at once.
+    if (inOffice.has(candidate.character)) {
+      report(`cabinet seats "${candidate.character}" in more than one ministry`);
+    } else if (isNonEmptyString(candidate.character)) {
+      inOffice.add(candidate.character);
+    }
+
+    // The registry decides who may sit where. A pack cannot seat the Chief Justice, the Speaker or a
+    // governor simply by naming them in a holder list.
+    const allowed = characters[candidate.character]?.cabinet?.ministries ?? [];
+    if (!allowed.includes(holder.portfolio)) {
+      report(
+        `cabinet seats "${candidate.character}" in "${where}", which the registry does not allow`,
+      );
     }
   }
 }

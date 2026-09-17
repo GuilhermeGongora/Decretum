@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { loadContent } from "@/src/content";
+// The registry is read straight from content, the way the epithets are: `loadContent()` validates it
+// and compiles the cards from it, but deliberately does not carry it in the frozen result.
+import { characters } from "@/src/content/characters";
 import { epithetDefinitions } from "@/src/content/epithets";
 import { withTransaction } from "@/src/database/transaction";
 import { EVENT_STATUS, GAME_STATUS, MONTHS_PER_YEAR } from "@/src/domain/constants";
+import { applyDeltas } from "@/src/domain/effects";
 import { resolveCampaign, resolveCandidateTraits } from "@/src/domain/election";
 import { buildSuccessorStart } from "@/src/domain/successor";
 import { buildGameSummary } from "@/src/domain/summary";
@@ -21,8 +25,13 @@ import {
   replaceFlags,
   updateScheduledEventStatus,
 } from "@/src/repositories/gameStateRepository";
-import { createCabinet, restoreCabinet } from "@/src/domain/cabinet";
+import { applyCabinetAction, createCabinet, restoreCabinet } from "@/src/domain/cabinet";
 import { findCabinetSeats, replaceCabinetSeats } from "@/src/repositories/cabinetRepository";
+import {
+  countManualActionsAtTurn,
+  findCabinetActions,
+  insertCabinetAction,
+} from "@/src/repositories/cabinetActionRepository";
 import {
   findActiveProcedure,
   findProcedures,
@@ -30,6 +39,9 @@ import {
   updateProcedure,
 } from "@/src/repositories/procedureRepository";
 import {
+  toCabinetChangeViews,
+  toCabinetChronicleView,
+  toCabinetView,
   toCardView,
   toDecisionView,
   toEndingView,
@@ -126,12 +138,26 @@ async function loadSnapshot(client, gameId, cards) {
   const procedures = await findProcedures(client, gameId);
   const procedure = toProcedureView(procedures.at(-1) ?? null, country, game.turn);
 
+  // The government the president actually holds, in public words. A suspended presidency may not
+  // reorganise it, so the view is told, and it stops offering actions the server would refuse.
+  const cabinet = toCabinetView(
+    restoreCabinet(country, await findCabinetSeats(client, gameId)),
+    country,
+    {
+      turn: game.turn,
+      actionsUsed: await countManualActionsAtTurn(client, gameId, game.turn),
+      suspended: procedure?.presidency?.key === "suspended",
+      active: game.status === GAME_STATUS.ACTIVE,
+    },
+  );
+
   if (game.status === GAME_STATUS.ACTIVE) {
     const card = cards.find((candidate) => candidate.slug === game.currentCardSlug);
     return {
       game: toGameView(game, country),
       currentCard: toCardView(card, game.meters),
       procedure,
+      cabinet,
       ending: null,
       summary: null,
     };
@@ -148,6 +174,8 @@ async function loadSnapshot(client, gameId, cards) {
     // A government that ended still carries the process that ended it: the archive has to stay
     // readable after the last month, and a removal is told by the procedure, not only by the ending.
     procedure,
+    // A government that ended is still read: the archive shows the cabinet it fell with.
+    cabinet,
     ending: toEndingView(game.endingCode, endings),
     summary: toSummaryView(summary, { endings, epithets: epithetDefinitions }),
   };
@@ -266,6 +294,82 @@ function toProcedureEvent(before, after, votes) {
   };
 }
 
+/**
+ * The Presidency signing one change to its own cabinet.
+ *
+ * The client sends an intention — which ministry, which candidate — and never an effect, a loyalty
+ * or an occupant. Everything else is decided here, inside one transaction holding the game row lock,
+ * so two requests racing in the same month cannot both be written.
+ *
+ * The count of this month's actions is read only so the refusal can be explained. What actually
+ * guarantees the limit is the database: the partial unique index over (game_id, turn) for manual
+ * actions refuses the second one even when both requests passed the count.
+ */
+export async function performCabinetAction(gameId, { turn, action, ministryKey, candidateId }) {
+  assertGameId(gameId);
+
+  const { snapshot, applied } = await withTransaction(async (client) => {
+    const game = await findGameById(client, gameId, { forUpdate: true });
+    if (!game) throw gameNotFound();
+    if (game.status !== GAME_STATUS.ACTIVE) {
+      throw new ConflictError("This government has already ended", { code: "GAME_NOT_ACTIVE" });
+    }
+    // The month the screen was opened in. A stale one means the board has moved since.
+    if (turn !== undefined && turn !== game.turn) {
+      throw new ConflictError("This month has already passed", { code: "TURN_ALREADY_DECIDED" });
+    }
+
+    const country = findCountry(game.countryCode);
+    // Read under the same lock: whether the Presidency is suspended decides whether it may act at
+    // all, and the country decides whether that rule applies to it.
+    const procedure = await findActiveProcedure(client, gameId, { forUpdate: true });
+    const cabinet = restoreCabinet(country, await findCabinetSeats(client, gameId));
+    const actionsUsedThisTurn = await countManualActionsAtTurn(client, gameId, game.turn);
+
+    const result = applyCabinetAction(
+      cabinet,
+      { action, ministryKey, candidateId },
+      {
+        country,
+        characters,
+        turn: game.turn,
+        actionsUsedThisTurn,
+        suspended: procedure?.stage === "suspended",
+      },
+    );
+
+    try {
+      await insertCabinetAction(client, gameId, result.action, "manual");
+    } catch (error) {
+      if (isUniqueViolation(error, "cabinet_actions_one_manual_per_turn")) {
+        throw new ConflictError("This month's cabinet action has already been used", {
+          code: "CABINET_ACTION_ALREADY_USED",
+          cause: error,
+        });
+      }
+      throw error;
+    }
+
+    await replaceCabinetSeats(client, gameId, result.cabinet);
+    // The consequences reach the pillars, but a cabinet change never ends a government on its own: a
+    // collapse belongs to a month that was decided, with its card, its consequence and its entry in
+    // the chronicle.
+    const { meters } = applyDeltas(game.meters, result.effects);
+    await updateGame(client, gameId, { ...game, meters });
+
+    const cards = await findAllCards(client);
+    return { snapshot: await loadSnapshot(client, gameId, cards), applied: result };
+  });
+
+  logger.info("game.cabinet_action", {
+    gameId,
+    turn: applied.action.turn,
+    action: applied.action.action,
+    ministryKey: applied.action.ministryKey,
+  });
+  return { ...snapshot, cabinetAction: applied.action };
+}
+
 // GDD §12.2: the whole month is resolved inside one transaction holding the game row lock.
 export async function decide(gameId, { choice, expectedTurn }) {
   assertGameId(gameId);
@@ -332,6 +436,24 @@ export async function decide(gameId, { choice, expectedTurn }) {
     // Guarded: replacing the seats deletes them first, so a government that holds no cabinet at all
     // must not reach this — it would wipe the table row set instead of leaving it untouched.
     if (turnResult.cabinet) await replaceCabinetSeats(client, gameId, turnResult.cabinet);
+    // A card that forced a minister out is recorded as well, as a change the Presidency did not
+    // sign. `source` is what keeps it outside the one-action-a-month index: a constitutional
+    // consequence is never refused because the month's own action had already been spent.
+    for (const change of turnResult.cabinetChanges ?? []) {
+      await insertCabinetAction(
+        client,
+        gameId,
+        {
+          turn: change.turn,
+          action: "dismiss",
+          ministryKey: change.portfolio,
+          previousCharacterId: change.holder,
+          nextCharacterId: null,
+          effects: {},
+        },
+        "decision",
+      );
+    }
     await updateGame(client, gameId, turnResult.state);
 
     // The procedure as it stood before this month, so the response can say what changed.
@@ -380,6 +502,12 @@ export async function decide(gameId, { choice, expectedTurn }) {
       procedureBefore,
       result.procedure,
       result.procedureVotes ?? result.ending?.procedureVotes ?? null,
+    ),
+    // Who left the government because of this month's decision, in public words. Empty whenever the
+    // card asked nothing of the cabinet, which is almost every month.
+    cabinetChanges: toCabinetChangeViews(
+      result.cabinetChanges,
+      findCountry(snapshot.game.country?.code),
     ),
     gameOver: result.gameOver,
   };
@@ -453,6 +581,9 @@ export async function getChronicle(gameId) {
       procedureEntries: procedures.flatMap((procedure) =>
         toProcedureChronicleView(procedure, country),
       ),
+      // A third series: who entered and who left the government, and whether the president signed it
+      // or a card forced it.
+      cabinetEntries: toCabinetChronicleView(await findCabinetActions(client, gameId), country),
     };
   });
 }

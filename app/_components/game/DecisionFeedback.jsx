@@ -49,7 +49,7 @@ function PowerMovement({ decision, effects, game }) {
 export function DecisionFeedback({ result, game, gameOver, onContinue }) {
   const headingId = useId();
   const continueRef = useRef(null);
-  const { decision, effects, resultText, consequence } = result;
+  const { decision, effects, resultText, consequence, cabinetChanges = [] } = result;
   const signedOn = formatDossierDate(decision.calendar);
   // Only flags this decision set; nothing is shown when no new condition was created.
   const newConditions = decision.flagChanges.filter((change) => change.type === "set");
@@ -84,6 +84,14 @@ export function DecisionFeedback({ result, game, gameOver, onContinue }) {
             Despacho apresentado por {decision.speaker.name}, {decision.speaker.title}
           </p>
         </div>
+        {cabinetChanges.length > 0 ? (
+          <p className={styles.consequence}>
+            Mudança no gabinete —{" "}
+            {cabinetChanges
+              .map((change) => `${change.ministryName}: ${change.holder} deixou a pasta.`)
+              .join(" ")}
+          </p>
+        ) : null}
         {movement}
         {continueButton}
       </section>
@@ -141,6 +149,20 @@ export function DecisionFeedback({ result, game, gameOver, onContinue }) {
               <ul className={styles.noteList}>
                 {newConditions.map((change) => (
                   <li key={change.key}>{change.label}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {/* Somebody actually left the government this month: the consequence has to say so, and
+              the archive already carries the same change. */}
+          {cabinetChanges.length > 0 ? (
+            <>
+              <p className={`${styles.noteLabel} ${styles.noteSection}`}>Mudança no gabinete</p>
+              <ul className={styles.noteList}>
+                {cabinetChanges.map((change) => (
+                  <li key={change.ministryKey}>
+                    {change.ministryName}: {change.holder} deixou a pasta, que está vaga.
+                  </li>
                 ))}
               </ul>
             </>

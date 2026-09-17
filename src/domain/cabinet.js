@@ -1,5 +1,5 @@
-import { DomainRuleError } from "../errors/index.js";
-import { CABINET_LOYALTY_MAX, CABINET_LOYALTY_MIN } from "./constants.js";
+import { ConflictError, DomainRuleError } from "../errors/index.js";
+import { CABINET_ACTIONS, CABINET_LOYALTY_MAX, CABINET_LOYALTY_MIN, METERS } from "./constants.js";
 
 // The cabinet a government holds across the months. Pure: it receives the country pack as an
 // argument and never imports content, so the ministries and whoever starts in them belong to the
@@ -14,6 +14,11 @@ const clampLoyalty = (value) =>
  * named for starts vacant, which is a real state and not a gap to be filled: a government can
  * perfectly well take office without a Justice minister.
  */
+export function findCandidate(country, candidateId) {
+  const candidates = country?.cabinet?.candidates ?? [];
+  return candidates.find((candidate) => candidate.id === candidateId) ?? null;
+}
+
 export function createCabinet(country) {
   const ministries = country?.keyMinistries ?? [];
   const holders = country?.cabinet?.holders ?? [];
@@ -22,11 +27,15 @@ export function createCabinet(country) {
   return {
     seats: ministries.map((ministry) => {
       const named = holders.find((holder) => holder.portfolio === ministry.key) ?? null;
+      // A holder names a candidate, and the candidate carries the person and the numbers. An unknown
+      // reference leaves the chair empty rather than inventing a minister; content validation is
+      // what refuses it in the first place.
+      const candidate = named ? findCandidate(country, named.candidate) : null;
       return {
         portfolio: ministry.key,
         name: ministry.name,
-        holder: named?.character ?? null,
-        loyalty: named ? clampLoyalty(named.loyalty ?? defaultLoyalty) : null,
+        holder: candidate?.character ?? null,
+        loyalty: candidate ? clampLoyalty(candidate.loyalty ?? defaultLoyalty) : null,
         sinceTurn: 1,
       };
     }),
@@ -78,6 +87,175 @@ const STRATEGIES = {
       null,
     ),
 };
+
+// What a president is allowed to know about the people around them. Competence and influence are
+// read plainly. Loyalty never is: nobody in office is handed a number for how loyal a minister is,
+// so its vocabulary is deliberately vaguer, and the raw score stays on the server.
+const COMPETENCE_BANDS = [
+  { max: 39, key: "low" },
+  { max: 69, key: "moderate" },
+  { max: CABINET_LOYALTY_MAX, key: "high" },
+];
+const LOYALTY_BANDS = [
+  { max: 39, key: "wavering" },
+  { max: 69, key: "uncertain" },
+  { max: CABINET_LOYALTY_MAX, key: "loyal" },
+];
+
+const bandOf = (bands, value) =>
+  Number.isFinite(value)
+    ? (bands.find((entry) => value <= entry.max)?.key ?? bands.at(-1).key)
+    : null;
+
+/**
+ * The public reading of somebody's numbers, as keys the country turns into words. An empty chair, or
+ * an attribute the pack never declared, reads as null rather than as a guess.
+ */
+export function toPublicAttributes({ competence, loyalty, influence } = {}) {
+  return {
+    competence: bandOf(COMPETENCE_BANDS, competence),
+    loyalty: bandOf(LOYALTY_BANDS, loyalty),
+    influence: bandOf(COMPETENCE_BANDS, influence),
+  };
+}
+
+const noEffects = () => Object.fromEntries(METERS.map((meter) => [meter, 0]));
+
+function addEffects(total, delta) {
+  for (const meter of METERS) total[meter] += delta?.[meter] ?? 0;
+  return total;
+}
+
+// Who the registry lets sit in a given chair. Content arrives as an argument — the way the engine
+// already receives the cards and the country — so the domain reads the cast without importing it.
+function assertEligible(candidate, ministryKey, characters) {
+  const record = characters?.[candidate.character] ?? null;
+  const allowed = record?.cabinet?.eligible ? (record.cabinet.ministries ?? []) : [];
+  if (!allowed.includes(ministryKey)) {
+    throw new DomainRuleError(`${candidate.character} may not hold the ${ministryKey} portfolio`, {
+      code: "CANDIDATE_NOT_ELIGIBLE",
+    });
+  }
+}
+
+/**
+ * The Presidency reorganising its own government: one appointment, dismissal or replacement.
+ *
+ * Every refusal is a rule of the state, not of the screen, and the client never computes any of it.
+ * The consequences come from the country (what an appointment or a dismissal costs) and from the
+ * candidate (what their traits are worth), so the engine adds numbers up without ever knowing what a
+ * "fiscalista" is.
+ */
+export function applyCabinetAction(
+  cabinet,
+  request,
+  { country, characters, turn, actionsUsedThisTurn = 0, suspended = false },
+) {
+  const { action, ministryKey, candidateId } = request ?? {};
+  const rules = country?.cabinet ?? {};
+
+  if (!CABINET_ACTIONS.includes(action)) {
+    throw new DomainRuleError(`Unknown cabinet action: ${String(action)}`, {
+      code: "UNKNOWN_CABINET_ACTION",
+    });
+  }
+  // A suspended president does not reorganise the government, unless the pack says otherwise.
+  if (suspended && !rules.allowActionsWhileSuspended) {
+    throw new ConflictError("The Presidency is suspended and cannot change the cabinet", {
+      code: "CABINET_LOCKED_WHILE_SUSPENDED",
+    });
+  }
+  if (actionsUsedThisTurn >= (rules.maxActionsPerTurn ?? 1)) {
+    throw new ConflictError("This month's cabinet action has already been used", {
+      code: "CABINET_ACTION_ALREADY_USED",
+    });
+  }
+
+  const seat = findSeat(cabinet, ministryKey);
+  if (!seat) {
+    throw new DomainRuleError(`Unknown ministry: ${String(ministryKey)}`, {
+      code: "UNKNOWN_MINISTRY",
+    });
+  }
+
+  const leaving = action === "dismiss" || action === "replace";
+  const arriving = action === "appoint" || action === "replace";
+
+  if (leaving && seat.holder === null) {
+    throw new ConflictError(`The ${ministryKey} portfolio is already vacant`, {
+      code: "MINISTRY_ALREADY_VACANT",
+    });
+  }
+  if (action === "appoint" && seat.holder !== null) {
+    throw new ConflictError(`The ${ministryKey} portfolio already has a holder`, {
+      code: "MINISTRY_ALREADY_HELD",
+    });
+  }
+
+  let candidate = null;
+  if (arriving) {
+    candidate = findCandidate(country, candidateId);
+    if (!candidate) {
+      throw new DomainRuleError(`Unknown candidate: ${String(candidateId)}`, {
+        code: "UNKNOWN_CANDIDATE",
+      });
+    }
+    // Already a minister somewhere else is the more specific truth, so it is said first: nobody
+    // holds two portfolios at once.
+    const elsewhere = cabinet.seats.some(
+      (other) => other.portfolio !== ministryKey && other.holder === candidate.character,
+    );
+    if (elsewhere) {
+      throw new ConflictError(`${candidate.character} already holds another portfolio`, {
+        code: "CHARACTER_ALREADY_IN_OFFICE",
+      });
+    }
+    assertEligible(candidate, ministryKey, characters);
+  }
+
+  const effects = noEffects();
+  if (leaving) addEffects(effects, rules.effects?.dismiss);
+  if (arriving) {
+    addEffects(effects, rules.effects?.appoint);
+    for (const trait of candidate.traits ?? []) {
+      addEffects(effects, rules.traitEffects?.[trait]);
+    }
+  }
+
+  // Losing a minister costs the ones who stayed, and it is charged before anybody new sits down: the
+  // newcomer is not made to pay for a fall they had no part in.
+  const cost = leaving ? (rules.dismissalLoyaltyCost ?? 0) : 0;
+  const seats = cabinet.seats.map((other) => {
+    if (other.portfolio === ministryKey) return other;
+    if (other.holder === null || cost === 0) return other;
+    return { ...other, loyalty: clampLoyalty(other.loyalty - cost) };
+  });
+
+  const previousCharacterId = seat.holder;
+  const settled = arriving
+    ? {
+        ...seat,
+        holder: candidate.character,
+        loyalty: clampLoyalty(candidate.loyalty ?? rules.defaultLoyalty),
+        sinceTurn: turn,
+      }
+    : { ...seat, holder: null, loyalty: null, sinceTurn: turn };
+
+  return {
+    cabinet: {
+      ...cabinet,
+      seats: seats.map((other) => (other.portfolio === ministryKey ? settled : other)),
+    },
+    action: {
+      turn,
+      action,
+      ministryKey,
+      previousCharacterId,
+      nextCharacterId: settled.holder,
+    },
+    effects,
+  };
+}
 
 /**
  * The cabinet after a decision. Dismissal runs before the loyalty shift, so the minister who was

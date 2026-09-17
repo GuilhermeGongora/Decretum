@@ -3,6 +3,7 @@ import { getCharacter } from "@/src/content/characters";
 import { getCalendar } from "@/src/domain/calendar";
 import { METERS, PROCEDURE_STATUS } from "@/src/domain/constants";
 import { resolveChoiceDeltas } from "@/src/domain/effects";
+import { toPublicAttributes } from "@/src/domain/cabinet";
 import { getMeterBand, getTrend } from "@/src/domain/meters";
 import {
   countChamberVotes,
@@ -15,6 +16,175 @@ export function toMetersView(meters) {
   return Object.fromEntries(
     METERS.map((meter) => [meter, { value: meters[meter], band: getMeterBand(meters[meter]) }]),
   );
+}
+
+// A minister as the public knows them: who they are, what they are called, and how the country reads
+// their numbers. The numbers themselves never appear — loyalty least of all.
+function toPersonView(characterId) {
+  const character = getCharacter(characterId);
+  if (!character) return null;
+  return {
+    characterId,
+    name: character.name,
+    publicTitle: character.role,
+    portrait: character.portrait ?? null,
+    initials: character.initials ?? null,
+  };
+}
+
+function toAttributesView(country, numbers, traitKeys = []) {
+  const labels = country?.cabinet?.attributeLabels ?? {};
+  const traits = country?.cabinet?.traits ?? [];
+  const reading = toPublicAttributes(numbers);
+
+  return {
+    competence: labels.competence?.[reading.competence] ?? null,
+    loyalty: labels.loyalty?.[reading.loyalty] ?? null,
+    influence: labels.influence?.[reading.influence] ?? null,
+    traits: traitKeys
+      .map((key) => traits.find((trait) => trait.key === key)?.label ?? null)
+      .filter((label) => label !== null),
+  };
+}
+
+/**
+ * The cabinet as the Presidency may see it.
+ *
+ * `availableActions` is empty whenever the server would refuse anyway — the month's action already
+ * spent, a suspended presidency, a government that has ended — so the screen never offers a decision
+ * that cannot be taken. The candidate list leaves out anyone already holding a portfolio, for the
+ * same reason.
+ */
+export function toCabinetView(cabinet, country, { turn, actionsUsed = 0, suspended, active }) {
+  if (!cabinet || !country?.cabinet) return null;
+
+  const rules = country.cabinet;
+  const ministries = country.keyMinistries ?? [];
+  const candidates = rules.candidates ?? [];
+  const candidateFor = (characterId) =>
+    candidates.find((candidate) => candidate.character === characterId) ?? null;
+
+  const mayAct = Boolean(active) && !(suspended && !rules.allowActionsWhileSuspended);
+  const actionAvailable = mayAct && actionsUsed < (rules.maxActionsPerTurn ?? 1);
+  const inOffice = new Set(cabinet.seats.map((seat) => seat.holder).filter(Boolean));
+
+  return {
+    actionAvailable,
+    actionUsedAtTurn: actionsUsed > 0 ? turn : null,
+    seats: cabinet.seats.map((seat) => {
+      const ministry = ministries.find((entry) => entry.key === seat.portfolio) ?? null;
+      const candidate = seat.holder ? candidateFor(seat.holder) : null;
+      const occupied = seat.holder !== null;
+
+      return {
+        ministryKey: seat.portfolio,
+        ministryName: ministry?.title ?? ministry?.name ?? seat.portfolio,
+        note: ministry?.note ?? null,
+        status: occupied ? "occupied" : "vacant",
+        occupant: occupied ? toPersonView(seat.holder) : null,
+        publicAttributes: occupied
+          ? toAttributesView(
+              country,
+              // Loyalty is the living number on the seat; the rest describe the person.
+              {
+                competence: candidate?.competence,
+                loyalty: seat.loyalty,
+                influence: candidate?.influence,
+              },
+              candidate?.traits ?? [],
+            )
+          : null,
+        appointedAtTurn: occupied ? seat.sinceTurn : null,
+        availableActions: actionAvailable ? (occupied ? ["dismiss", "replace"] : ["appoint"]) : [],
+      };
+    }),
+    // Everyone the Presidency could still reach for. Whoever already holds a portfolio is left out:
+    // offering a name the server would refuse is worse than not offering it.
+    candidates: candidates
+      .filter((candidate) => !inOffice.has(candidate.character))
+      .map((candidate) => {
+        const character = getCharacter(candidate.character);
+        const allowed = character?.cabinet?.eligible ? (character.cabinet.ministries ?? []) : [];
+        return {
+          id: candidate.id,
+          ...toPersonView(candidate.character),
+          eligibleMinistries: allowed,
+          biography: candidate.biography ?? null,
+          publicAttributes: toAttributesView(
+            country,
+            {
+              competence: candidate.competence,
+              loyalty: candidate.loyalty,
+              influence: candidate.influence,
+            },
+            candidate.traits ?? [],
+          ),
+        };
+      })
+      .filter((candidate) => candidate.eligibleMinistries.length > 0),
+  };
+}
+
+const CABINET_ACTION_LABELS = {
+  appoint: "Nomeação",
+  dismiss: "Exoneração",
+  replace: "Substituição",
+};
+
+const ministryNameIn = (country, ministryKey) => {
+  const ministry = (country?.keyMinistries ?? []).find((entry) => entry.key === ministryKey);
+  return ministry?.title ?? ministry?.name ?? ministryKey;
+};
+
+/**
+ * Every change to the cabinet, as entries for the archive. `source` keeps the two kinds apart: what
+ * the Presidency signed, and what a card forced out of it. The archive should not blur them.
+ */
+export function toCabinetChronicleView(actions, country) {
+  if (!country?.cabinet) return [];
+  const nameOf = (id) => (id ? (getCharacter(id)?.name ?? id) : null);
+
+  return actions.map((action) => {
+    const ministryName = ministryNameIn(country, action.ministryKey);
+    const previousHolder = nameOf(action.previousCharacterId);
+    const nextHolder = nameOf(action.nextCharacterId);
+    // No article before the ministry: "Casa Civil" and "Ministério da Fazenda" do not take the same
+    // one, and the pasta itself is always feminine.
+    const summary =
+      action.action === "appoint"
+        ? `${ministryName}: ${nextHolder} assumiu a pasta.`
+        : action.action === "dismiss"
+          ? `${ministryName}: ${previousHolder} deixou a pasta.`
+          : `${ministryName}: ${nextHolder} substituiu ${previousHolder}.`;
+
+    return {
+      id: action.id,
+      turn: action.turn,
+      calendar: getCalendar(action.turn),
+      type: action.action,
+      label: CABINET_ACTION_LABELS[action.action] ?? action.action,
+      ministryKey: action.ministryKey,
+      ministryName,
+      previousHolder,
+      nextHolder,
+      source: action.source,
+      summary,
+    };
+  });
+}
+
+/**
+ * What a decision did to the cabinet this month, in public words. The engine's change carries the
+ * loyalty the seat was holding; it is dropped here, because the screen is never told that number.
+ */
+export function toCabinetChangeViews(changes, country) {
+  if (!country?.cabinet) return [];
+  return (changes ?? []).map((change) => ({
+    type: change.type,
+    ministryKey: change.portfolio,
+    ministryName: ministryNameIn(country, change.portfolio),
+    holder: getCharacter(change.holder)?.name ?? change.holder,
+  }));
 }
 
 export function toGameView(game, country) {
