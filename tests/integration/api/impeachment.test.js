@@ -28,19 +28,24 @@ async function decide(id, body) {
 
 // Puts a government in front of a given link of the chain, which is the only way to reach a stage
 // without playing the months that lead to it.
-async function openProcedureAt(gameId, { stage, cardSlug, support = {}, turn = 12 }) {
+async function openProcedureAt(
+  gameId,
+  { stage, cardSlug, support = {}, evidence = 70, turn = 12 },
+) {
   await queryTestDatabase(
     `UPDATE games SET turn = $2, current_card_id = (SELECT id FROM cards WHERE slug = $3)
       WHERE id = $1`,
     [gameId, turn, cardSlug],
   );
 
+  // How heavy the accusation is decides a vote as much as the political drive does, so a scenario
+  // that wants a petition thrown out has to say the file is thin, not only that the house is calm.
   const { rows } = await queryTestDatabase(
     `INSERT INTO political_procedures
        (game_id, type, country_code, stage, status, grounds, evidence, support, opened_at_turn, timeline)
-     VALUES ($1, 'impeachment', 'BR', $2, 'active', 'audit_cover_up', 70, $3, 10, '[]'::jsonb)
+     VALUES ($1, 'impeachment', 'BR', $2, 'active', 'audit_cover_up', $4, $3, 10, '[]'::jsonb)
      RETURNING id`,
-    [gameId, stage, JSON.stringify({ ...SUPPORT, ...support })],
+    [gameId, stage, JSON.stringify({ ...SUPPORT, ...support }), evidence],
   );
   return rows[0].id;
 }
@@ -106,6 +111,7 @@ describe("the vote in the Chamber", () => {
     await openProcedureAt(game.id, {
       stage: "chamber_vote",
       cardSlug: "impeachment_chamber_vote",
+      evidence: 18,
       support: { chamber: 30 },
     });
 

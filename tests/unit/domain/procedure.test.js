@@ -4,6 +4,7 @@ import {
   applyProcedureEffects,
   canTransition,
   countChamberVotes,
+  countSenateVotes,
   estimateRange,
   evaluateGrounds,
   isExpired,
@@ -25,13 +26,16 @@ const CALM = { people: 62, market: 58, congress: 70, institutions: 66 };
 
 // Support is a percentage of the house, so a seat count sits between two percentages. These are the
 // supports that land exactly on the constitutional thresholds of 513 and 81 seats.
-const withSupport = (support, stage = "chamber_vote") => ({
+// `evidence` belongs to the procedure, not to the support of a house: it is what the accusation is
+// worth, the same in both chambers. Taking it out of the support object here is what keeps a caller
+// from silently filing it under a house and leaving the default in place.
+const withSupport = ({ evidence = 60, ...support }, stage = "chamber_vote") => ({
   type: "impeachment",
   countryCode: "BR",
   stage,
   status: "active",
   grounds: "audit_cover_up",
-  evidence: 60,
+  evidence,
   support: {
     chamber: 0,
     senate: 0,
@@ -193,71 +197,179 @@ describe("the chain", () => {
   });
 });
 
-describe("the votes", () => {
-  it("archives the petition with 341 of 513", () => {
-    const vote = resolveChamberVote(withSupport({ chamber: 66.4 }), brazil);
+// A house is no longer a percentage of itself: the blocs decide what pressure converts into, so a
+// vote is described by the state that produced it, not by a share typed into the fixture.
+const state = ({ evidence = 50, ...support }) => ({ evidence, ...support });
 
-    expect(vote.votes).toBe(341);
+describe("the votes", () => {
+  it("counts against the thresholds the country declares, never its own", () => {
+    expect(brazil.removal.chamber.authorizationVotes).toBe(342);
+    expect(brazil.removal.senate.admissibilityVotes).toBe(41);
+    expect(brazil.removal.senate.convictionVotes).toBe(54);
+
+    const vote = resolveChamberVote(withSupport(state({ evidence: 85, chamber: 78 })), brazil);
+
+    expect(vote.authorised).toBe(vote.votes >= brazil.removal.chamber.authorizationVotes);
+  });
+
+  it("archives the petition when the accusation is thin, however hostile the chamber", () => {
+    const vote = resolveChamberVote(
+      withSupport(
+        state({
+          evidence: 25,
+          chamber: 70,
+          coalitionCohesion: 45,
+          publicPressure: 40,
+          institutionalCredibility: 60,
+        }),
+      ),
+      brazil,
+    );
+
+    expect(vote.votes).toBeLessThan(brazil.removal.chamber.authorizationVotes);
     expect(vote.authorised).toBe(false);
     expect(vote.next).toBe("archived");
   });
 
-  it("authorises the process with 342 of 513", () => {
-    const vote = resolveChamberVote(withSupport({ chamber: 66.6667 }), brazil);
+  it("authorises the process when the record is heavy and the coalition has broken", () => {
+    const vote = resolveChamberVote(
+      withSupport(
+        state({
+          evidence: 85,
+          chamber: 78,
+          coalitionCohesion: 20,
+          publicPressure: 80,
+          institutionalCredibility: 25,
+        }),
+      ),
+      brazil,
+    );
 
-    expect(vote.votes).toBe(342);
+    expect(vote.votes).toBeGreaterThanOrEqual(brazil.removal.chamber.authorizationVotes);
     expect(vote.authorised).toBe(true);
     expect(vote.next).toBe("senate_admissibility");
   });
 
-  it("does not open the trial with 40 of 81", () => {
+  it("does not open the trial on hostility with nothing behind it", () => {
     const vote = resolveSenateAdmissibility(
-      withSupport({ senate: 49 }, "senate_admissibility"),
+      withSupport(
+        state({
+          evidence: 25,
+          senate: 60,
+          coalitionCohesion: 45,
+          publicPressure: 40,
+          institutionalCredibility: 60,
+        }),
+        "senate_admissibility",
+      ),
       brazil,
     );
 
-    expect(vote.votes).toBe(40);
+    expect(vote.votes).toBeLessThan(brazil.removal.senate.admissibilityVotes);
     expect(vote.opened).toBe(false);
     expect(vote.next).toBe("archived");
   });
 
-  it("opens the trial with 41 of 81", () => {
+  it("opens the trial on an absolute majority", () => {
     const vote = resolveSenateAdmissibility(
-      withSupport({ senate: 50 }, "senate_admissibility"),
+      withSupport(
+        state({ evidence: 55, senate: 55, coalitionCohesion: 55, publicPressure: 60 }),
+        "senate_admissibility",
+      ),
       brazil,
     );
 
-    expect(vote.votes).toBe(41);
+    expect(vote.votes).toBeGreaterThanOrEqual(brazil.removal.senate.admissibilityVotes);
     expect(vote.opened).toBe(true);
     expect(vote.next).toBe("suspended");
   });
 
-  it("acquits with 53 of 81", () => {
-    const vote = resolveSenateTrial(withSupport({ senate: 65.4 }, "senate_trial"), brazil);
+  it("acquits when the Senate opened the trial but cannot reach two thirds", () => {
+    const vote = resolveSenateTrial(
+      withSupport(
+        state({ evidence: 55, senate: 55, coalitionCohesion: 55, publicPressure: 60 }),
+        "senate_trial",
+      ),
+      brazil,
+    );
 
-    expect(vote.votes).toBe(53);
+    expect(vote.votes).toBeGreaterThanOrEqual(brazil.removal.senate.admissibilityVotes);
+    expect(vote.votes).toBeLessThan(brazil.removal.senate.convictionVotes);
     expect(vote.convicted).toBe(false);
     expect(vote.next).toBe("acquitted");
   });
 
-  it("removes the president with 54 of 81", () => {
-    const vote = resolveSenateTrial(withSupport({ senate: 66.67 }, "senate_trial"), brazil);
+  it("removes the president when two thirds of the Senate convict", () => {
+    const vote = resolveSenateTrial(
+      withSupport(
+        state({
+          evidence: 72,
+          senate: 66,
+          coalitionCohesion: 32,
+          publicPressure: 70,
+          institutionalCredibility: 35,
+        }),
+        "senate_trial",
+      ),
+      brazil,
+    );
 
-    expect(vote.votes).toBe(54);
+    expect(vote.votes).toBeGreaterThanOrEqual(brazil.removal.senate.convictionVotes);
     expect(vote.convicted).toBe(true);
     expect(vote.next).toBe("removed");
   });
 
-  it("never reports more votes than there are seats", () => {
-    expect(countChamberVotes(withSupport({ chamber: 100 }), brazil)).toBe(513);
-    expect(countChamberVotes(withSupport({ chamber: 0 }), brazil)).toBe(0);
+  it("leaves part of every house standing, even with every driver at its worst", () => {
+    const collapse = withSupport(
+      state({
+        evidence: 100,
+        chamber: 100,
+        senate: 100,
+        coalitionCohesion: 0,
+        publicPressure: 100,
+        institutionalCredibility: 0,
+      }),
+    );
+
+    // The loyal benches cannot be carried across their tipping point by pressure alone, so a
+    // near-unanimous parliament stays out of reach however extreme the crisis becomes.
+    expect(countChamberVotes(collapse, brazil) / brazil.removal.chamber.seats).toBeLessThan(0.95);
+    expect(countSenateVotes(collapse, brazil) / brazil.removal.senate.seats).toBeLessThan(0.95);
   });
 
-  it("shows an estimate as a band, never as the count", () => {
-    const range = estimateRange(330, 513);
+  it("never reports fewer votes than none", () => {
+    const quiet = withSupport(
+      state({
+        evidence: 0,
+        chamber: 0,
+        senate: 0,
+        coalitionCohesion: 100,
+        publicPressure: 0,
+        institutionalCredibility: 100,
+      }),
+    );
 
-    expect(range.low).toBeLessThan(330);
-    expect(range.high).toBeGreaterThan(330);
+    expect(countChamberVotes(quiet, brazil)).toBeGreaterThanOrEqual(0);
+    expect(countChamberVotes(quiet, brazil)).toBeLessThan(
+      brazil.removal.chamber.authorizationVotes,
+    );
+  });
+
+  it("counts the same house the same way every time", () => {
+    const procedure = withSupport(state({ evidence: 64, chamber: 58 }));
+    const once = resolveChamberVote(procedure, brazil);
+    const twice = resolveChamberVote(procedure, brazil);
+
+    expect(once).toEqual(twice);
+  });
+
+  it("shows an estimate as a band that contains the count, never the count itself", () => {
+    const procedure = withSupport(state({ evidence: 64, chamber: 58 }));
+    const votes = countChamberVotes(procedure, brazil);
+    const range = estimateRange(votes, brazil.removal.chamber.seats);
+
+    expect(range.low).toBeLessThan(votes);
+    expect(range.high).toBeGreaterThan(votes);
   });
 });
 

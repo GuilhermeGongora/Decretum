@@ -89,6 +89,51 @@ export const brazil = {
       seats: 513,
       authorizationVotes: 342,
       presidedBy: "celina-braga",
+      // How the house divides when it is asked to authorise a removal. Shares sum to 1; the engine
+      // apportions the seats. `intercept` is where a bloc rests when nothing is happening, and the
+      // weights are what it will move for. The loyal fifth of the house sits so far below its
+      // tipping point that no accumulation of pressure carries it, which is what keeps a Brazilian
+      // chamber from ever voting 492 to 21.
+      // Evidence is the heaviest weight in every bloc but the opposition: a hostile chamber that has
+      // nothing to accuse the president of does not reach two thirds, which is the difference between
+      // a political grievance and an impeachable act.
+      blocs: [
+        {
+          key: "government_base",
+          label: "Base fiel",
+          share: 0.2,
+          intercept: -4.6,
+          weights: { cohesionLoss: 2.2, evidence: 2.4 },
+        },
+        {
+          key: "pragmatic_coalition",
+          label: "Coalizão pragmática",
+          share: 0.26,
+          intercept: -3,
+          weights: { cohesionLoss: 2.8, hostility: 1.2, evidence: 3, publicPressure: 0.9 },
+        },
+        {
+          key: "independent_centre",
+          label: "Centro independente",
+          share: 0.22,
+          intercept: -2,
+          weights: { evidence: 3.6, publicPressure: 2.2, hostility: 1 },
+        },
+        {
+          key: "opposition",
+          label: "Oposição",
+          share: 0.24,
+          intercept: 0.9,
+          weights: { evidence: 1.8, publicPressure: 0.9 },
+        },
+        {
+          key: "institutionalists",
+          label: "Bancada institucionalista",
+          share: 0.08,
+          intercept: -2.2,
+          weights: { evidence: 5, credibilityLoss: 2 },
+        },
+      ],
     },
     senate: {
       name: "Senado Federal",
@@ -97,6 +142,47 @@ export const brazil = {
       convictionVotes: 54,
       presidedBy: "tomas-azevedo",
       presidedByNote: "O julgamento é presidido pelo Presidente do Supremo Tribunal Federal.",
+      // The upper house is the more institutional of the two: a larger bench answers to the record
+      // rather than to the streets, and a loyal base plus a pragmatic coalition hold 47% of it. The
+      // two thirds a conviction needs can only be reached when the evidence carries the centre and
+      // the institutionalists at once, which is what makes removal rare and admissibility common.
+      blocs: [
+        {
+          key: "government_base",
+          label: "Base fiel",
+          share: 0.22,
+          intercept: -4.4,
+          weights: { cohesionLoss: 2, evidence: 2.2 },
+        },
+        {
+          key: "pragmatic_coalition",
+          label: "Coalizão pragmática",
+          share: 0.25,
+          intercept: -3.2,
+          weights: { cohesionLoss: 2.6, hostility: 1.1, evidence: 3.2, publicPressure: 0.8 },
+        },
+        {
+          key: "independent_centre",
+          label: "Centro independente",
+          share: 0.21,
+          intercept: -2.2,
+          weights: { evidence: 4, publicPressure: 1.9, hostility: 0.9 },
+        },
+        {
+          key: "opposition",
+          label: "Oposição",
+          share: 0.21,
+          intercept: 0.7,
+          weights: { evidence: 2, publicPressure: 0.8 },
+        },
+        {
+          key: "institutionalists",
+          label: "Bancada institucionalista",
+          share: 0.11,
+          intercept: -2.4,
+          weights: { evidence: 5.2, credibilityLoss: 2.2 },
+        },
+      ],
     },
     // 180 days of suspension, read on the game's calendar of one month per turn.
     suspensionTurns: 6,

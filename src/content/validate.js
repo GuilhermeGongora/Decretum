@@ -13,6 +13,7 @@ import {
   PROCEDURE_TYPES,
 } from "../domain/constants.js";
 import { EFFECT_OPERATIONS } from "../domain/effects.js";
+import { DRIVERS as LEGISLATIVE_DRIVERS } from "../domain/legislature.js";
 
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 const COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/;
@@ -606,6 +607,82 @@ function validateCountryCampaign(campaign, context, report) {
   }
 }
 
+// A house that removes a president is a composition, not a dial: the blocs divide it exactly once,
+// and every weight has to name a driver the engine knows. Shares that do not add up to one would
+// silently shrink or inflate the parliament on every count.
+function validateRemovalHouse(house, label, report) {
+  if (!isPlainObject(house)) return report(`removal.${label} must be an object`);
+  if (!isIntegerAtLeast(house.seats, 1)) {
+    report(`removal.${label}.seats must be a positive integer`);
+  }
+  if (!Array.isArray(house.blocs) || house.blocs.length === 0) {
+    return report(`removal.${label}.blocs must be a non-empty array`);
+  }
+
+  const keys = new Set();
+  let shares = 0;
+
+  for (const bloc of house.blocs) {
+    if (!isPlainObject(bloc)) {
+      report(`removal.${label} has a bloc that is not an object`);
+      continue;
+    }
+    const name = isNonEmptyString(bloc.key) ? bloc.key : "?";
+    if (!isNonEmptyString(bloc.key)) report(`removal.${label} has a bloc without a key`);
+    else if (keys.has(bloc.key)) report(`removal.${label} repeats the bloc "${bloc.key}"`);
+    else keys.add(bloc.key);
+
+    if (!(Number.isFinite(bloc.share) && bloc.share > 0 && bloc.share <= 1)) {
+      report(`removal.${label} bloc "${name}" needs a share between 0 and 1`);
+    } else {
+      shares += bloc.share;
+    }
+    if (!Number.isFinite(bloc.intercept)) {
+      report(`removal.${label} bloc "${name}" needs a numeric intercept`);
+    }
+    if (bloc.weights !== undefined && !isPlainObject(bloc.weights)) {
+      report(`removal.${label} bloc "${name}" weights must be an object`);
+      continue;
+    }
+    for (const [driver, weight] of Object.entries(bloc.weights ?? {})) {
+      if (!LEGISLATIVE_DRIVERS.includes(driver)) {
+        report(`removal.${label} bloc "${name}" weighs unknown driver "${driver}"`);
+      } else if (!Number.isFinite(weight)) {
+        report(`removal.${label} bloc "${name}" weight for "${driver}" must be a number`);
+      }
+    }
+  }
+
+  if (Math.abs(shares - 1) > 0.001) {
+    report(`removal.${label} bloc shares must add up to 1 (they add up to ${shares.toFixed(3)})`);
+  }
+}
+
+function validateRemoval(removal, report) {
+  if (removal === undefined) return;
+  if (!isPlainObject(removal)) return report("removal must be an object");
+
+  validateRemovalHouse(removal.chamber, "chamber", report);
+  validateRemovalHouse(removal.senate, "senate", report);
+
+  // A threshold nobody can reach, or one already met by an empty house, is a broken procedure.
+  const thresholds = [
+    ["chamber.authorizationVotes", removal.chamber?.seats, removal.chamber?.authorizationVotes],
+    ["senate.admissibilityVotes", removal.senate?.seats, removal.senate?.admissibilityVotes],
+    ["senate.convictionVotes", removal.senate?.seats, removal.senate?.convictionVotes],
+  ];
+  for (const [name, seats, votes] of thresholds) {
+    if (!isIntegerAtLeast(votes, 1)) report(`removal.${name} must be a positive integer`);
+    else if (Number.isInteger(seats) && votes > seats) {
+      report(`removal.${name} (${votes}) cannot exceed the ${seats} seats of the house`);
+    }
+  }
+
+  if (!isIntegerAtLeast(removal.suspensionTurns, 1)) {
+    report("removal.suspensionTurns must be a positive integer");
+  }
+}
+
 function validateCountries(countries, flags, errors) {
   if (!isPlainObject(countries)) {
     errors.push("countries must be an object");
@@ -670,6 +747,7 @@ function validateCountries(countries, flags, errors) {
         }
       }
     }
+    validateRemoval(country.removal, report);
     validateCountryCampaign(country.campaign, context, report);
   }
 }

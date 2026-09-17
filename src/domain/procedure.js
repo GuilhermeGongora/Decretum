@@ -1,6 +1,7 @@
 import { DomainRuleError } from "../errors/index.js";
 import { MANDATE_TURNS, PROCEDURE_STATUS } from "./constants.js";
 import { isFlagActive } from "./flags.js";
+import { countVotes, projectVotes } from "./legislature.js";
 
 // A constitutional procedure that runs across months next to the card loop. Pure: it receives the
 // country pack as an argument and never imports content, so the thresholds and the vocabulary belong
@@ -151,15 +152,42 @@ export function applyProcedureEffects(procedure, effects = {}) {
   };
 }
 
-const votesFrom = (seats, support) =>
-  Math.min(seats, Math.max(0, Math.round((seats * support) / 100)));
+/**
+ * What a house is reacting to, as fractions from 0 to 1.
+ *
+ * `support.chamber` and `support.senate` are no longer a share of the seats — a house is not a
+ * dial. They are how hard the removal is being driven in each house, and the blocs decide what that
+ * converts into. Cohesion and credibility enter as what the government has *lost*, since that is
+ * what a member of parliament is actually weighing.
+ */
+function driversFor(procedure, house) {
+  const support = procedure.support;
+  return {
+    evidence: procedure.evidence / 100,
+    publicPressure: support.publicPressure / 100,
+    hostility: (house === "senate" ? support.senate : support.chamber) / 100,
+    cohesionLoss: 1 - support.coalitionCohesion / 100,
+    credibilityLoss: 1 - support.institutionalCredibility / 100,
+  };
+}
 
+// Kept as the named counts the views and the engine already call. The arithmetic behind them is the
+// bloc model; the country owns the composition, and this file never sees a seat count of its own.
 export function countChamberVotes(procedure, country) {
-  return votesFrom(country.removal.chamber.seats, procedure.support.chamber);
+  return countVotes(country.removal.chamber, driversFor(procedure, "chamber")).votes;
 }
 
 export function countSenateVotes(procedure, country) {
-  return votesFrom(country.removal.senate.seats, procedure.support.senate);
+  return countVotes(country.removal.senate, driversFor(procedure, "senate")).votes;
+}
+
+// The breakdown behind a count: for tests and for the engine's own record, never for a client.
+export function countChamberBlocs(procedure, country) {
+  return countVotes(country.removal.chamber, driversFor(procedure, "chamber")).byBloc;
+}
+
+export function countSenateBlocs(procedure, country) {
+  return countVotes(country.removal.senate, driversFor(procedure, "senate")).byBloc;
 }
 
 // The three counts of the chain. Each one is a pure comparison against the country's own thresholds.
@@ -228,7 +256,8 @@ export function record(procedure, turn, note) {
 }
 
 // What the interface may show before a vote: a band, never the exact count the engine already knows.
+// The band is built around the real count, so it always contains it.
 export function estimateRange(votes, seats) {
-  const spread = Math.max(4, Math.round(seats * 0.02));
-  return { low: Math.max(0, votes - spread), high: Math.min(seats, votes + spread) };
+  const { min, max } = projectVotes(votes, seats);
+  return { low: min, high: max };
 }

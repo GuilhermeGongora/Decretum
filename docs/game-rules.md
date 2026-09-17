@@ -196,10 +196,30 @@ The GDD has no removal procedure; this is the playbook §5 chain, implemented fo
   the weighted draw. Each card schedules the next link; the links no card can foresee — the opening,
   the stage a count lands on and the outcomes — are named per stage by `removal.cards` in the pack
   and scheduled by the engine with priority 100. No card slug appears in the engine.
-- **Known balance debt**: support saturates. A consistently confrontational government reaches ~96%
-  of the Chamber and 100% of the Senate, so the votes come out near-unanimous (492/513, 81/81).
-  The outcomes are correct and earned; the margins are not yet plausible. Left for the balancing
-  phase, with the pillar cost of the chain cards.
+- **A house is a composition, not a dial.** The first model multiplied the seats by one accumulated
+  support number. Being linear, pressure that kept arriving kept converting into seats, and a
+  determined government reached 492 of 513 — a near-unanimous chamber, which no real crisis
+  produces. `src/domain/legislature.js` replaces it: the country declares the blocs of each house
+  (share of the seats, a resting position, and the drivers each one answers to), the engine
+  apportions the seats by largest remainder so the total is exact, and each bloc's adherence is a
+  logistic curve over the drivers of the moment.
+- **Why a logistic curve.** It is the shape defection actually has: almost nothing moves while the
+  drivers are low, the middle moves quickly around its tipping point, and the last holdouts cost far
+  more than the first. Diminishing returns fall out of the curve instead of being bolted on as a cap,
+  and no arbitrary maximum is applied anywhere.
+- **Saturation is bounded by composition.** A bloc whose resting position is deeply negative needs
+  drivers far beyond the plausible to cross a half, so a loyal base keeps part of the house out of
+  reach. With every driver at its worst at once, the Brazilian chamber reaches 456 of 513 (88.9%)
+  and the Senate 70 of 81 (86.4%). Unanimity stays possible in principle and unreachable in practice.
+- **The accusation weighs more than the hostility.** Evidence is the heaviest weight in every bloc
+  but the opposition, so a hostile chamber with nothing to accuse the president of does not reach two
+  thirds: at evidence 20 the chamber tops out at 320 of the 342 it needs. The exception, deliberately
+  kept, is total collapse — maximum public pressure with the coalition gone can authorise a thin
+  file, which is a real political phenomenon; the Senate still refuses to convict on it.
+- **Projection and result are different things.** Before a house votes the client receives a band
+  built around the count the engine already holds, so the band always contains the result. After the
+  vote it receives the confirmed count and no band. The drive in each house, the cohesion, the
+  credibility and the weight of the file never leave the server.
 
 ### API
 
