@@ -101,10 +101,28 @@ game designer should review.
   - Raul Serpa → **Raul Mendonça**, Líder da coalizão.
   - The President of the Tribunal da Carta (GDD: Lívia Ornelas) is **Tomás Azevedo**
     (`tomas-azevedo`). He speaks `national_data_registry` and `contract_investigation`.
-  - **Lívia Nogueira** (`livia-nogueira`) is the Ministra da Economia and appears only in economic
-    cards: `inheritance_tax` (previously Helena) and `interest_rate_pressure` (previously Caio Ferraz,
-    who keeps the Fazenda cards). Her reactions in `inheritance_tax` were rewritten for the new role.
+  - **Lívia Nogueira** (`livia-nogueira`) appears only in economic cards: `inheritance_tax`
+    (previously Helena) and `interest_rate_pressure` (previously Caio Ferraz). Her reactions in
+    `inheritance_tax` were rewritten for the new role.
   - **Tomás Gade** (Federação Industrial) is a different person and was not changed.
+- The cabinet phase settled the ministerial canon, because two characters claimed economic authority
+  and no declared pasta matched either of them:
+  - **Lívia Nogueira** is the **Ministra da Fazenda**. "Economia" was a card role, never a portfolio
+    the country declares, and it is gone.
+  - **Caio Ferraz** held the Fazenda before her and is now **Secretário do Tesouro Nacional**: still
+    the fiscal voice of his three cards, and the alternative name for the pasta if it opens.
+  - **General Otávio Leme** left the Estado-Maior Conjunto to become **Ministro da Defesa**. This is
+    an explicit career change, recorded here: the post is civilian command of the armed forces, and
+    accepting it means giving up the command of troops.
+  - **Sofia Amaral** is new, and holds the **Meio Ambiente** — a seventh portfolio added with her.
+  - **Bruno Tavares**, **Dalva Moreno**, **Renata Pires** and **Hélio Barbosa** are new candidates,
+    not ministers. None of them starts in office.
+  - **Amira Sol** is the Chanceler, which is a ministerial post in life but not one this pack
+    declares, so she holds no seat.
+- **Eligibility is declared, never inferred.** Each character says whether they may hold a ministry
+  and which. The Court, the Chamber's chair, the opposition, the press, the unions, industry and the
+  governors are all ineligible, each with the reason written next to them, so adding somebody to the
+  cast never quietly makes them appointable.
 - Every character has a political `sphere` (a pillar key). Values other than the two set by the bible
   (Lívia: market, Tomás Azevedo: institutions) are **provisional**.
 - The validator rejects two ids with the same display name; a test checks that each id speaks with a
@@ -251,6 +269,65 @@ screen: there is no appointment, no dismissal as a player decision, and no inter
   cabinet the country describes, rather than with six empty chairs.
 - **Persistence** is `cabinet_seats`, one row per ministry, replaced wholesale inside the same
   transaction as the decision that changed it, the same way the flag set is.
+
+#### Candidates and what they are worth
+
+- **Attributes are declared once.** A candidate carries the person and the numbers (competence,
+  loyalty, influence, traits, biography); a holder only names which candidate sits where. A minister
+  and whoever could replace him are therefore described in exactly the same place.
+- **Traits are keys with labels**, declared by the country. The engine adds up what each one is
+  worth and never knows what a "fiscalista" is.
+- **Nobody is good at everything.** The competent are less loyal, the loyal are less competent, and
+  influence in Congress is paid for somewhere else. Justiça starts vacant with two opposite names
+  written for it; Fazenda, Saúde and Educação each have one alternative.
+- **Eligibility lives in the character registry**, never in the pack: a country cannot seat the
+  Chief Justice by naming him, and content validation refuses it.
+
+#### Appointment, dismissal and replacement
+
+- **One manual change a month**, a number the country owns (`maxActionsPerTurn`). The limit is held
+  by the database — a partial unique index over `(game_id, turn)` for manual actions — so two
+  requests racing inside the same month cannot both be written.
+- **A suspended presidency does not reorganise the government** (`allowActionsWhileSuspended`).
+  Changes a constitutional card forces still happen: those are not the Presidency acting, they are
+  recorded with `source = 'decision'`, and they fall outside the monthly limit on purpose.
+- **The refusals are rules of the state, not of the screen**: a ministry that already has a holder, a
+  chair that is already empty, a candidate the registry does not allow, somebody who already holds
+  another portfolio, a month that has already passed, a government that has ended.
+- **The costs come from the country and from the candidate.** An appointment or a dismissal has a
+  declared price in pillars; the new minister's traits are added to it. Losing a minister also costs
+  the ones who stayed `dismissalLoyaltyCost` — charged before anybody new sits down, so the newcomer
+  never pays for a fall they had no part in.
+- **A cabinet change never ends a government.** The effects reach the pillars, but a collapse belongs
+  to a month that was decided, with its card, its consequence and its entry in the chronicle.
+- **The client sends an intention only**: the operation, the ministry and the candidate. A body
+  carrying effects, loyalty, competence, influence, an occupant, flags or a country is refused
+  outright rather than ignored.
+
+#### What the player is allowed to see
+
+- **Competence and influence are read plainly; loyalty is not.** The server turns each number into a
+  key and the country turns the key into a word. Loyalty has a deliberately vaguer vocabulary
+  (`leal`, `incerta`, `vacilante`), because nobody in office is handed a score for how loyal a
+  minister is. The raw number never leaves the server.
+- **The screen is never offered what the server would refuse**: `availableActions` is empty once the
+  month's action is spent, while the Presidency is suspended, and after the government has ended, and
+  the candidate list leaves out anyone already holding a portfolio.
+
+#### The archive
+
+- Every change is recorded in `cabinet_actions` with its month, its ministry, who left, who arrived
+  and where it came from. The chronicle reads them as a third series, next to the decisions and the
+  constitutional milestones, and says which ones were a consequence of a decision rather than
+  something the president signed.
+
+#### A ministry added later
+
+- Meio Ambiente was declared after the cabinet already existed. A ministry with no stored seat is
+  vacant by rule, so the engine showed the new chair as empty immediately; a migration backfills the
+  row for governments that already hold a cabinet, touching no existing seat and skipping governments
+  that stored none at all — giving one of those a single empty chair would make the engine read
+  "seats are stored" and hand it seven vacancies instead of the cabinet its country describes.
 
 ### API
 
