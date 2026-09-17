@@ -1,0 +1,191 @@
+/*
+ * A count in a chamber, not a scoreboard. Brass for the votes that were cast for removal, ivory for
+ * the benches that were not, and burgundy only on the line the constitution draws. No colour here
+ * says whether the outcome is good: a house voted, and this is what it said.
+ */
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(100%, 720px);
+  margin: auto;
+  padding: 26px 30px 28px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: var(--radius-document);
+  background: linear-gradient(176deg, rgb(16 30 50 / 0.96), rgb(9 18 31 / 0.96));
+  box-shadow: var(--shadow-s3);
+  color: var(--ivory-paper);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgb(176 141 79 / 0.4);
+}
+
+.house {
+  margin: 0;
+  color: var(--light-brass);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.question {
+  margin: 0;
+  font: 600 clamp(20px, 2.2vw, 26px) / 1.2 var(--font-serif);
+}
+
+.quorum {
+  margin: 0;
+  color: rgb(244 239 227 / 0.84);
+  font: 400 14px/1.4 var(--font-sans);
+}
+
+/* The benches: a house read as blocs, forty marks instead of five hundred nodes. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.bench {
+  height: 14px;
+  border: 1px solid rgb(244 239 227 / 0.18);
+  border-radius: 2px;
+  background: rgb(244 239 227 / 0.05);
+  transition: background-color 240ms ease;
+}
+
+.bench[data-filled] {
+  border-color: rgb(211 174 109 / 0.7);
+  background: rgb(201 164 99 / 0.55);
+}
+
+.tally {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid rgb(176 141 79 / 0.45);
+  border-radius: 999px;
+  background: rgb(244 239 227 / 0.07);
+}
+
+/* Filled from the custom property the screen writes each frame; no width in React state. */
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--counted, 0%);
+  background: linear-gradient(90deg, rgb(176 141 79 / 0.85), var(--light-brass));
+}
+
+.threshold {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--constitutional-red);
+}
+
+.count {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+}
+
+.value {
+  font: 700 clamp(30px, 4vw, 44px) / 1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  color: rgb(244 239 227 / 0.8);
+  font: 400 14px/1.3 var(--font-sans);
+}
+
+.outcome {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--aged-brass);
+  background: rgb(244 239 227 / 0.06);
+  font: 500 15px/1.45 var(--font-sans);
+}
+
+.reveal[data-passed] .outcome {
+  border-left-color: var(--constitutional-red);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primary,
+.secondary {
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: var(--radius-button);
+  font: 600 13px/1 var(--font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid var(--light-brass);
+  background: linear-gradient(180deg, var(--ivory-paper), #e7dec9);
+  color: var(--deep-navy);
+}
+
+.secondary {
+  border: 1px solid rgb(244 239 227 / 0.35);
+  background: transparent;
+  color: var(--ivory-paper);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1023px) {
+  .reveal {
+    gap: 14px;
+    padding: 18px 16px 20px;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .actions .primary,
+  .actions .secondary {
+    flex: 1;
+    padding: 0 14px;
+  }
+}
+
+/* Reduced motion: the result is already there, so nothing moves and nothing has to be skipped. */
+@media (prefers-reduced-motion: reduce) {
+  .bench,
+  .fill {
+    transition: none;
+  }
+}
+
+:global([data-reduced-motion="true"]) .bench,
+:global([data-reduced-motion="true"]) .fill {
+  transition: none;
+}

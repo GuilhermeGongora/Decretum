@@ -1,3 +1,4 @@
+import { GET as getChronicle } from "@/app/api/v1/games/[id]/chronicle/route";
 import { POST as postDecision } from "@/app/api/v1/games/[id]/decisions/route";
 import { GET as getGame } from "@/app/api/v1/games/[id]/route";
 import { POST as postGame } from "@/app/api/v1/games/route";
@@ -213,5 +214,153 @@ describe("a government can only face one process at a time", () => {
         cardSlug: "impeachment_chamber_campaign",
       }),
     ).rejects.toMatchObject({ constraint: "political_procedures_one_active" });
+  });
+});
+
+async function fetchChronicle(id) {
+  return (await getChronicle(getRequest(`/api/v1/games/${id}/chronicle`), routeContext(id))).json();
+}
+
+describe("the archive of a constitutional process", () => {
+  it("has nothing to show for a government that never faced one", async () => {
+    const { game } = await createGame();
+
+    const chronicle = await fetchChronicle(game.id);
+
+    expect(chronicle.procedureEntries).toEqual([]);
+    // The rest of the archive is untouched by a government with no process.
+    expect(Array.isArray(chronicle.entries)).toBe(true);
+  });
+
+  it("records the vote as a milestone, with the month and the house that held it", async () => {
+    const { game } = await createGame();
+    await openProcedureAt(game.id, {
+      stage: "chamber_vote",
+      cardSlug: "impeachment_chamber_vote",
+      support: { chamber: 95 },
+    });
+    await decide(game.id, { choice: "left", turn: 12 });
+
+    const chronicle = await fetchChronicle(game.id);
+
+    expect(chronicle.procedureEntries.length).toBeGreaterThan(0);
+    const [milestone] = chronicle.procedureEntries;
+    expect(milestone).toMatchObject({ type: "impeachment", turn: 12 });
+    expect(milestone.institution).toBeTruthy();
+    expect(milestone.label).toBeTruthy();
+    expect(milestone.note).toMatch(/Câmara: \d+ votos/);
+  });
+
+  it("reads the same archive twice without duplicating a single entry", async () => {
+    const { game } = await createGame();
+    await openProcedureAt(game.id, {
+      stage: "chamber_vote",
+      cardSlug: "impeachment_chamber_vote",
+      support: { chamber: 95 },
+    });
+    await decide(game.id, { choice: "left", turn: 12 });
+
+    const first = await fetchChronicle(game.id);
+    const second = await fetchChronicle(game.id);
+
+    expect(second.procedureEntries).toEqual(first.procedureEntries);
+    expect(second.entries).toEqual(first.entries);
+  });
+
+  it("never votes again because the page was opened again", async () => {
+    const { game } = await createGame();
+    await openProcedureAt(game.id, {
+      stage: "chamber_vote",
+      cardSlug: "impeachment_chamber_vote",
+      support: { chamber: 95 },
+    });
+    await decide(game.id, { choice: "left", turn: 12 });
+
+    const { rows: afterVote } = await readProcedure(game.id);
+    // Three reads of the government, as three refreshes would be.
+    await fetchGame(game.id);
+    await fetchGame(game.id);
+    const reread = await fetchGame(game.id);
+    const { rows: afterReads } = await readProcedure(game.id);
+
+    expect(afterReads[0].stage).toBe(afterVote[0].stage);
+    expect(afterReads[0].chamber_votes).toBe(afterVote[0].chamber_votes);
+    expect(reread.procedure.chamber.votes).toBe(afterVote[0].chamber_votes);
+  });
+
+  it("keeps a resolved process readable after it has ended", async () => {
+    const { game } = await createGame();
+    await openProcedureAt(game.id, {
+      stage: "chamber_vote",
+      cardSlug: "impeachment_chamber_vote",
+      evidence: 18,
+      support: { chamber: 30 },
+    });
+    await decide(game.id, { choice: "right", turn: 12 });
+
+    const body = await fetchGame(game.id);
+
+    expect(body.procedure).toMatchObject({
+      status: "resolved",
+      resolution: "archived",
+      nextMilestone: null,
+    });
+    expect(body.procedure.presidency.key).toBe("in_office");
+  });
+});
+
+describe("a government removed by the Senate", () => {
+  async function convict(gameId) {
+    await openProcedureAt(gameId, {
+      stage: "senate_trial",
+      cardSlug: "impeachment_trial",
+      evidence: 92,
+      turn: 24,
+      support: {
+        chamber: 84,
+        senate: 82,
+        coalitionCohesion: 12,
+        publicPressure: 88,
+        institutionalCredibility: 15,
+      },
+    });
+    return decide(gameId, { choice: "right", turn: 24 });
+  }
+
+  it("ends the mandate with the removal ending, not a generic collapse", async () => {
+    const { game } = await createGame();
+
+    const body = await (await convict(game.id)).json();
+
+    expect(body.gameOver).toBe(true);
+    expect(body.ending.code).toBe("removed_from_office");
+    expect(body.procedureEvent).toMatchObject({
+      type: "vote_resolved",
+      stage: "senate_trial",
+      next: "removed",
+    });
+  });
+
+  it("keeps the process readable after the government is over", async () => {
+    const { game } = await createGame();
+    await convict(game.id);
+
+    const body = await fetchGame(game.id);
+
+    // The ended government still answers with its procedure: the panel and the archive open the
+    // same way after the last month as before it.
+    expect(body.procedure).not.toBeNull();
+    expect(body.procedure).toMatchObject({ status: "resolved", resolution: "removed" });
+    expect(body.procedure.presidency.key).toBe("removed");
+    expect(body.procedure.senate.votes).toBeGreaterThanOrEqual(54);
+  });
+
+  it("records the conviction in the archive", async () => {
+    const { game } = await createGame();
+    await convict(game.id);
+
+    const chronicle = await fetchChronicle(game.id);
+
+    expect(chronicle.procedureEntries.some((entry) => entry.stage === "removed")).toBe(true);
   });
 });

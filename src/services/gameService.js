@@ -32,6 +32,7 @@ import {
   toDecisionView,
   toEndingView,
   toGameView,
+  toProcedureChronicleView,
   toProcedureView,
   toSummaryView,
 } from "@/src/services/gameViews";
@@ -121,7 +122,7 @@ async function loadSnapshot(client, gameId, cards) {
   // The chain a government went through, running or already judged. Null for the governments that
   // never faced one, which is every government created before the procedures table existed.
   const procedures = await findProcedures(client, gameId);
-  const procedure = toProcedureView(procedures.at(-1) ?? null, country);
+  const procedure = toProcedureView(procedures.at(-1) ?? null, country, game.turn);
 
   if (game.status === GAME_STATUS.ACTIVE) {
     const card = cards.find((candidate) => candidate.slug === game.currentCardSlug);
@@ -142,6 +143,9 @@ async function loadSnapshot(client, gameId, cards) {
   return {
     game: toGameView(game, country),
     currentCard: null,
+    // A government that ended still carries the process that ended it: the archive has to stay
+    // readable after the last month, and a removal is told by the procedure, not only by the ending.
+    procedure,
     ending: toEndingView(game.endingCode, endings),
     summary: toSummaryView(summary, { endings, epithets: epithetDefinitions }),
   };
@@ -237,11 +241,30 @@ async function persistProcedure(client, gameId, before, after) {
   }
 }
 
+// What happened to the constitutional process this month, as an explicit event. The interface opens
+// a vote screen because the server said a vote resolved, never because it recognised a headline.
+// It carries no internal number: the stage it left, the stage it reached, and the count already
+// persisted — which is public the moment the house has voted.
+function toProcedureEvent(before, after, votes) {
+  if (!after || before?.stage === after.stage) return null;
+
+  if (votes === null || votes === undefined) {
+    return { type: "stage_changed", procedureType: after.type, stage: after.stage };
+  }
+  return {
+    type: "vote_resolved",
+    procedureType: after.type,
+    stage: before.stage,
+    next: after.stage,
+    votes,
+  };
+}
+
 // GDD §12.2: the whole month is resolved inside one transaction holding the game row lock.
 export async function decide(gameId, { choice, expectedTurn }) {
   assertGameId(gameId);
 
-  const { result, snapshot } = await withTransaction(async (client) => {
+  const { result, snapshot, procedureBefore } = await withTransaction(async (client) => {
     const game = await findGameById(client, gameId, { forUpdate: true });
     if (!game) throw gameNotFound();
 
@@ -295,7 +318,12 @@ export async function decide(gameId, { choice, expectedTurn }) {
     await persistProcedure(client, gameId, procedure, turnResult.procedure);
     await updateGame(client, gameId, turnResult.state);
 
-    return { result: turnResult, snapshot: await loadSnapshot(client, gameId, cards) };
+    // The procedure as it stood before this month, so the response can say what changed.
+    return {
+      result: turnResult,
+      snapshot: await loadSnapshot(client, gameId, cards),
+      procedureBefore: procedure,
+    };
   });
 
   logger.info("game.decision", {
@@ -331,6 +359,12 @@ export async function decide(gameId, { choice, expectedTurn }) {
     game: snapshot.game,
     // Where the constitutional chain stands after this month, or null for a government facing none.
     procedure: snapshot.procedure,
+    // What the chain did this month, so the interface reacts to an event instead of reading text.
+    procedureEvent: toProcedureEvent(
+      procedureBefore,
+      result.procedure,
+      result.procedureVotes ?? result.ending?.procedureVotes ?? null,
+    ),
     gameOver: result.gameOver,
   };
 
@@ -388,6 +422,10 @@ export async function getChronicle(gameId) {
 
     const decisions = await findDecisions(client, gameId);
     const flags = await findFlags(client, gameId);
+    // Every procedure this government faced, resolved or running. They are a separate series: a
+    // constitutional milestone is not a decision the president signed.
+    const procedures = await findProcedures(client, gameId);
+    const country = findCountry(game.countryCode);
 
     return {
       gameId,
@@ -396,6 +434,9 @@ export async function getChronicle(gameId) {
         .filter(([, flag]) => flag.inherited)
         .map(([key, flag]) => ({ key, label: flag.label })),
       entries: decisions.map(toDecisionView),
+      procedureEntries: procedures.flatMap((procedure) =>
+        toProcedureChronicleView(procedure, country),
+      ),
     };
   });
 }

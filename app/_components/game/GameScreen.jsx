@@ -3,6 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { MANDATE_TURNS } from "@/src/domain/constants";
 import { formatDossierDate } from "@/app/_lib/text";
+import { ConstitutionalBand } from "@/app/_components/procedure/ConstitutionalBand";
+import { ConstitutionalPanel } from "@/app/_components/procedure/ConstitutionalPanel";
+import { VoteReveal } from "@/app/_components/procedure/VoteReveal";
 import { DecisionChoice } from "./DecisionChoice";
 import { DecisionDossier } from "./DecisionDossier";
 import { DecisionFeedback } from "./DecisionFeedback";
@@ -35,6 +38,8 @@ function sideOf(offset) {
 export function GameScreen({
   game,
   card,
+  // The public view of the constitutional process, or null for a government facing none.
+  procedure = null,
   feedback,
   pending,
   error,
@@ -47,6 +52,17 @@ export function GameScreen({
   onOpenSettings,
 }) {
   const [focusedSide, setFocusedSide] = useState(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  // The band is what opened the panel, so it is where the reader is returned when it closes.
+  const bandRef = useRef(null);
+  // Reset every month by the key the parent gives this screen, so a reveal is never shown twice.
+  const [voteSeen, setVoteSeen] = useState(false);
+  const panelWasOpen = useRef(false);
+  // A vote only reaches the screen because the server said one resolved, with the count it stored.
+  const voteEvent =
+    feedback?.procedureEvent?.type === "vote_resolved" && procedure
+      ? feedback.procedureEvent
+      : null;
   // Only the side changes state while a finger is down; the distance never does.
   const [draggedSide, setDraggedSide] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -158,6 +174,19 @@ export function GameScreen({
     if (showDecision) cardRef.current?.focus();
   }, [showDecision]);
 
+  // Returning from the panel has to happen after the dialog is gone: closing one hands focus back to
+  // the body, which would wipe anything set while it was still open.
+  useEffect(() => {
+    if (panelOpen) {
+      panelWasOpen.current = true;
+      return;
+    }
+    if (panelWasOpen.current) {
+      panelWasOpen.current = false;
+      bandRef.current?.querySelector("button")?.focus();
+    }
+  }, [panelOpen]);
+
   // Arrow keys also work before anything on the page has focus.
   useEffect(() => {
     if (!showDecision) return undefined;
@@ -266,7 +295,22 @@ export function GameScreen({
           Gabinete presidencial — {formatDossierDate(game.calendar)}
         </h1>
 
-        {feedback ? (
+        {/* Only once the process is public: the band itself decides whether there is anything to
+            show, so a government under no procedure sees nothing here. */}
+        <div ref={bandRef}>
+          <ConstitutionalBand procedure={procedure} onOpen={() => setPanelOpen(true)} />
+        </div>
+
+        {/* A house voted this month: the count is already persisted, and this only opens the
+            envelope. The consequence waits until the reader has seen it. */}
+        {voteEvent && !voteSeen ? (
+          <VoteReveal
+            event={voteEvent}
+            procedure={procedure}
+            reducedMotion={reducedMotion}
+            onDone={() => setVoteSeen(true)}
+          />
+        ) : feedback ? (
           <DecisionFeedback
             result={feedback}
             game={game}
@@ -341,6 +385,14 @@ export function GameScreen({
           Arraste o dossiê para a esquerda ou para a direita, ou use as setas do teclado para
           examinar uma decisão. Enter confirma a decisão examinada e Escape cancela a prévia.
         </p>
+
+        {panelOpen ? (
+          <ConstitutionalPanel
+            procedure={procedure}
+            stages={game.country?.removal?.stages ?? []}
+            onClose={() => setPanelOpen(false)}
+          />
+        ) : null}
       </main>
     </GameShell>
   );

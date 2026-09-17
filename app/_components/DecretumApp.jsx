@@ -32,6 +32,9 @@ function toSnapshot(response) {
   return {
     game: response.game,
     currentCard: response.currentCard ?? response.nextCard ?? null,
+    // Where the constitutional process stands, as the server describes it in public terms. Null for
+    // a government facing none, which is every government until one is opened against it.
+    procedure: response.procedure ?? null,
     ending: response.ending ?? null,
     summary: response.summary ?? null,
   };
@@ -182,6 +185,9 @@ export default function DecretumApp() {
         effects: response.effects,
         resultText: response.resultText,
         consequence: response.consequence ?? null,
+        // What the constitutional chain did this month, as the server reported it. The interface
+        // opens a vote screen because of this event, never because it recognised a headline.
+        procedureEvent: response.procedureEvent ?? null,
       });
       setSnapshot(toSnapshot(response));
       setInheritance(null);
@@ -372,6 +378,7 @@ export default function DecretumApp() {
         key={`${game.id}:${game.turn}:${feedback ? "feedback" : "decision"}`}
         game={game}
         card={currentCard}
+        procedure={snapshot.procedure}
         feedback={feedback}
         pending={pending}
         error={error}

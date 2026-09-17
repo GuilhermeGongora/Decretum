@@ -121,6 +121,12 @@ export function ChronicleDrawer({ gameId, onClose }) {
 
   const entries =
     state.status === "ready" ? [...state.chronicle.entries].sort((a, b) => b.turn - a.turn) : [];
+  // Constitutional milestones are a separate series, and a government from before the chain existed
+  // simply has none: the archive opens the same way either.
+  const procedureEntries =
+    state.status === "ready"
+      ? [...(state.chronicle.procedureEntries ?? [])].sort((a, b) => b.turn - a.turn)
+      : [];
   const years = [...new Set(entries.map((entry) => entry.calendar.year))].sort((a, b) => a - b);
   const visibleEntries =
     year === "all" ? entries : entries.filter((entry) => entry.calendar.year === year);
@@ -194,6 +200,23 @@ export function ChronicleDrawer({ gameId, onClose }) {
             <ul className={styles.inheritanceList}>
               {state.chronicle.inheritedFlags.map((flag) => (
                 <li key={flag.key}>{flag.label}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {procedureEntries.length > 0 ? (
+          <section className={styles.inheritance} aria-labelledby={`${titleId}-procedure`}>
+            <h3 id={`${titleId}-procedure`} className={styles.inheritanceLabel}>
+              Processo constitucional
+            </h3>
+            <ul className={styles.inheritanceList}>
+              {procedureEntries.map((milestone) => (
+                <li key={milestone.id}>
+                  {formatDossierDate(milestone.calendar)} · Mês {padTurn(milestone.turn)} ·{" "}
+                  {milestone.label} · {milestone.institution}
+                  {milestone.note ? ` — ${milestone.note}` : ""}
+                </li>
               ))}
             </ul>
           </section>

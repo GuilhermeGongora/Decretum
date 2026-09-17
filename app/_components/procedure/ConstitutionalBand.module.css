@@ -1,0 +1,135 @@
+/*
+ * A strip of official paper laid across the desk, not a system alert: a brass hairline, the navy of
+ * the room behind it, and burgundy only when the presidency has actually been suspended. It sits
+ * above the dossier without covering it, and it is the only thing on the screen that says a process
+ * is running.
+ */
+.band {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0 auto 12px;
+  padding: 8px 18px;
+  border: 1px solid rgb(176 141 79 / 0.55);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgb(16 30 50 / 0.92), rgb(9 18 31 / 0.92));
+  box-shadow: var(--shadow-s0);
+  color: var(--ivory-paper);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.band:hover {
+  border-color: var(--light-brass);
+}
+
+.band:focus-visible {
+  outline: 2px solid var(--light-brass);
+  outline-offset: 3px;
+}
+
+/* Suspension is the one state that earns the constitutional red. */
+.band[data-suspended] {
+  border-color: rgb(142 43 36 / 0.75);
+  background: linear-gradient(180deg, rgb(46 16 14 / 0.95), rgb(24 11 12 / 0.95));
+}
+
+.mark {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--light-brass);
+  transform: rotate(45deg);
+}
+
+.band[data-suspended] .mark {
+  background: var(--alert-on-navy);
+}
+
+.label {
+  flex: none;
+  color: var(--light-brass);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.band[data-suspended] .label {
+  color: var(--alert-on-navy);
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  background: rgb(244 239 227 / 0.22);
+}
+
+.stage {
+  font: 500 14px/1.2 var(--font-serif);
+}
+
+.milestone {
+  min-width: 0;
+  overflow: hidden;
+  color: rgb(244 239 227 / 0.82);
+  font: 400 13px/1.2 var(--font-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.milestoneLabel {
+  color: rgb(244 239 227 / 0.6);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.open {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--light-brass);
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Short desktop windows give back what they can, but never the target itself: 44px is the floor for
+   anything a pointer or a thumb has to hit, and a low window is not a reason to shrink it. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .band {
+    margin-bottom: 8px;
+    padding: 6px 16px;
+  }
+}
+
+/* On a phone the milestone is the first thing to go: the stage and the way in are what matter. */
+@media (max-width: 1023px) {
+  .band {
+    gap: 9px;
+    padding: 8px 12px;
+  }
+
+  .milestone,
+  .divider:last-of-type {
+    display: none;
+  }
+
+  .stage {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .open {
+    padding-left: 8px;
+  }
+}

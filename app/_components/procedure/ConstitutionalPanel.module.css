@@ -1,0 +1,325 @@
+/*
+ * The process as a document from the constitutional archive: ivory paper, brass rules, a burgundy
+ * edge while the presidency is suspended. A side drawer on desktop, a sheet on mobile — the same
+ * shape the chronicle already uses, so the two read as pages of one archive.
+ */
+.panel {
+  width: min(560px, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: none;
+  border-left: 1px solid rgb(176 141 79 / 0.55);
+  background: linear-gradient(176deg, #f8f4ea, #e9e0c9);
+  color: var(--deep-navy);
+}
+
+.panel::backdrop {
+  background: rgb(5 11 19 / 0.72);
+}
+
+.panel[data-suspended] {
+  border-left-color: rgb(142 43 36 / 0.8);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 2px solid var(--deep-navy);
+}
+
+.title {
+  margin: 0;
+  font: 600 21px/1.15 var(--font-serif);
+}
+
+.meta {
+  margin: 6px 0 0;
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.close {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgb(22 39 63 / 0.35);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--deep-navy);
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--aged-brass);
+  outline-offset: 2px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: calc(100dvh - 78px);
+  padding: 18px 22px 28px;
+  overflow: auto;
+}
+
+.fieldLabel {
+  display: block;
+  margin: 0 0 4px;
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.standing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--aged-brass);
+  background: rgb(176 141 79 / 0.1);
+}
+
+.presidency {
+  margin: 0;
+  font: 600 17px/1.2 var(--font-serif);
+}
+
+.presidency[data-state="suspended"],
+.presidency[data-state="removed"] {
+  color: var(--constitutional-red);
+}
+
+.institution,
+.deadline {
+  margin: 0;
+  font: 400 15px/1.35 var(--font-sans);
+}
+
+.deadline {
+  font-weight: 600;
+  color: var(--constitutional-red);
+}
+
+.accusation {
+  padding-top: 4px;
+}
+
+.evidence {
+  margin: 0;
+  font: 400 15px/1.4 var(--font-sans);
+}
+
+.grounds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grounds li {
+  display: flex;
+  gap: 10px;
+  font: 400 15px/1.4 var(--font-sans);
+}
+
+.grounds li::before {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 7px;
+  background: var(--aged-brass);
+  transform: rotate(45deg);
+  content: "";
+}
+
+/* The two houses, side by side: the quorum the constitution asks for, and what is expected or done. */
+.houses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.house {
+  padding: 12px 14px;
+  border: 1px solid rgb(22 39 63 / 0.18);
+  border-radius: var(--radius-document);
+  background: rgb(255 255 255 / 0.4);
+}
+
+.houseName {
+  margin: 0;
+  font: 600 14px/1.2 var(--font-serif);
+}
+
+.quorum {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0 0;
+}
+
+.quorumLabel {
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.quorumValue {
+  font: 600 15px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgb(22 39 63 / 0.14);
+}
+
+.countValue {
+  font: 700 20px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.count[data-confirmed] .countValue {
+  color: var(--constitutional-red);
+}
+
+.countUnit {
+  color: var(--paper-ink-muted);
+  font: 400 12px/1.3 var(--font-sans);
+}
+
+/* The chain, as a column of steps on paper. */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
+  padding: 9px 0 9px 2px;
+  border-left: 1px solid rgb(22 39 63 / 0.18);
+  margin-left: 6px;
+  padding-left: 14px;
+}
+
+.stepMark {
+  width: 9px;
+  height: 9px;
+  margin-left: -20px;
+  background: rgb(22 39 63 / 0.25);
+  transform: rotate(45deg);
+}
+
+.step[data-state="done"] .stepMark {
+  background: var(--aged-brass);
+}
+
+.step[data-state="current"] .stepMark {
+  background: var(--constitutional-red);
+  box-shadow: 0 0 0 3px rgb(142 43 36 / 0.18);
+}
+
+.stepLabel {
+  font: 500 15px/1.3 var(--font-sans);
+}
+
+.step[data-state="current"] .stepLabel {
+  font-weight: 700;
+}
+
+.step[data-state="future"] .stepLabel,
+.step[data-state="interrupted"] .stepLabel {
+  color: rgb(22 39 63 / 0.5);
+}
+
+.step[data-state="interrupted"] .stepLabel {
+  text-decoration: line-through;
+}
+
+.stepNote {
+  grid-column: 2;
+  color: var(--paper-ink-muted);
+  font: 400 12px/1.3 var(--font-sans);
+}
+
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(22 39 63 / 0.12);
+}
+
+.recordTurn {
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.recordNote {
+  font: 400 14px/1.4 var(--font-sans);
+}
+
+.empty {
+  margin: 0;
+  font: 400 15px/1.5 var(--font-sans);
+}
+
+/* Mobile: a sheet from the bottom, the same as the chronicle. */
+@media (max-width: 1023px) {
+  .panel {
+    width: 100vw;
+    height: 92dvh;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-left: none;
+    border-top: 1px solid rgb(176 141 79 / 0.55);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .body {
+    height: calc(92dvh - 78px);
+    padding: 16px 16px 24px;
+  }
+
+  .houses {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

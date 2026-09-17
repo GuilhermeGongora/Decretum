@@ -4,7 +4,12 @@ import { getCalendar } from "@/src/domain/calendar";
 import { METERS, PROCEDURE_STATUS } from "@/src/domain/constants";
 import { resolveChoiceDeltas } from "@/src/domain/effects";
 import { getMeterBand, getTrend } from "@/src/domain/meters";
-import { countChamberVotes, countSenateVotes, estimateRange } from "@/src/domain/procedure";
+import {
+  countChamberVotes,
+  countSenateVotes,
+  estimateRange,
+  nextStage,
+} from "@/src/domain/procedure";
 
 export function toMetersView(meters) {
   return Object.fromEntries(
@@ -191,7 +196,32 @@ function toHouseView(house, { votes, threshold, estimate }) {
   };
 }
 
-export function toProcedureView(procedure, country) {
+// Which body holds the process at each link of the chain. The stages come from the country, so this
+// only says whether the lower or the upper house is the one deciding next.
+const SENATE_STAGES = Object.freeze(["senate_admissibility", "suspended", "senate_trial"]);
+
+// The accusation as the public can read it. The engine's evidence is a number the player must never
+// see: what leaves the server is how heavy the file is, in words.
+function toAccusationLevel(evidence) {
+  if (evidence < 35) return { key: "weak", label: "frágeis" };
+  if (evidence < 65) return { key: "relevant", label: "relevantes" };
+  return { key: "grave", label: "graves" };
+}
+
+// Where the presidency stands, which is not the same as where the process stands: a suspended
+// president is not a removed one, and an acquitted one is back in office.
+function toPresidencyStatus(procedure) {
+  if (procedure.resolution === "removed") return { key: "removed", label: "Mandato encerrado" };
+  if (procedure.resolution === "acquitted")
+    return { key: "restored", label: "Presidência restituída" };
+  if (procedure.stage === "suspended") return { key: "suspended", label: "Presidência afastada" };
+  return { key: "in_office", label: "Presidência em exercício" };
+}
+
+// `currentTurn` is the month the government is living. Without it a deadline can only be described
+// as the distance from the day the process opened, which never moves and is not what anyone facing a
+// clock wants to know.
+export function toProcedureView(procedure, country, currentTurn = null) {
   if (!procedure || !country?.removal) return null;
 
   const { removal } = country;
@@ -202,18 +232,40 @@ export function toProcedureView(procedure, country) {
       ? removal.senate.convictionVotes
       : removal.senate.admissibilityVotes;
 
+  const inSenate = SENATE_STAGES.includes(procedure.stage);
+  const upcoming = active ? nextStage(procedure.stage) : null;
+  const milestone = upcoming ? (removal.stages.find((e) => e.key === upcoming) ?? null) : null;
+  const resolution = procedure.resolution
+    ? (removal.resolutions.find((e) => e.key === procedure.resolution) ?? null)
+    : null;
+  const grounds = removal.grounds.find((entry) => entry.key === procedure.grounds) ?? null;
+
   return {
     type: procedure.type,
     status: procedure.status,
     stage: { key: procedure.stage, label: stage?.label ?? null, note: stage?.note ?? null },
+    // Which house decides the stage the process stands at, named by the country itself.
+    institution: inSenate ? removal.senate.name : removal.chamber.name,
+    // What comes next, without promising how it ends.
+    nextMilestone: milestone ? { key: upcoming, label: milestone.label } : null,
+    presidency: toPresidencyStatus(procedure),
+    // The charge in public words, never the number behind it.
+    accusation: {
+      level: toAccusationLevel(procedure.evidence),
+      grounds: grounds ? [{ key: grounds.key, label: grounds.label }] : [],
+    },
     resolution: procedure.resolution,
+    resolutionLabel: resolution?.label ?? null,
     openedAtTurn: procedure.openedAtTurn,
     calendar: getCalendar(procedure.openedAtTurn),
     // Only while suspended does a deadline exist; it is the one number the player must plan around.
     deadlineTurn: procedure.deadlineTurn,
+    // What is left of the suspension from where the government stands now, never the span the
+    // deadline was set with: a clock that does not move is not a clock. Null when the month is not
+    // known, because an invented number is worse than none.
     turnsLeft:
-      active && procedure.deadlineTurn !== null
-        ? procedure.deadlineTurn - procedure.openedAtTurn
+      active && procedure.deadlineTurn !== null && Number.isInteger(currentTurn)
+        ? Math.max(0, procedure.deadlineTurn - currentTurn)
         : null,
     chamber: toHouseView(removal.chamber, {
       votes: procedure.chamberVotes,
@@ -236,6 +288,32 @@ export function toProcedureView(procedure, country) {
       note: note ?? null,
     })),
   };
+}
+
+// The milestones of a constitutional procedure, as entries for the archive. They are built from the
+// timeline the engine wrote when each step happened — nothing is reconstructed from the current
+// state, so an entry never changes after the month that produced it.
+export function toProcedureChronicleView(procedure, country) {
+  if (!procedure || !country?.removal) return [];
+
+  const { removal } = country;
+  const nameOf = (key) =>
+    removal.stages.find((stage) => stage.key === key)?.label ??
+    removal.resolutions.find((resolution) => resolution.key === key)?.label ??
+    key;
+
+  return procedure.timeline.map((entry, index) => ({
+    // Stable within a government: the turn plus the position in that procedure's own record.
+    id: `${procedure.type}-${procedure.openedAtTurn}-${entry.turn}-${index}`,
+    type: procedure.type,
+    turn: entry.turn,
+    calendar: getCalendar(entry.turn),
+    stage: entry.stage,
+    label: nameOf(entry.stage),
+    institution: SENATE_STAGES.includes(entry.stage) ? removal.senate.name : removal.chamber.name,
+    // Whatever the engine recorded at the time: a vote count, a ground, or nothing at all.
+    note: entry.note ?? null,
+  }));
 }
 
 export function toEndingView(code, endings) {
