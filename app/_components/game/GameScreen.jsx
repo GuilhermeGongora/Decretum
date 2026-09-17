@@ -15,6 +15,7 @@ import { PowerIndicators } from "./PowerIndicators";
 const MAX_DRAG_OFFSET = 190;
 const PREVIEW_DISTANCE = 24;
 const CONFIRM_DISTANCE = 120;
+const MAX_ROTATION = 4;
 const EXIT_DURATION_MS = 200;
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -22,6 +23,12 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 function isTypingTarget(element) {
   return element instanceof HTMLElement && element.closest("input, textarea, select, dialog");
+}
+
+function sideOf(offset) {
+  if (offset <= -PREVIEW_DISTANCE) return "left";
+  if (offset >= PREVIEW_DISTANCE) return "right";
+  return null;
 }
 
 // Mounted once per month (keyed by the parent), so interaction state never leaks between cards.
@@ -40,10 +47,14 @@ export function GameScreen({
   onOpenSettings,
 }) {
   const [focusedSide, setFocusedSide] = useState(null);
-  const [dragX, setDragX] = useState(0);
+  // Only the side changes state while a finger is down; the distance never does.
+  const [draggedSide, setDraggedSide] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [leavingSide, setLeavingSide] = useState(null);
   const dragRef = useRef(null);
+  const offsetRef = useRef(0);
+  const stageRef = useRef(null);
+  const frameRef = useRef(0);
   const decisionLockRef = useRef(false);
   const cardRef = useRef(null);
   const leftButtonRef = useRef(null);
@@ -53,22 +64,65 @@ export function GameScreen({
 
   const showDecision = !feedback && card;
   const busy = pending || leavingSide !== null;
-  const offset = clamp(dragX, -MAX_DRAG_OFFSET, MAX_DRAG_OFFSET);
-  const draggedSide =
-    offset <= -PREVIEW_DISTANCE ? "left" : offset >= PREVIEW_DISTANCE ? "right" : null;
   const previewSide = showDecision ? (draggedSide ?? focusedSide) : null;
+
+  // The dossier follows the pointer through two custom properties written straight to the node, one
+  // frame at a time. Re-rendering React on every pointermove would rebuild the card, the portrait and
+  // both panels sixty times a second to move one element by a few pixels.
+  function paintDrag() {
+    frameRef.current = 0;
+    const node = cardRef.current;
+    const offset = offsetRef.current;
+    if (node && !reducedMotion) {
+      node.style.setProperty("--drag-x", `${offset}px`);
+      node.style.setProperty("--drag-rot", `${(offset / MAX_DRAG_OFFSET) * MAX_ROTATION}deg`);
+    }
+    // How near the gesture is to signing, from 0 to 1. Custom properties inherit, so both panels read
+    // it from the stage without a prop, a context or a render.
+    stageRef.current?.style.setProperty(
+      "--drag-progress",
+      `${Math.min(1, Math.abs(offset) / CONFIRM_DISTANCE)}`,
+    );
+    // Crossing the threshold is the only thing the rest of the screen needs to know about.
+    const side = sideOf(offset);
+    setDraggedSide((current) => (current === side ? current : side));
+  }
+
+  function scheduleDrag() {
+    if (frameRef.current) return;
+    frameRef.current = requestAnimationFrame(paintDrag);
+  }
+
+  function clearDrag() {
+    offsetRef.current = 0;
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = 0;
+    }
+    const node = cardRef.current;
+    if (node) {
+      node.style.removeProperty("--drag-x");
+      node.style.removeProperty("--drag-rot");
+    }
+    stageRef.current?.style.removeProperty("--drag-progress");
+    setDraggedSide(null);
+  }
+
+  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
 
   async function confirm(side) {
     // The ref blocks a second decision before React re-renders the disabled state.
     if (decisionLockRef.current || pending) return;
     decisionLockRef.current = true;
+    clearDrag();
     setLeavingSide(side);
     if (!reducedMotion) await wait(EXIT_DURATION_MS);
     const accepted = await onDecide(side);
     if (!accepted) {
+      // The month stands: the dossier comes back and the choice can be taken again.
       decisionLockRef.current = false;
       setLeavingSide(null);
-      setDragX(0);
+      clearDrag();
     }
   }
 
@@ -79,7 +133,7 @@ export function GameScreen({
 
   function cancelPreview() {
     setFocusedSide(null);
-    setDragX(0);
+    clearDrag();
     cardRef.current?.focus();
   }
 
@@ -97,6 +151,12 @@ export function GameScreen({
       confirm(previewSide);
     }
   }
+
+  // The next month arrives with its paper already on the desk. Focus moves to it, so a screen reader
+  // announces the new dossier instead of being left on the body once the consequence is dismissed.
+  useEffect(() => {
+    if (showDecision) cardRef.current?.focus();
+  }, [showDecision]);
 
   // Arrow keys also work before anything on the page has focus.
   useEffect(() => {
@@ -121,26 +181,34 @@ export function GameScreen({
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setDragging(true);
     },
+    // Every handler asks whether a gesture is in flight before it asks which one: an environment that
+    // leaves `pointerId` undefined would otherwise compare undefined with undefined, pass the guard
+    // and dereference a gesture that never started.
     onPointerMove(event) {
-      if (dragRef.current?.pointerId !== event.pointerId) return;
-      setDragX(event.clientX - dragRef.current.startX);
+      const gesture = dragRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      offsetRef.current = clamp(event.clientX - gesture.startX, -MAX_DRAG_OFFSET, MAX_DRAG_OFFSET);
+      scheduleDrag();
     },
     onPointerUp(event) {
-      if (dragRef.current?.pointerId !== event.pointerId) return;
-      const distance = event.clientX - dragRef.current.startX;
+      const gesture = dragRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      const distance = event.clientX - gesture.startX;
       dragRef.current = null;
       setDragging(false);
       if (Math.abs(distance) >= CONFIRM_DISTANCE) {
         confirm(distance < 0 ? "left" : "right");
       } else {
-        setDragX(0);
+        // Below the threshold nothing was decided: the dossier settles back where it was.
+        clearDrag();
       }
     },
     onPointerCancel(event) {
-      if (dragRef.current?.pointerId !== event.pointerId) return;
+      const gesture = dragRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
       dragRef.current = null;
       setDragging(false);
-      setDragX(0);
+      clearDrag();
     },
   };
 
@@ -179,8 +247,21 @@ export function GameScreen({
   );
 
   return (
-    <GameShell header={header} powers={powers} footer={footer} previewSide={previewSide}>
-      <main className={styles.stage} aria-busy={pending || undefined} onKeyDown={handleKeyDown}>
+    <GameShell
+      header={header}
+      powers={powers}
+      footer={footer}
+      previewSide={previewSide}
+      scene="decision"
+      sceneIntensity="soft"
+      scenePriority
+    >
+      <main
+        ref={stageRef}
+        className={styles.stage}
+        aria-busy={pending || undefined}
+        onKeyDown={handleKeyDown}
+      >
         <h1 className="visually-hidden">
           Gabinete presidencial — {formatDossierDate(game.calendar)}
         </h1>
@@ -215,10 +296,8 @@ export function GameScreen({
                 turn={game.turn}
                 calendar={game.calendar}
                 previewSide={previewSide}
-                offset={offset}
                 dragging={dragging}
                 leavingSide={leavingSide}
-                reducedMotion={reducedMotion}
                 cardRef={cardRef}
                 headingId={headingId}
                 helpId={helpId}

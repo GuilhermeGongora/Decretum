@@ -231,6 +231,25 @@ The GDD has no removal procedure; this is the playbook §5 chain, implemented fo
   `docs/design/decretum-v2/source/characters/`); the others, and any image that fails to load, show
   initials. There is no audio in this cut (§21–22).
 - The tutorial opens once on the first government and can be reopened from settings (§23).
+- **The mandate sits in a painted scene** (`decision`), with its own lighter veil: the artwork is so
+  dark that the veils of the onboarding screens would close it to black. Contrast still never depends
+  on it — the dossier carries its own paper, and a blocked image leaves the navy fallback.
+- **The four pillars are one instrument band**, not four cards: emblem, name and standing on a line,
+  the number beside them, and the scale along the foot. This is presentation only — values, names,
+  bands, thresholds, the `meter` semantics and the critical states are unchanged. The band gave 84px
+  of height back to the stage at 1366×768, which is where the dossier had least room.
+- **The dossier follows the pointer through CSS custom properties written once per frame** (`--drag-x`,
+  `--drag-rot` on the card; `--drag-progress` on the stage), never through React state: a re-render
+  per `pointermove` would rebuild the card, the portrait and both panels to move one element. React
+  state changes only when the gesture crosses into a side, which is the only thing the rest of the
+  screen needs to know.
+- **A decision is signed past 120px of travel**, never before: below it the paper returns and nothing
+  is sent. The panel on the side being dragged towards lights with the distance (`--drag-progress`,
+  0 to 1) instead of switching on at the threshold, and the opposite one recedes. Neither panel ever
+  shows an outcome, a colour of approval or a judgement of the choice.
+- Every input — swipe, buttons, ← → and Enter — calls the same decision command, which sends only the
+  chosen side and the month. A decision that fails restores the dossier with the choice still
+  available; the turn does not advance and no consequence is shown.
 
 ## Balance findings (simulator, 2 000 games per policy)
 

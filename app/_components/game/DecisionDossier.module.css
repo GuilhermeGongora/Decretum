@@ -10,11 +10,26 @@
     0 3px 0 rgb(176 141 79 / 0.4),
     0 46px 92px -26px rgb(3 7 13 / 0.85);
   cursor: grab;
+  /* Written by the screen, one frame at a time, while a pointer is down. Absent, the card rests. */
+  transform: translateX(var(--drag-x, 0px)) rotate(var(--drag-rot, 0deg));
   touch-action: pan-y;
   user-select: none;
   transition:
     transform 180ms ease,
     opacity 200ms ease;
+}
+
+/* Paper settling on the desk: a short fall and a fade, no bounce and no overshoot. The component is
+   mounted fresh for each month, so this runs once, when the next dossier arrives. */
+.dossier {
+  animation: dossier-in 220ms ease-out;
+}
+
+@keyframes dossier-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
 .dossier::before {
@@ -241,12 +256,14 @@
   }
 }
 
-/* Reduced motion: no translation or rotation, only a short fade. */
+/* Reduced motion: no translation or rotation, only a short fade — the arrival included, which would
+   otherwise still fall into place, since a shorter animation is still movement. */
 @media (prefers-reduced-motion: reduce) {
   .dossier,
   .dossier[data-leaving] {
     transform: none;
     transition: opacity 150ms ease;
+    animation: dossier-fade-in 150ms ease-out;
   }
 }
 
@@ -254,4 +271,11 @@
 :global([data-reduced-motion="true"]) .dossier[data-leaving] {
   transform: none;
   transition: opacity 150ms ease;
+  animation: dossier-fade-in 150ms ease-out;
+}
+
+@keyframes dossier-fade-in {
+  from {
+    opacity: 0;
+  }
 }

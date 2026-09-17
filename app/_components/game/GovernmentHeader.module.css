@@ -17,6 +17,29 @@
   margin: 0;
 }
 
+/* Emblem plus wordmark. The name is type, never part of the image. */
+.brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.wordmark {
+  color: rgb(244 239 227 / 0.94);
+  font: 600 15px/1 var(--font-serif);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* The flag stays glued to the country it names, whatever else the header drops. */
+.identity {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
 .country {
   font: 600 15px/1 var(--font-sans);
   letter-spacing: 0.16em;
@@ -118,9 +141,16 @@
     padding: 7px 16px;
   }
 
+  /* On a phone the row is emblem, flag and country. The wordmark goes: the title is on the cover,
+     and the date and both actions keep their places on the right. */
+  .wordmark,
   .office,
   .divider {
     display: none;
+  }
+
+  .brand {
+    gap: 0;
   }
 
   .country {

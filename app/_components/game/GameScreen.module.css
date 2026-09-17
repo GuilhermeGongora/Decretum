@@ -1,5 +1,5 @@
 .stage {
-  --dossier-width: 470px;
+  --dossier-width: 460px;
   --portrait-height: clamp(214px, 32dvh, 288px);
   position: relative;
   display: flex;
@@ -9,6 +9,9 @@
   padding: 18px 56px;
 }
 
+/* The three columns are one gesture, so they hold a measure instead of spreading with the window:
+   past this width the panels would drift away from the dossier and the screen would read as three
+   islands. It is the same measure as the instrument band above, so both align on a wide display. */
 .decision {
   display: grid;
   grid-template-areas: "left dossier right";
@@ -16,6 +19,7 @@
   column-gap: 30px;
   align-items: center;
   width: 100%;
+  max-width: 1180px;
   margin: auto;
 }
 
@@ -93,14 +97,17 @@
   text-align: left;
 }
 
+/* Short desktop windows (1366×768 is the tightest of them). The instrument band gave 84px back to
+   the stage, so the dossier can take its place in the composition instead of being squeezed: it is
+   the thing being read. */
 @media (min-width: 1024px) and (max-height: 820px) {
   .stage {
-    --dossier-width: 434px;
-    --portrait-height: clamp(196px, 30dvh, 250px);
+    --dossier-width: 446px;
+    --portrait-height: clamp(210px, 34dvh, 272px);
     --dilemma-size: 17px;
     --portrait-name-size: 25px;
     --panel-offset: 48px;
-    padding: 10px 44px;
+    padding: 14px 44px;
   }
 }
 

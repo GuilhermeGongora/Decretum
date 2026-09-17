@@ -5,27 +5,21 @@ import { CharacterPortrait } from "./CharacterPortrait";
 import styles from "./DecisionDossier.module.css";
 import { OfficialStamp } from "./OfficialStamp";
 
+// The paper itself. While it is being dragged its position comes from two custom properties that the
+// screen writes on this node once per frame, so following the pointer costs no re-render here — and
+// under reduced motion they are never written, which leaves the card still by default.
 export function DecisionDossier({
   card,
   turn,
   calendar,
   previewSide,
-  offset,
   dragging,
   leavingSide,
-  reducedMotion,
   cardRef,
   headingId,
   helpId,
   pointerHandlers,
 }) {
-  const maxOffset = 190;
-  const rotation = (offset / maxOffset) * 4;
-  const style =
-    leavingSide || reducedMotion
-      ? undefined
-      : { transform: `translateX(${offset}px) rotate(${rotation}deg)` };
-
   return (
     <article
       ref={cardRef}
@@ -37,7 +31,6 @@ export function DecisionDossier({
       data-dragging={dragging || undefined}
       data-leaving={leavingSide ?? undefined}
       data-crisis={card.isCrisis || undefined}
-      style={style}
       {...pointerHandlers}
     >
       <div className={styles.meta}>

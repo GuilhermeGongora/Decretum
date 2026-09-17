@@ -51,6 +51,9 @@ function Emblem({ pillar, value, severity }) {
   );
 }
 
+// One instrument of the cabinet, read left to right: the emblem, what it measures, where it stands.
+// The scale runs along the foot of the band, so the reading is a line and not a card. Nothing here
+// is revealed by hovering: the value, the word and the danger zones are always on the surface.
 export function PowerIndicator({ pillar, meter, trend = null, delta = null }) {
   const { value, band } = meter;
   const { statusWord, severity } = describeBand(band);
@@ -59,6 +62,21 @@ export function PowerIndicator({ pillar, meter, trend = null, delta = null }) {
   return (
     <li className={styles.indicator} data-severity={severity}>
       <Emblem pillar={pillar.key} value={value} severity={severity} />
+
+      <span className={styles.reading}>
+        <span className={styles.name}>{pillar.name}</span>
+        <span className={styles.status}>
+          {showTrend ? (
+            <span className={styles.trendChip} data-direction={trend.direction}>
+              <span aria-hidden="true">{trendArrows(trend)} </span>
+              <span className={styles.trendWord}>{trendWord(trend)}</span>
+            </span>
+          ) : (
+            statusWord
+          )}
+        </span>
+      </span>
+
       <span className={styles.value}>
         {value}
         {delta ? (
@@ -67,17 +85,7 @@ export function PowerIndicator({ pillar, meter, trend = null, delta = null }) {
           </span>
         ) : null}
       </span>
-      <span className={styles.name}>{pillar.name}</span>
-      <span className={styles.status}>
-        {showTrend ? (
-          <span className={styles.trendChip} data-direction={trend.direction}>
-            <span aria-hidden="true">{trendArrows(trend)} </span>
-            <span className={styles.trendWord}>{trendWord(trend)}</span>
-          </span>
-        ) : (
-          statusWord
-        )}
-      </span>
+
       <span
         className={styles.ruler}
         role="meter"

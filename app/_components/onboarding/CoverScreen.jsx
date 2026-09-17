@@ -1,5 +1,5 @@
+import { BrandMark } from "@/app/_components/brand/BrandMark";
 import styles from "./CoverScreen.module.css";
-import { PresidentialSeal } from "./PresidentialSeal";
 
 // Title screen. The reading column sits on the dark side of the Minerva scene, and the saved mandate
 // is a file on the same desk — it carries the actions that belong to it instead of floating apart.
@@ -15,8 +15,10 @@ export function CoverScreen({
   return (
     <main className={styles.cover}>
       <div className={styles.column}>
+        {/* The emblem opens the composition; the title below is the wordmark, and the artwork is
+            never repeated large over Minerva. */}
         <div className={styles.crest}>
-          <PresidentialSeal variant="brass" />
+          <BrandMark variant="home" />
           <p className={styles.eyebrow}>Arquivo constitucional da República</p>
         </div>
 

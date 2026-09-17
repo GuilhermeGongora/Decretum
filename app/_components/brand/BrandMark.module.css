@@ -1,0 +1,50 @@
+/*
+ * The emblem is square and is never distorted: width and height come from the variant, and the
+ * aspect ratio is pinned so a missing image reserves exactly the same box and nothing shifts.
+ * No filter, no background plate, no ring, no glow — the artwork already carries its own light.
+ */
+.mark {
+  flex: none;
+  aspect-ratio: 1;
+  object-fit: contain;
+  /* Alt text is the fallback when images do not load; this keeps it from inheriting a huge face. */
+  font: 500 11px/1.1 var(--font-mono);
+  color: rgb(244 239 227 / 0.72);
+}
+
+/* A very soft seat on the page, far from a drop shadow: the facets keep their own contrast. */
+.mark[data-variant="home"],
+.mark[data-variant="seal"] {
+  filter: drop-shadow(0 6px 14px rgb(3 7 13 / 0.45));
+}
+
+.mark[data-variant="watermark"] {
+  position: absolute;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  .mark[data-variant="header"] {
+    width: 26px;
+    height: 26px;
+  }
+
+  .mark[data-variant="home"] {
+    width: 58px;
+    height: 58px;
+  }
+
+  .mark[data-variant="seal"] {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+/* Short desktop windows (1366×768): the header gives back what the dossier needs. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .mark[data-variant="header"] {
+    width: 28px;
+    height: 28px;
+  }
+}

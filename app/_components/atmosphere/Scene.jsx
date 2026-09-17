@@ -40,6 +40,14 @@ const SCENES = {
     glow: "normal",
     particles: "normal",
   },
+  // The mandate: the office at night with the Congress beyond the glass. The screen is for reading
+  // and for deciding, so the light and the dust stay at their quietest here.
+  decision: {
+    focus: "50% 46%",
+    mobileFocus: "50% 38%",
+    glow: "soft",
+    particles: "sparse",
+  },
 };
 
 export function Scene({ name, intensity = "normal", focus, priority = false, glow, particles }) {

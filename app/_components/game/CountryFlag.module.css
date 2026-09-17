@@ -1,4 +1,19 @@
+/*
+ * 20:14 is the constitutional ratio, so the width is the only size given: the height follows from
+ * `aspect-ratio` and the drawing is never stretched. The hairline is a seat on the navy page, not a
+ * frame around the flag.
+ */
 .flag {
+  flex: none;
+  width: 28px;
+  height: auto;
+  aspect-ratio: 10 / 7;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(176 141 79 / 0.4);
+}
+
+/* Geometric mark for the packs that have no official file yet. */
+.mark {
   position: relative;
   flex: none;
   width: 28px;
@@ -9,7 +24,7 @@
 }
 
 .field,
-.mark {
+.figure {
   position: absolute;
 }
 
@@ -17,34 +32,8 @@
   inset: 0;
 }
 
-/* Brazil: green field, brass lozenge, night-blue disc. */
-.flag[data-code="BR"] .field {
-  background: var(--heraldic-green);
-}
-
-.flag[data-code="BR"] .mark {
-  top: 50%;
-  left: 50%;
-  width: 15px;
-  height: 11px;
-  background: var(--light-brass);
-  transform: translate(-50%, -50%) rotate(45deg) scale(0.86);
-}
-
-.flag[data-code="BR"]::after {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--republic-night);
-  transform: translate(-50%, -50%);
-  content: "";
-}
-
 /* United States: night-blue canton over alternating bands. */
-.flag[data-code="US"] .field {
+.mark[data-code="US"] .field {
   background: repeating-linear-gradient(
     180deg,
     var(--constitutional-red) 0 3px,
@@ -52,10 +41,21 @@
   );
 }
 
-.flag[data-code="US"] .mark {
+.mark[data-code="US"] .figure {
   top: 0;
   left: 0;
   width: 13px;
   height: 11px;
   background: var(--portrait-frame);
+}
+
+@media (max-width: 1023px) {
+  .flag {
+    width: 24px;
+  }
+
+  .mark {
+    width: 24px;
+    height: 17px;
+  }
 }

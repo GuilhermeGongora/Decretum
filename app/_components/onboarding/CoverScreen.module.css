@@ -22,10 +22,6 @@
   gap: 18px;
 }
 
-.crest > :first-child {
-  --seal-size: 78px;
-}
-
 .eyebrow {
   color: var(--light-brass);
   font: 500 12px/1.4 var(--font-mono);
@@ -199,13 +195,9 @@
     width: 100%;
   }
 
-  /* The seal plus the archive line has to fit the column exactly, with no 2px spilling over. */
+  /* The emblem plus the archive line has to fit the column exactly, with no 2px spilling over. */
   .crest {
     gap: 12px;
-  }
-
-  .crest > :first-child {
-    --seal-size: 62px;
   }
 
   .eyebrow {

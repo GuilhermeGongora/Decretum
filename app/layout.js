@@ -30,9 +30,20 @@ const signature = Mrs_Saint_Delafield({
   display: "swap",
 });
 
+// The favicon and the touch icon are app/icon.png and app/apple-icon.png, which Next serves by
+// convention. Both keep the navy plate: the emblem is dense, and at 16px a transparent cut-out
+// dissolves into whatever the browser paints behind a tab.
 export const metadata = {
   title: "DECRETUM: Salus Populi Suprema Lex",
   description: "Decretum — um jogo de estratégia política em cartas. Salus Populi Suprema Lex.",
+  openGraph: {
+    title: "DECRETUM: Salus Populi Suprema Lex",
+    description: "Decretum — um jogo de estratégia política em cartas. Salus Populi Suprema Lex.",
+    // The square plate is the one place the framed version of the emblem belongs.
+    images: [{ url: "/assets/brand/social.png", width: 1200, height: 1200, alt: "Decretum" }],
+    locale: "pt_BR",
+    type: "website",
+  },
 };
 
 export const viewport = {

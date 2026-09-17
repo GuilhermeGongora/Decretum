@@ -63,6 +63,21 @@
     radial-gradient(130% 100% at 50% 50%, rgb(4 9 16 / 0.72), transparent 74%);
 }
 
+.scene[data-scene="decision"] .image {
+  object-position: 50% 46%;
+}
+
+/* The office at night is already a dark painting: measured over the source, its brightest third
+   averages 29 of 255. The veils above would close it to black and the scene would stop meaning
+   anything. So this one only seats the two bands that carry text on the navy — the indicators at
+   the top and the timeline at the foot — and barely touches the middle, where the dossier brings
+   its own ivory and needs no help. */
+.scene[data-scene="decision"] .veil {
+  background:
+    linear-gradient(180deg, rgb(4 9 16 / 0.62) 0%, rgb(4 9 16 / 0.12) 40%, rgb(4 9 16 / 0.76) 100%),
+    radial-gradient(96% 72% at 50% 52%, rgb(4 9 16 / 0.3), transparent 72%);
+}
+
 @media (max-width: 767px) {
   .scene[data-scene="home"] .image {
     object-position: 62% 34%;
@@ -93,6 +108,22 @@
         rgb(4 9 16 / 0.92) 100%
       ),
       radial-gradient(140% 70% at 50% 60%, rgb(4 9 16 / 0.62), transparent 70%);
+  }
+
+  .scene[data-scene="decision"] .image {
+    object-position: 50% 38%;
+  }
+
+  /* On a phone the dossier fills almost the whole width, so the scene is only read at the edges. */
+  .scene[data-scene="decision"] .veil {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(4 9 16 / 0.68) 0%,
+        rgb(4 9 16 / 0.24) 34%,
+        rgb(4 9 16 / 0.86) 100%
+      ),
+      radial-gradient(130% 66% at 50% 56%, rgb(4 9 16 / 0.34), transparent 72%);
   }
 }
 

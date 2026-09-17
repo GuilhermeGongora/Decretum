@@ -81,28 +81,28 @@ alpha ≤ 0.07; no blur/glassmorphism.
 
 ## 6. Responsive breakpoints
 
-| Viewport            | Layout                                                                                                                                                                                                                                   |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ≥ 1024px wide       | Full-height shell, no page scroll. Header 58px, power strip, card column 470px with panels 30px to each side, timeline 78px.                                                                                                             |
-| ≥ 1024 × ≤ 820 high | Compact (3a): header 50px, tighter power strip, card 434px, portrait ~250px, dilemma 17px, timeline 56px. Everything visible without vertical scroll at 1366×768.                                                                        |
-| < 1024px            | Mobile reflow (2f mobile): header row 46px, full-bleed power strip, card full width (≈358px at 390), drag hint, two choice buttons (≥ 66px high) in the thumb zone, timeline at the bottom. The page may scroll; nothing is scaled down. |
+| Viewport            | Layout                                                                                                                                                                                                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ≥ 1024px wide       | Full-height shell, no page scroll. Header 58px, power strip, card column 460px with panels 30px to each side, timeline 78px. The three columns hold a measure of 1180px — the same one as the instrument band — so they stay a composition instead of drifting apart on a wide display. |
+| ≥ 1024 × ≤ 820 high | Compact (3a): header 50px, tighter power strip, card 446px, portrait ~272px, dilemma 17px, timeline 56px. Everything visible without vertical scroll at 1366×768.                                                                                                                       |
+| < 1024px            | Mobile reflow (2f mobile): header row 46px, full-bleed power strip, card full width (≈358px at 390), drag hint, two choice buttons (≥ 66px high) in the thumb zone, timeline at the bottom. The page may scroll; nothing is scaled down.                                                |
 
 Grid 4px. Desktop margin 56px; mobile margin 16–20px; touch targets ≥ 44px.
 
 ## 7. Reusable components
 
-| Component         | Content and states                                                                                                                                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GameShell         | Atmospheric background (window grid, curtains, desk, vignette; decorative, `aria-hidden`), layout slots                                                                                                                                                   |
-| GovernmentHeader  | Flag emblem, country, office title, date, month n/48, Chronicle button, settings icon button                                                                                                                                                              |
-| PowerIndicators   | Four columns separated by 1px hairlines                                                                                                                                                                                                                   |
-| PowerIndicator    | 40px emblem that fills from the bottom (People circle, Market diamond, Congress arch, Institutions shield), value, name, status word, 64×3px ruler with red danger zones at both ends and a value marker, trend chip (pill + arrow + word) during preview |
-| DecisionDossier   | Paper card: dossier number, crisis/category chip, portrait with name and title, dilemma in quotes, signature, short left/right verbs; preview seal while dragging                                                                                         |
-| CharacterPortrait | 20px frame, brass corner marks, bottom scrim, image or initials fallback                                                                                                                                                                                  |
-| DecisionChoice    | Side panel. rest: alpha .055; target: full paper, brass focus ring, expected trends, confirmation note; opposite: alpha .40                                                                                                                               |
-| DecisionFeedback  | After the server responds: stamp, chosen decree, consequence text, power movement, continue action                                                                                                                                                        |
-| OfficialStamp     | Circular stamp, double or dashed red border, rotated 9–12°                                                                                                                                                                                                |
-| MandateTimeline   | 48 pill segments: past ivory .5 (6px), current light brass (16px), future ivory .16                                                                                                                                                                       |
+| Component         | Content and states                                                                                                                                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GameShell         | Layout slots over one atmosphere: the mandate takes the painted `decision` scene; the office drawn in CSS (window, curtains, desk, vignette) remains the fallback for screens without one. Decorative, `aria-hidden`                                                                         |
+| GovernmentHeader  | Brand mark and DECRETUM wordmark, then the national flag with the country, the office title, the date and month n/48, Chronicle button, settings icon button. Three identities that must not read as one: the emblem is the game, the flag is Brazil                                         |
+| PowerIndicators   | One instrument band across the top, four readings separated by short hairlines                                                                                                                                                                                                               |
+| PowerIndicator    | 30px emblem that fills from the bottom (People circle, Market diamond, Congress arch, Institutions shield), value, name, status word, a 3px scale along the whole foot of the reading with red danger zones at both ends and a value marker, trend chip (pill + arrow + word) during preview |
+| DecisionDossier   | Paper card: dossier number, crisis/category chip, portrait with name and title, dilemma in quotes, signature, short left/right verbs; preview seal while dragging                                                                                                                            |
+| CharacterPortrait | 20px frame, brass corner marks, bottom scrim, image or initials fallback                                                                                                                                                                                                                     |
+| DecisionChoice    | Side panel. rest: alpha .055; target: full paper, brass focus ring, expected trends, confirmation note; opposite: alpha .40                                                                                                                                                                  |
+| DecisionFeedback  | After the server responds: stamp, chosen decree, consequence text, power movement, continue action                                                                                                                                                                                           |
+| OfficialStamp     | Circular stamp, double or dashed red border, rotated 9–12°                                                                                                                                                                                                                                   |
+| MandateTimeline   | 48 pill segments: past ivory .5 (6px), current light brass (16px), future ivory .16                                                                                                                                                                                                          |
 
 Primary button: paper gradient to `#E7DEC9`, hover +4% light, focus 2px brass ring, active moves down
 1px, disabled alpha .45.
@@ -172,9 +172,9 @@ may need tuning in the registry. Never mirror or distort a face with CSS.
 
 ### Scenes (onboarding atmosphere)
 
-Five low-poly scenes, each delivered as a desktop and a mobile crop, in
-`public/assets/scenes/<scene>-{desktop,mobile}.webp` (1600×900 and 900×1599, ~505 KB for all ten).
-The source PNGs are archived in `docs/design/decretum-v2/source/scenes/`.
+Six low-poly scenes, each delivered as a desktop and a mobile crop, in
+`public/assets/scenes/<scene>-{desktop,mobile}.webp` (1600×900 and 900×1599). The source PNGs are
+archived in `docs/design/decretum-v2/source/`, never served.
 
 | Scene      | Screen                                    | Art                                                                |
 | ---------- | ----------------------------------------- | ------------------------------------------------------------------ |
@@ -183,6 +183,37 @@ The source PNGs are archived in `docs/design/decretum-v2/source/scenes/`.
 | `debate`   | Campaign                                  | Debate stage between two lecterns                                  |
 | `count`    | Election night                            | Count room with the map and the press                              |
 | `ceremony` | Inauguration, briefing                    | Ceremonial hall with the open book                                 |
+| `decision` | The mandate                               | The office at night, the Congress beyond the glass                 |
+
+`decision` is the darkest of them: measured over the source, even its brightest third averages 29 of 255. The veils used by the onboarding scenes would close it to black, so it carries its own — one
+that only seats the two bands that hold text over the navy (the instruments at the top, the timeline
+at the foot) and barely touches the middle, where the dossier brings its own ivory. The source is
+16:9, so the mobile crop keeps the middle third, framed high to hold the towers and the desk; a
+purpose-made vertical composition is still wanted.
+
+### Brand
+
+`app/_components/brand/BrandMark.jsx` is the only place the emblem reaches a screen (cover 68px,
+header 30px, documents 44px, seal 96px, watermark 200px). The emblem is the mark; **DECRETUM is a
+wordmark and stays type** — the component never draws the name.
+
+The supplied transparent PNG could not be used: its cut-out leaves ~20 000 pixels of saturated red
+and yellow fringe around the sword and the eyes, which reads as coloured dirt on navy. The served
+emblem is matted out of the navy plate instead (`scripts/build-assets.mjs`, `npm run assets:build`):
+same artwork, background removed by distance from the plate colour, with the navy tint unmultiplied
+out of the edge pixels. Output: `public/assets/brand/emblem-{512,256,128}.webp`, plus `app/icon.png`
+and `app/apple-icon.png` — the icons keep the plate, because at 16px a transparent cut-out dissolves
+into whatever the browser paints behind a tab.
+
+### The national flag
+
+`public/assets/brand/flag-br.svg` is the official drawing of the Brazilian flag (public domain as an
+act of the Brazilian State): 20:14, the yellow rhombus 1.7 modules from each edge, the blue globe of
+3.5 modules, the white band between arcs of 8 and 8.5 modules, and the 27 stars in their five
+magnitudes. It replaced a geometric mark that the component itself described as "not a reproduction
+of its flag". Nothing about it is approximated in CSS: a flag drawn by eye is a wrong flag. It is
+decorative (`alt=""`), because the country is always written beside it. Packs without an official
+file of their own still show the geometric mark.
 
 `app/_components/atmosphere/Scene.jsx` is the only way a scene reaches a screen: `GameShell` takes
 `scene`, `sceneIntensity` (`soft` | `normal` | `deep`) and `scenePriority`. The layer is `aria-hidden`,
