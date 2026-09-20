@@ -244,6 +244,36 @@
   font: 400 14px/1.45 var(--font-sans);
 }
 
+/* What a change would do, before it is signed. The direction is carried by the sentence itself, so
+   the colour is decoration and never the information. */
+.trends {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trendsLabel {
+  margin: 0;
+  color: var(--paper-ink-muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.trendsList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 14px/1.4 var(--font-sans);
+}
+
+.trendsList li[data-direction="down"] {
+  color: var(--constitutional-red);
+}
+
 .warning {
   margin: 0;
   padding: 12px 14px;

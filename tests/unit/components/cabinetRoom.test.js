@@ -41,6 +41,10 @@ function cabinetView(over = {}) {
         },
         appointedAtTurn: 1,
         availableActions: ["dismiss", "replace"],
+        dismissTrends: [
+          { pillar: "congress", direction: "down" },
+          { pillar: "institutions", direction: "up" },
+        ],
       },
       {
         ministryKey: "justica",
@@ -63,6 +67,12 @@ function cabinetView(over = {}) {
         initials: "BT",
         eligibleMinistries: ["justica"],
         biography: "Procurador de carreira com reputação impecável.",
+        // Two readings, because arriving into an empty chair costs less than arriving over somebody.
+        appointTrends: [{ pillar: "institutions", direction: "up" }],
+        replaceTrends: [
+          { pillar: "congress", direction: "down" },
+          { pillar: "institutions", direction: "up" },
+        ],
         publicAttributes: {
           competence: "alta",
           loyalty: "incerta",
@@ -193,6 +203,47 @@ describe("opening a portfolio", () => {
     fireEvent.click(screen.getByRole("button", { name: "Voltar ao gabinete" }));
 
     expect(screen.getByRole("heading", { name: "Ministério da Justiça" })).toBeTruthy();
+  });
+});
+
+// What a change would do, before anybody signs it. The server sends a direction per pillar; the
+// screen turns it into a sentence, and never into a number.
+describe("what the screen says a change would cost", () => {
+  it("reads the loss of a minister as directions, in words", () => {
+    open();
+    openPortfolio("Ministério da Fazenda");
+
+    expect(screen.getByText("Se a pasta ficar vaga")).toBeTruthy();
+    expect(screen.getByText("Congresso tende a reagir negativamente")).toBeTruthy();
+    expect(screen.getByText("Instituições tende a reagir favoravelmente")).toBeTruthy();
+  });
+
+  it("reads an arrival into an empty chair, not the price of replacing somebody", () => {
+    open();
+    openPortfolio("Ministério da Justiça");
+
+    expect(screen.getByText("Se este nome assumir")).toBeTruthy();
+    expect(screen.getByText("Instituições tende a reagir favoravelmente")).toBeTruthy();
+    // That one belongs to replacing a sitting minister, and this chair is empty.
+    expect(screen.queryByText("Congresso tende a reagir negativamente")).toBeNull();
+  });
+
+  it("carries the reading into the confirmation, for the operation being signed", () => {
+    open();
+    openPortfolio("Ministério da Justiça");
+    fireEvent.click(screen.getByRole("button", { name: /Nomear Bruno Tavares/ }));
+
+    expect(screen.getByText("Como as forças tendem a reagir")).toBeTruthy();
+    expect(screen.getByText("Instituições tende a reagir favoravelmente")).toBeTruthy();
+  });
+
+  // The whole point of a direction: the arithmetic stays on the server.
+  it("never puts a number on it", () => {
+    open();
+    openPortfolio("Ministério da Fazenda");
+    const reading = screen.getByText("Se a pasta ficar vaga").parentElement;
+
+    expect(reading.textContent).not.toMatch(/\d/);
   });
 });
 

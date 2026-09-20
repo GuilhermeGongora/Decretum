@@ -1,9 +1,11 @@
 import {
   applyCabinetAction,
   applyCabinetOperations,
+  cabinetActionEffects,
   createCabinet,
   findSeat,
   restoreCabinet,
+  toActionTrends,
   toPublicAttributes,
 } from "@/src/domain/cabinet";
 
@@ -335,6 +337,94 @@ describe("toPublicAttributes", () => {
     for (const value of Object.values(toPublicAttributes({ competence: 82, loyalty: 45 }))) {
       expect(typeof value === "string" || value === null).toBe(true);
     }
+  });
+});
+
+describe("previewing what an operation would cost", () => {
+  const country = {
+    keyMinistries: [{ key: "fazenda", name: "Fazenda", note: "orçamento" }],
+    cabinet: {
+      defaultLoyalty: 60,
+      effects: {
+        appoint: { congress: 1, institutions: 1 },
+        dismiss: { congress: -4, institutions: 2, people: -1 },
+      },
+      traitEffects: { fiscalista: { market: 3 } },
+    },
+  };
+  const fiscalist = { id: "fz", character: "caio-ferraz", loyalty: 50, traits: ["fiscalista"] };
+
+  it("adds the country's price to what the arriving minister brings", () => {
+    expect(cabinetActionEffects(country, { action: "appoint", candidate: fiscalist })).toEqual({
+      people: 0,
+      market: 3,
+      congress: 1,
+      institutions: 1,
+    });
+  });
+
+  it("charges only the country's price for a dismissal, with nobody arriving", () => {
+    expect(cabinetActionEffects(country, { action: "dismiss" })).toEqual({
+      people: -1,
+      market: 0,
+      congress: -4,
+      institutions: 2,
+    });
+  });
+
+  it("pays for both halves of a replacement", () => {
+    expect(cabinetActionEffects(country, { action: "replace", candidate: fiscalist })).toEqual({
+      people: -1,
+      market: 3,
+      congress: -3,
+      institutions: 3,
+    });
+  });
+
+  // The promise the preview makes is the one the action keeps.
+  it("previews exactly what applying the action turns out to cost", () => {
+    const full = {
+      keyMinistries: country.keyMinistries,
+      cabinet: {
+        ...country.cabinet,
+        maxActionsPerTurn: 1,
+        allowActionsWhileSuspended: false,
+        candidates: [fiscalist],
+        holders: [{ portfolio: "fazenda", candidate: "fz" }],
+      },
+    };
+    const characters = {
+      "caio-ferraz": { cabinet: { eligible: true, ministries: ["fazenda"] } },
+    };
+
+    const applied = applyCabinetAction(
+      createCabinet(full),
+      { action: "dismiss", ministryKey: "fazenda" },
+      { country: full, characters, turn: 3 },
+    );
+
+    expect(applied.effects).toEqual(cabinetActionEffects(full, { action: "dismiss" }));
+  });
+});
+
+describe("toActionTrends", () => {
+  it("says which way each pillar moves, and never how far", () => {
+    const trends = toActionTrends({ people: -1, market: 3, congress: 0, institutions: 2 });
+
+    expect(trends).toEqual([
+      { pillar: "people", direction: "down" },
+      { pillar: "market", direction: "up" },
+      { pillar: "institutions", direction: "up" },
+    ]);
+    expect(JSON.stringify(trends)).not.toMatch(/[123]/);
+  });
+
+  it("leaves out a pillar the operation does not touch", () => {
+    expect(toActionTrends({ people: 0, market: 0, congress: 0, institutions: 0 })).toEqual([]);
+  });
+
+  it("says nothing at all when there is nothing to say", () => {
+    expect(toActionTrends()).toEqual([]);
   });
 });
 

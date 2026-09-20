@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
+import { PILLARS } from "@/app/_lib/text";
 import styles from "./CabinetRoom.module.css";
 
 // Same contract as the dossier's portrait: decorative artwork when there is any, initials when there
@@ -55,6 +56,28 @@ function Attributes({ attributes }) {
   );
 }
 
+// What the server says a change would do, said out loud. It sends a direction per pillar and never a
+// number; the sentence is built here, the way the pillar bands already are.
+const TREND_WORDS = { up: "favoravelmente", down: "negativamente" };
+
+function Trends({ trends, label = "Como as forças tendem a reagir" }) {
+  if (!trends?.length) return null;
+
+  return (
+    <div className={styles.trends}>
+      <p className={styles.trendsLabel}>{label}</p>
+      <ul className={styles.trendsList}>
+        {trends.map(({ pillar, direction }) => (
+          <li key={pillar} data-direction={direction}>
+            {PILLARS.find((entry) => entry.key === pillar)?.name ?? pillar} tende a reagir{" "}
+            {TREND_WORDS[direction]}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const ACTION_LABELS = {
   appoint: "Nomear",
   dismiss: "Exonerar",
@@ -90,6 +113,18 @@ export function CabinetRoom({ cabinet, turn, pending = false, error = null, onAc
     : null;
   const candidatesFor = (ministryKey) =>
     cabinet.candidates.filter((candidate) => candidate.eligibleMinistries.includes(ministryKey));
+
+  // The reading that belongs to the operation being confirmed: arriving over somebody costs more
+  // than arriving into an empty chair, and the server already worked out both.
+  const confirmingCandidate = confirming?.candidateId
+    ? (cabinet.candidates.find((entry) => entry.id === confirming.candidateId) ?? null)
+    : null;
+  const confirmingTrends =
+    confirming?.action === "dismiss"
+      ? (seat?.dismissTrends ?? [])
+      : confirming?.action === "replace"
+        ? (confirmingCandidate?.replaceTrends ?? [])
+        : (confirmingCandidate?.appointTrends ?? []);
 
   async function confirm() {
     // The ref blocks a second submission before React has re-rendered the pending state.
@@ -220,6 +255,9 @@ export function CabinetRoom({ cabinet, turn, pending = false, error = null, onAc
                 Exonerar {seat.occupant.name}
               </button>
             ) : null}
+            {seat.availableActions.includes("dismiss") ? (
+              <Trends trends={seat.dismissTrends} label="Se a pasta ficar vaga" />
+            ) : null}
 
             {seat.availableActions.some(
               (action) => action === "appoint" || action === "replace",
@@ -241,6 +279,14 @@ export function CabinetRoom({ cabinet, turn, pending = false, error = null, onAc
                           <p className={styles.biography}>{candidate.biography}</p>
                         ) : null}
                         <Attributes attributes={candidate.publicAttributes} />
+                        <Trends
+                          trends={
+                            seat.status === "occupied"
+                              ? candidate.replaceTrends
+                              : candidate.appointTrends
+                          }
+                          label="Se este nome assumir"
+                        />
                         <button
                           type="button"
                           className={styles.action}
@@ -296,6 +342,7 @@ export function CabinetRoom({ cabinet, turn, pending = false, error = null, onAc
                 <dd>{String(turn).padStart(2, "0")}</dd>
               </div>
             </dl>
+            <Trends trends={confirmingTrends} />
             <p className={styles.warning}>
               Esta decisão será registrada na crônica e consumirá sua ação de gabinete deste mês.
             </p>

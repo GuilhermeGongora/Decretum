@@ -3,7 +3,7 @@ import { getCharacter } from "@/src/content/characters";
 import { getCalendar } from "@/src/domain/calendar";
 import { METERS, PROCEDURE_STATUS } from "@/src/domain/constants";
 import { resolveChoiceDeltas } from "@/src/domain/effects";
-import { toPublicAttributes } from "@/src/domain/cabinet";
+import { cabinetActionEffects, toActionTrends, toPublicAttributes } from "@/src/domain/cabinet";
 import { getMeterBand, getTrend } from "@/src/domain/meters";
 import {
   countChamberVotes,
@@ -96,6 +96,11 @@ export function toCabinetView(cabinet, country, { turn, actionsUsed = 0, suspend
           : null,
         appointedAtTurn: occupied ? seat.sinceTurn : null,
         availableActions: actionAvailable ? (occupied ? ["dismiss", "replace"] : ["appoint"]) : [],
+        // What losing this minister would do, in directions rather than numbers. Null when there is
+        // nobody to lose.
+        dismissTrends: occupied
+          ? toActionTrends(cabinetActionEffects(country, { action: "dismiss" }))
+          : null,
       };
     }),
     // Everyone the Presidency could still reach for. Whoever already holds a portfolio is left out:
@@ -110,6 +115,14 @@ export function toCabinetView(cabinet, country, { turn, actionsUsed = 0, suspend
           ...toPersonView(candidate.character),
           eligibleMinistries: allowed,
           biography: candidate.biography ?? null,
+          // What signing this name would do. Two readings, because arriving into an empty chair and
+          // arriving over somebody else do not cost the same: the screen picks by the seat's state.
+          appointTrends: toActionTrends(
+            cabinetActionEffects(country, { action: "appoint", candidate }),
+          ),
+          replaceTrends: toActionTrends(
+            cabinetActionEffects(country, { action: "replace", candidate }),
+          ),
           publicAttributes: toAttributesView(
             country,
             {

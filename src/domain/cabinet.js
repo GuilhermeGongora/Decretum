@@ -139,6 +139,40 @@ function assertEligible(candidate, ministryKey, characters) {
 }
 
 /**
+ * What an operation would cost, before anybody commits to it.
+ *
+ * One function, used both to preview a change and to apply it, so the screen can never promise a
+ * consequence different from the one that lands. It answers for a hypothetical too: a candidate who
+ * has not been appointed, a dismissal nobody has signed.
+ */
+export function cabinetActionEffects(country, { action, candidate = null }) {
+  const rules = country?.cabinet ?? {};
+  const leaving = action === "dismiss" || action === "replace";
+  const arriving = action === "appoint" || action === "replace";
+
+  const effects = noEffects();
+  if (leaving) addEffects(effects, rules.effects?.dismiss);
+  if (arriving) {
+    addEffects(effects, rules.effects?.appoint);
+    for (const trait of candidate?.traits ?? []) {
+      addEffects(effects, rules.traitEffects?.[trait]);
+    }
+  }
+  return effects;
+}
+
+/**
+ * The same consequence as a reading rather than a number: which way each pillar would move, and
+ * nothing about how far. What a president is told before signing is a direction, not a forecast.
+ */
+export function toActionTrends(effects) {
+  return METERS.filter((meter) => (effects?.[meter] ?? 0) !== 0).map((meter) => ({
+    pillar: meter,
+    direction: effects[meter] > 0 ? "up" : "down",
+  }));
+}
+
+/**
  * The Presidency reorganising its own government: one appointment, dismissal or replacement.
  *
  * Every refusal is a rule of the state, not of the screen, and the client never computes any of it.
@@ -213,14 +247,8 @@ export function applyCabinetAction(
     assertEligible(candidate, ministryKey, characters);
   }
 
-  const effects = noEffects();
-  if (leaving) addEffects(effects, rules.effects?.dismiss);
-  if (arriving) {
-    addEffects(effects, rules.effects?.appoint);
-    for (const trait of candidate.traits ?? []) {
-      addEffects(effects, rules.traitEffects?.[trait]);
-    }
-  }
+  // The same arithmetic the screen previewed, from the same function: a promise the server keeps.
+  const effects = cabinetActionEffects(country, { action, candidate });
 
   // Losing a minister costs the ones who stayed, and it is charged before anybody new sits down: the
   // newcomer is not made to pay for a fall they had no part in.

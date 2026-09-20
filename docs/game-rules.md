@@ -366,6 +366,12 @@ screen: there is no appointment, no dismissal as a player decision, and no inter
 - **The screen is never offered what the server would refuse**: `availableActions` is empty once the
   month's action is spent, while the Presidency is suspended, and after the government has ended, and
   the candidate list leaves out anyone already holding a portfolio.
+- **A change is previewed before it is signed, as directions.** The server answers which way each
+  pillar would move and says nothing about how far, so the Presidency reads "Congresso tende a
+  reagir negativamente" rather than a forecast. One function computes it, and the same one computes
+  what the action actually applies — the preview cannot promise a consequence different from the one
+  that lands. A candidate carries two readings, because arriving into an empty chair and arriving
+  over a sitting minister do not cost the same.
 
 #### The archive
 
