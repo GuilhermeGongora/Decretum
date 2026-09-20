@@ -622,6 +622,18 @@ function validateCountryCampaign(campaign, context, report) {
   if (!(campaign.validVoteRate > 0 && campaign.validVoteRate <= 1)) {
     report("campaign validVoteRate must be between 0 and 1");
   }
+
+  // The second round is the country's own arithmetic, and the engine depends on it: a pack without
+  // it would have nothing to consolidate a runoff with.
+  if (!isPlainObject(campaign.runoff)) {
+    report("campaign needs a runoff with base and slope");
+  } else {
+    const { base, slope } = campaign.runoff;
+    if (!(Number.isFinite(base) && base >= 0 && base <= 100)) {
+      report("campaign runoff base must be a number between 0 and 100");
+    }
+    if (!Number.isFinite(slope)) report("campaign runoff slope must be a number");
+  }
   if (!isPlainObject(campaign.opponent) || !isNonEmptyString(campaign.opponent.name)) {
     report("campaign needs a named opponent");
   }
@@ -663,6 +675,17 @@ function validateCountryCampaign(campaign, context, report) {
     }
     if (!campaign.headlines.some((headline) => headline.minMargin <= 0)) {
       report("campaign headlines must cover a zero margin");
+    }
+    // A campaign can be lost, and the resolver reads a headline for whatever margin comes out of it.
+    // With no band reaching the worst defeat there would be nothing to read at all.
+    if (!campaign.headlines.some((headline) => headline.minMargin <= -100)) {
+      report("campaign headlines must cover a defeat");
+    }
+    // `.find()` takes the first band the margin reaches, so a band that is not below the one before
+    // it can never be reached.
+    const margins = campaign.headlines.map((headline) => headline.minMargin);
+    if (margins.some((margin, index) => index > 0 && !(margin < margins[index - 1]))) {
+      report("campaign headlines must be ordered from the widest margin down");
     }
   }
 }

@@ -94,6 +94,33 @@ game designer should review.
   the campaign and offers another attempt). The same was already true of `POST /api/v1/games` before
   this phase; a request key would be the fix and is not implemented.
 
+### Losing the election
+
+The campaign used to elect the player whatever they did; the resolver said so in its own comment.
+It no longer does.
+
+- **Winning outright** needs more than the country's `runoffThreshold` in the first round.
+- **Otherwise there is a second round**, and what each side consolidates there is the country's
+  arithmetic, not the engine's: `runoff.base` is what a campaign that ended the first round exactly
+  at `baseShare` carries into it, and `runoff.slope` is how much of every extra point comes across.
+  For Brazil that is `49.2 + (share − 44.6) × 0.42`, so the cliff sits near a first round of 46.5.
+- **A tie is not a victory.** Election requires more votes than the other side, so a margin of
+  exactly zero is a defeat. Deliberate: without a majority nobody is elected.
+- **A defeated campaign starts no government.** No row is inserted, no id is saved, there is nothing
+  to resume, and the engine returns `meters: null` rather than a set of pillars nobody will govern
+  with. The API answers 200 with `{ outcome: "defeated", game: null, candidate, election }` — not a
+  201, because nothing was created.
+- **Headlines must cover a defeat.** The resolver reads a band for whatever margin comes out, so the
+  pack declares negative bands too, and content validation refuses a pack without one. The bands are
+  also checked to be in descending order, because `.find()` takes the first one reached and a band
+  out of order could never be read.
+- **Refusing every deal loses.** The clean campaign — austerity, no coalition, no dossier, closing
+  with the market — lands at 45.6 and is beaten in the runoff. Nobody is owed an election for having
+  clean hands, which is the mirror of the impeachment rule that governing well protects you.
+- On screen the count is shown in full either way: the opponent is marked as the elected one, the
+  inauguration is replaced by another election, and the player returns to the registration with the
+  same draft and a clean campaign.
+
 ## Characters
 
 - The GDD §17 cast was revised to match the approved character bible and artwork:

@@ -13,8 +13,13 @@ const CANDIDATE = {
 };
 
 const SIDES = ["left", "right"];
+// Every campaign the pack allows, whatever number of questions it declares. Adding a debate must not
+// mean rewriting this by hand — and it is how a new question gets exercised in both directions.
 const everyCampaign = () =>
-  SIDES.flatMap((a) => SIDES.flatMap((b) => SIDES.flatMap((c) => SIDES.map((d) => [a, b, c, d]))));
+  brazil.campaign.questions.reduce(
+    (campaigns) => campaigns.flatMap((choices) => SIDES.map((side) => [...choices, side])),
+    [[]],
+  );
 
 const run = (choices, candidate = CANDIDATE) =>
   resolveCampaign({ country: brazil, candidate, choices });
@@ -35,23 +40,33 @@ describe("resolveCampaign", () => {
     expect(austere.meters).not.toEqual(popular.meters);
   });
 
-  it("elects the player in every campaign, in one round or two", () => {
+  // The campaign used to elect the player whatever they did. It no longer does: some of the sixteen
+  // campaigns win and some lose, which is the whole point of running one.
+  it("elects some campaigns and defeats others, in one round or two", () => {
     const rounds = new Set();
+    const outcomes = new Set();
 
     for (const choices of everyCampaign()) {
-      const { election } = run(choices);
+      const { outcome, election } = run(choices);
       rounds.add(election.round);
-      expect(election.share).toBeGreaterThan(election.opponentShare);
-      expect(election.margin).toBeGreaterThan(0);
+      outcomes.add(outcome);
       expect(election.share + election.opponentShare).toBeCloseTo(100, 5);
+      // Winning is having more votes than the other side and nothing else: a dead tie is not a win.
+      expect(outcome === "elected").toBe(election.margin > 0);
     }
 
     expect([...rounds].sort()).toEqual([1, 2]);
+    expect([...outcomes].sort()).toEqual(["defeated", "elected"]);
   });
 
-  it("keeps every pillar inside the 40–60 opening range", () => {
+  it("keeps every pillar of an elected government inside the 40–60 opening range", () => {
     for (const choices of everyCampaign()) {
-      const { meters } = run(choices);
+      const { outcome, meters } = run(choices);
+      if (outcome === "defeated") {
+        // A campaign that lost starts no government, so it hands over no pillars at all.
+        expect(meters).toBeNull();
+        continue;
+      }
       for (const meter of METERS) {
         expect(meters[meter]).toBeGreaterThanOrEqual(SUCCESSOR_METER_BOUNDS.min);
         expect(meters[meter]).toBeLessThanOrEqual(SUCCESSOR_METER_BOUNDS.max);

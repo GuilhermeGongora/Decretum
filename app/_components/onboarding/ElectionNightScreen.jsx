@@ -26,6 +26,9 @@ export function ElectionNightScreen({ country, candidate, election, reducedMotio
     if (counted) proceedRef.current?.focus();
   }, [counted]);
 
+  // The count decides who was elected, not the fact that this is the player's screen.
+  const defeated = election.margin < 0;
+
   const rows = [
     {
       key: "winner",
@@ -33,15 +36,15 @@ export function ElectionNightScreen({ country, candidate, election, reducedMotio
       detail: `${candidate.party.acronym} · ${candidate.coalition.label}`,
       share: election.share,
       votes: election.votes,
-      elected: true,
+      elected: !defeated,
     },
     {
       key: "opponent",
       name: election.opponent.name,
-      detail: `${election.opponent.acronym} · oposição`,
+      detail: `${election.opponent.acronym} · ${defeated ? "eleita" : "oposição"}`,
       share: election.opponentShare,
       votes: election.opponentVotes,
-      elected: false,
+      elected: defeated,
     },
   ];
 
@@ -124,15 +127,24 @@ export function ElectionNightScreen({ country, candidate, election, reducedMotio
             </div>
             <div>
               <dt>Posse</dt>
-              <dd>Janeiro · Ano 1</dd>
+              <dd>{defeated ? "Não haverá" : "Janeiro · Ano 1"}</dd>
             </div>
           </dl>
 
-          <section className={styles.elected} aria-label="Presidência eleita">
-            <p className={styles.electedLabel}>Presidência eleita</p>
-            <p className={styles.electedName}>{candidate.name}</p>
+          <section
+            className={styles.elected}
+            aria-label={defeated ? "Candidatura derrotada" : "Presidência eleita"}
+          >
+            <p className={styles.electedLabel}>
+              {defeated ? "Candidatura derrotada" : "Presidência eleita"}
+            </p>
+            <p className={styles.electedName}>
+              {defeated ? election.opponent.name : candidate.name}
+            </p>
             <p className={styles.electedDetail}>
-              {candidate.treatment.label} · {candidate.origin.label} · {candidate.promise.label}
+              {defeated
+                ? `${election.opponent.party} · a Presidência ficou com a oposição`
+                : `${candidate.treatment.label} · ${candidate.origin.label} · ${candidate.promise.label}`}
             </p>
           </section>
 
@@ -143,7 +155,7 @@ export function ElectionNightScreen({ country, candidate, election, reducedMotio
               className={`btn btn--primary ${styles.proceed}`}
               onClick={onProceed}
             >
-              Receber o diploma e seguir para a posse
+              {defeated ? "Disputar outra eleição" : "Receber o diploma e seguir para a posse"}
             </button>
           </div>
         </>

@@ -630,6 +630,11 @@ export const brazil = {
     baseShare: 44.6,
     baseTurnout: 76.8,
     validVoteRate: 0.93,
+    // The second round, as this country's arithmetic. `base` is what a campaign that ended the first
+    // round exactly at `baseShare` consolidates; `slope` is how much of every extra point it carries
+    // across. Below 50 the candidacy loses — a first round far under the threshold does not come
+    // back from it, and refusing every deal is a way of getting there.
+    runoff: { base: 49.2, slope: 0.42 },
     questions: [
       {
         id: "economy_debate",
@@ -762,6 +767,18 @@ export const brazil = {
         text: "Apuração decidida nas últimas urnas define a Presidência por diferença mínima",
         summary:
           "A diferença cabe em uma capital. Governar exigirá concessões desde o primeiro mês.",
+      },
+      // Below zero the candidacy lost. The bands stay in descending order, because the resolver
+      // takes the first one the margin reaches.
+      {
+        minMargin: -3,
+        text: "Segundo turno termina sem mandato para a candidatura, por diferença de menos de dois pontos",
+        summary: "Faltou pouco, e o pouco que faltou foi recusado na campanha.",
+      },
+      {
+        minMargin: -100,
+        text: "Oposição confirma o segundo turno com folga e assume o Palácio no ano que vem",
+        summary: "A derrota foi ampla, e a campanha terminou sem o apoio que recusou negociar.",
       },
     ],
   },

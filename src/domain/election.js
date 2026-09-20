@@ -4,7 +4,12 @@ import { clampMeter } from "./meters.js";
 
 // The electoral prologue. A pure function of (country, candidate, choices): no randomness at all, so a
 // campaign always produces the same election. The country profile arrives as an argument — the engine
-// never imports country content. In this version the player always wins; the campaign decides how.
+// never imports country content.
+//
+// A campaign can be lost. Winning the first round outright needs more than the country's runoff
+// threshold; below it the race is decided in a second round, and what the candidate consolidates
+// there is declared by the country, not by the engine. A campaign that refuses every deal is
+// honourable and it loses votes: nobody is owed an election for having clean hands.
 const ROUNDED = (value) => Math.round(value * 10) / 10;
 
 function sumOf(sources, field) {
@@ -79,12 +84,17 @@ export function resolveCampaign({ country, candidate, choices }) {
   const turnout = ROUNDED(
     Math.min(94, Math.max(62, campaign.baseTurnout + sumOf(picked, "turnout"))),
   );
-  // Below the runoff threshold the race is decided in a second round, where the winner consolidates
-  // the votes that went to eliminated candidates.
+  // Below the runoff threshold the race is decided in a second round. How much of the eliminated
+  // vote each side consolidates is the country's own arithmetic: a first round far below the
+  // threshold does not come back from it.
   const decidedInFirstRound = share > electoralRules.runoffThreshold;
-  const finalShare = decidedInFirstRound ? share : ROUNDED(50.4 + (share - 40) * 0.42);
+  const runoff = campaign.runoff;
+  const finalShare = decidedInFirstRound
+    ? share
+    : ROUNDED(runoff.base + (share - campaign.baseShare) * runoff.slope);
   const opponentShare = ROUNDED(100 - finalShare);
   const margin = ROUNDED(finalShare - opponentShare);
+  const elected = margin > 0;
 
   const attending = Math.round((campaign.electorate * turnout) / 100);
   const validVotes = Math.round(attending * campaign.validVoteRate);
@@ -116,8 +126,11 @@ export function resolveCampaign({ country, candidate, choices }) {
   const flagKeys = [...new Set(sources.flatMap((source) => source.flags ?? []))].sort();
 
   return {
-    meters,
-    flagKeys,
+    outcome: elected ? "elected" : "defeated",
+    // A defeated candidacy starts no government, so there is no state to hand over: null is the
+    // truthful answer, not a set of pillars nobody will ever govern with.
+    meters: elected ? meters : null,
+    flagKeys: elected ? flagKeys : [],
     election: {
       round: decidedInFirstRound ? 1 : 2,
       share: finalShare,

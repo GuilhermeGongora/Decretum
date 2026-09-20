@@ -75,6 +75,9 @@ export default function DecretumApp() {
   const [resumeFailedFor, setResumeFailedFor] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [inheritance, setInheritance] = useState(null);
+  // A campaign that lost: there is no government behind it, so the election night reads from here
+  // instead of from a snapshot that was never created.
+  const [defeat, setDefeat] = useState(null);
   // null | { step: "country" | "candidate" | "campaign" | "election" | "briefing" }
   //      | { step: "inauguration", mode: "new" | "successor" }
   const [onboarding, setOnboarding] = useState(null);
@@ -158,6 +161,18 @@ export default function DecretumApp() {
         candidate: draft.candidate,
         campaign: { choices: answers },
       });
+      // A campaign can be lost, and a lost one created no government: there is no id to save and
+      // nothing to resume. The count is still shown, because losing is a result, not an error.
+      if (response.outcome === "defeated") {
+        setDefeat({
+          country: selectedCountry,
+          candidate: response.candidate,
+          election: response.election,
+        });
+        setOnboarding({ step: "election" });
+        return;
+      }
+      setDefeat(null);
       saveGameId(response.game.id);
       setSnapshot(toSnapshot(response));
       setFeedback(null);
@@ -273,6 +288,7 @@ export default function DecretumApp() {
     setSnapshot(null);
     setFeedback(null);
     setInheritance(null);
+    setDefeat(null);
     setOnboarding(null);
     setDraft(null);
     setError(null);
@@ -358,11 +374,21 @@ export default function DecretumApp() {
     content = (
       <GameShell scrollable scene="count">
         <ElectionNightScreen
-          country={snapshot.game.country}
-          candidate={snapshot.game.candidate}
-          election={snapshot.game.election}
+          country={defeat ? defeat.country : snapshot.game.country}
+          candidate={defeat ? defeat.candidate : snapshot.game.candidate}
+          election={defeat ? defeat.election : snapshot.game.election}
           reducedMotion={preferences.reducedMotion}
-          onProceed={() => goTo({ step: "inauguration", mode: "new" })}
+          onProceed={
+            defeat
+              ? () => {
+                  // Losing sends the player back to the registration, with the same draft and a
+                  // clean campaign: the defeat is read, not carried into the next attempt.
+                  setDefeat(null);
+                  setDraft((current) => (current ? { ...current, answers: [] } : current));
+                  goTo({ step: "candidate" });
+                }
+              : () => goTo({ step: "inauguration", mode: "new" })
+          }
         />
       </GameShell>
     );

@@ -223,6 +223,24 @@ export async function createGame({ countryCode, candidate, campaignChoices } = {
       ? resolveCampaign({ country, candidate, choices: campaignChoices })
       : null;
 
+  // A campaign can be lost, and a lost campaign starts no government: nothing is inserted, nothing
+  // is saved and there is nothing to resume. The count still comes back, because the player has to
+  // be told how it went.
+  if (start?.outcome === "defeated") {
+    logger.info("game.campaign_defeated", {
+      countryCode: country.countryCode,
+      margin: start.election.margin,
+    });
+    // The candidacy is still described, because the screen has to name who lost and under which
+    // party and coalition. Rebuilding those labels in the browser would be a second source of them.
+    return {
+      outcome: "defeated",
+      game: null,
+      candidate: buildCandidateSnapshot(country, candidate),
+      election: start.election,
+    };
+  }
+
   const snapshot = await withTransaction(async (client) => {
     const cards = await findAllCards(client);
     const gameId = await insertStartedGame(client, {
@@ -243,7 +261,7 @@ export async function createGame({ countryCode, candidate, campaignChoices } = {
     elected: Boolean(start),
     cardSlug: snapshot.currentCard.slug,
   });
-  return snapshot;
+  return { outcome: "elected", ...snapshot };
 }
 
 export async function getGame(gameId) {
