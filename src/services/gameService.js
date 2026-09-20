@@ -497,6 +497,10 @@ export async function decide(gameId, { choice, expectedTurn }) {
     game: snapshot.game,
     // Where the constitutional chain stands after this month, or null for a government facing none.
     procedure: snapshot.procedure,
+    // The cabinet as it stands after this month. It travels with every response that rebuilds the
+    // client's snapshot: leaving it out here emptied the cabinet between decisions, and the room
+    // disappeared from the header until the page was reloaded.
+    cabinet: snapshot.cabinet,
     // What the chain did this month, so the interface reacts to an event instead of reading text.
     procedureEvent: toProcedureEvent(
       procedureBefore,

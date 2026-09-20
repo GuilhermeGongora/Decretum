@@ -182,3 +182,18 @@ describe("a government whose stored cabinet predates the ministries it holds now
     expect(rows.find((row) => row.portfolio === "justica").holder_character_id).toBeNull();
   });
 });
+
+// The client rebuilds its whole snapshot from whatever a decision answers with. Anything missing
+// here is not stale on the screen — it is gone, until the page is reloaded.
+describe("what a decided month answers with", () => {
+  it("still carries the cabinet, so the room does not vanish between months", async () => {
+    const { game } = await createGame();
+
+    const response = await decide(game.id, { choice: "right", turn: 1 });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.cabinet.seats).toHaveLength(7);
+    expect(body.cabinet.seats.filter((seat) => seat.occupant)).toHaveLength(6);
+  });
+});
