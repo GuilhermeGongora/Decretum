@@ -1225,4 +1225,127 @@ export const cardDefinitions = [
     uniquePerGame: true,
     tags: ["congress", "justice"],
   },
+
+  // Promises called in. The candidate's platform sets a pledge during the campaign; these are what
+  // happens when the bill for it arrives, and each one only appears to the government that made it.
+  {
+    slug: "fiscal_pledge_called_in",
+    type: "conditional",
+    speaker: "livia-nogueira",
+    category: "budget",
+    text: "A campanha prometeu equilibrar as contas. O primeiro orçamento chega com um rombo maior que o anunciado, e o corte precisa sair de algum lugar.",
+    leftChoice: {
+      label: "Cortar como prometido",
+      effects: fx(-6, 7, -3, 4),
+      resultText: "O corte sai como prometido, e as categorias organizadas vão às ruas.",
+      headline:
+        "Governo corta programas para cumprir promessa fiscal e enfrenta greve de servidores",
+      reaction:
+        "O número fecha, Presidente. O custo político aparece em março, e ele vem inteiro para a sua mesa.",
+    },
+    rightChoice: {
+      label: "Adiar o ajuste",
+      effects: fx(4, -6, 2, -4),
+      setFlags: [{ key: "pledge_fiscal_broken" }],
+      resultText: "O ajuste fica para depois, e o mercado começa a cobrar juros pela espera.",
+      headline:
+        "Presidência adia o ajuste prometido e o mercado revisa projeções para o fim do ano",
+      reaction:
+        "Adiar não é cancelar, mas o mercado já fez a conta. Cada mês de espera sai mais caro que o anterior.",
+    },
+    conditions: { allFlags: ["pledge_fiscal"], minTurn: 4 },
+    weight: 6,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["budget", "economy"],
+  },
+  {
+    slug: "social_pledge_called_in",
+    type: "conditional",
+    speaker: "joana-reis",
+    category: "labor",
+    text: "As centrais cobram a expansão dos programas sociais prometida na campanha. O Tesouro diz que não há espaço no orçamento deste ano.",
+    leftChoice: {
+      label: "Ampliar como prometido",
+      effects: fx(7, -6, -2, 1),
+      resultText: "A ampliação é assinada, e o Tesouro refaz as contas do ano inteiro.",
+      headline: "Governo amplia programas sociais como prometeu e Tesouro abre rombo no orçamento",
+      reaction:
+        "A senhora cumpriu, e nós vamos dizer isso em cada assembleia. O Tesouro que se entenda com a conta.",
+    },
+    rightChoice: {
+      label: "Segurar a ampliação",
+      effects: fx(-7, 5, 2, -1),
+      setFlags: [{ key: "pledge_social_broken" }],
+      resultText: "A ampliação fica para o ano que vem, e as centrais marcam paralisação.",
+      headline: "Presidência segura a expansão social prometida e centrais convocam paralisação",
+      reaction:
+        "Prometer na praça e segurar no gabinete tem nome, Presidente, e não é responsabilidade fiscal.",
+    },
+    conditions: { allFlags: ["pledge_social"], minTurn: 4 },
+    weight: 6,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["labor", "budget"],
+  },
+  {
+    slug: "security_pledge_called_in",
+    type: "conditional",
+    speaker: "nina-vale",
+    category: "security",
+    text: "Uma chacina na região metropolitana volta a cobrar o plano de segurança prometido. O Correio Cívico pede a data de início.",
+    leftChoice: {
+      label: "Lançar a operação",
+      effects: fx(5, 1, 2, -6),
+      resultText:
+        "A operação começa, e as entidades de direitos humanos entram com representações.",
+      headline:
+        "Presidência lança o plano de segurança prometido sob críticas de entidades de direitos",
+      reaction:
+        "O plano saiu do papel, e agora o Correio Cívico vai acompanhar cada operação que ele autorizar.",
+    },
+    rightChoice: {
+      label: "Adiar o plano",
+      effects: fx(-6, 0, -1, 3),
+      setFlags: [{ key: "pledge_security_broken" }],
+      resultText: "O plano continua em estudo, e o jornal publica a promessa ao lado da data.",
+      headline: "Plano de segurança prometido na campanha completa um ano sem sair do papel",
+      reaction:
+        "Registro a data, Presidente. Promessa sem calendário vira manchete todo mês até virar resposta.",
+    },
+    conditions: { allFlags: ["pledge_security"], minTurn: 5 },
+    weight: 6,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["security", "media"],
+  },
+  {
+    slug: "integrity_pledge_called_in",
+    type: "conditional",
+    speaker: "andre-furtado",
+    category: "scandal",
+    text: "Um aliado da base é citado em desvio de emendas. A oposição lembra, em plenário, a promessa de não fazer acordo com quem desvia.",
+    leftChoice: {
+      label: "Romper com o aliado",
+      effects: fx(4, 1, -8, 7),
+      resultText: "O rompimento é anunciado, e a base perde onze votos de uma vez.",
+      headline: "Governo rompe com aliado citado em desvio de emendas e perde votos na base",
+      reaction:
+        "Reconheço o gesto e continuo na oposição. O senhor acaba de perder onze votos que eram seus.",
+    },
+    rightChoice: {
+      label: "Manter o aliado",
+      effects: fx(-5, 0, 6, -7),
+      setFlags: [{ key: "pledge_integrity_broken" }],
+      resultText: "O aliado fica, e a promessa de campanha volta ao plenário todos os dias.",
+      headline: "Presidência mantém aliado citado em desvio e oposição cobra promessa de campanha",
+      reaction:
+        "Guardei a frase da campanha, Presidente. Vou repeti-la no plenário toda vez que este nome aparecer.",
+    },
+    conditions: { allFlags: ["pledge_integrity"], minTurn: 6 },
+    weight: 6,
+    cooldownTurns: 0,
+    uniquePerGame: true,
+    tags: ["scandal", "congress"],
+  },
 ];

@@ -16,10 +16,14 @@ const candidate = {
 
 const run = (choices) => resolveCampaign({ country: brazil, candidate, choices });
 
-// The four questions, in the order the pack declares them: economy, coalition, dossier, last week.
-// Every option below is real content, so these are two campaigns a player can actually run.
-const AGGRESSIVE = ["right", "left", "left", "left"];
-const CLEAN = ["left", "right", "right", "right"];
+// The questions in the order the pack declares them: economy, coalition, dossier, last week and the
+// environment. Every option below is real content, so these are two campaigns a player can run.
+//
+// Taking everything on offer wins outright at 57.4. Refusing all of it — austerity, no coalition, no
+// dossier, the market instead of the streets, and enforcement instead of licensing — lands at 44.8
+// and is beaten in the runoff.
+const AGGRESSIVE = ["right", "left", "left", "left", "left"];
+const CLEAN = ["left", "right", "right", "right", "right"];
 
 describe("a campaign strong enough to win outright", () => {
   it("is decided in the first round and takes office", () => {

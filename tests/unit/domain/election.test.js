@@ -21,8 +21,19 @@ const everyCampaign = () =>
     [[]],
   );
 
+// A campaign is written as the sides that matter to the test and completed with the rest, so adding
+// a debate to the pack does not mean editing every array in this file.
+const pad = (choices) => {
+  const full = [...choices];
+  while (full.length < brazil.campaign.questions.length) full.push("right");
+  return full;
+};
+
 const run = (choices, candidate = CANDIDATE) =>
-  resolveCampaign({ country: brazil, candidate, choices });
+  resolveCampaign({ country: brazil, candidate, choices: pad(choices) });
+
+// For the cases that need a wrong length or a wrong side on purpose: nothing is completed here.
+const runExactly = (choices) => resolveCampaign({ country: brazil, candidate: CANDIDATE, choices });
 
 describe("resolveCampaign", () => {
   it("produces the same election for the same campaign, with no randomness", () => {
@@ -40,8 +51,8 @@ describe("resolveCampaign", () => {
     expect(austere.meters).not.toEqual(popular.meters);
   });
 
-  // The campaign used to elect the player whatever they did. It no longer does: some of the sixteen
-  // campaigns win and some lose, which is the whole point of running one.
+  // The campaign used to elect the player whatever they did. It no longer does: of the thirty-two
+  // campaigns the pack allows, some win and some lose, which is the whole point of running one.
   it("elects some campaigns and defeats others, in one round or two", () => {
     const rounds = new Set();
     const outcomes = new Set();
@@ -92,12 +103,9 @@ describe("resolveCampaign", () => {
     expect(flagKeys).toContain("campaign_clean_hands");
     expect(flagKeys).not.toContain("campaign_spending_pledge");
     expect([...flagKeys]).toEqual([...flagKeys].sort());
-    expect(election.decisions.map((decision) => decision.choice)).toEqual([
-      "left",
-      "left",
-      "right",
-      "right",
-    ]);
+    expect(election.decisions.map((decision) => decision.choice)).toEqual(
+      pad(["left", "left", "right", "right"]),
+    );
   });
 
   it("names the strongholds among the country's own regions", () => {
@@ -118,9 +126,14 @@ describe("resolveCampaign", () => {
 
   it.each([
     ["too few decisions", ["left", "right"], /INCOMPLETE_CAMPAIGN/],
-    ["a side that does not exist", ["left", "up", "left", "right"], /INVALID_CAMPAIGN_CHOICE/],
+    // Full length, so the campaign is rejected for the side itself and not for being short.
+    [
+      "a side that does not exist",
+      ["left", "up", "left", "right", "right"],
+      /INVALID_CAMPAIGN_CHOICE/,
+    ],
   ])("rejects %s", (_, choices, code) => {
-    expect(() => run(choices)).toThrow(
+    expect(() => runExactly(choices)).toThrow(
       expect.objectContaining({ code: expect.stringMatching(code) }),
     );
   });

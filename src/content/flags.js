@@ -90,6 +90,18 @@ export const flagCatalog = {
     label: "A eleição foi decidida em um comício com os movimentos sociais.",
   },
   campaign_market_trust: { label: "A reta final da campanha foi construída com investidores." },
+  // A promise made on the campaign trail and not kept in office. The pledge itself is set by the
+  // candidate's own platform; these are what happens when the bill for it arrives.
+  pledge_fiscal_broken: { label: "A promessa de responsabilidade fiscal foi adiada no governo." },
+  pledge_social_broken: { label: "A expansão social prometida na campanha foi segurada." },
+  pledge_security_broken: { label: "O plano de segurança prometido não saiu do papel." },
+  pledge_integrity_broken: { label: "O governo manteve um aliado citado em desvio." },
+  campaign_licensing_promised: {
+    label: "A campanha prometeu licenciar a estrada na floresta protegida.",
+  },
+  campaign_environment_pledge: {
+    label: "A campanha se comprometeu a manter a fiscalização ambiental.",
+  },
 
   // Set along the constitutional chain: what the government did while it was being judged.
   impeachment_petition_filed: { label: "A oposição protocolou um pedido de impeachment." },

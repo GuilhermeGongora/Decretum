@@ -35,9 +35,9 @@ describe("initial content", () => {
     expect(validateContent(sourceContent()).errors).toEqual([]);
   });
 
-  it("has the 30 cards of the GDD deck plus the 10 of the constitutional chain", () => {
-    expect(cards.filter((card) => card.active)).toHaveLength(40);
-    expect(new Set(cards.map((card) => card.slug)).size).toBe(40);
+  it("has the 30 cards of the GDD deck, the 10 of the chain and the 4 that call a pledge in", () => {
+    expect(cards.filter((card) => card.active)).toHaveLength(44);
+    expect(new Set(cards.map((card) => card.slug)).size).toBe(44);
 
     const chain = cards.filter((card) => card.slug.startsWith("impeachment_"));
     expect(chain).toHaveLength(10);
@@ -95,7 +95,7 @@ describe("initial content", () => {
           .map(([field]) => `${at}.${field}`),
       );
 
-      expect(outcomes).toHaveLength(80);
+      expect(outcomes).toHaveLength(88);
       expect(missing).toEqual([]);
     });
 

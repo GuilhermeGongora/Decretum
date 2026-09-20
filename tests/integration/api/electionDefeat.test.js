@@ -17,10 +17,10 @@ const CANDIDATE = {
   promise: "social",
 };
 
-// Austerity, refusing the coalition, refusing the dossier, and closing with the market: honourable,
-// and not enough votes.
-const LOSING = ["left", "right", "right", "right"];
-const WINNING = ["right", "left", "left", "left"];
+// Austerity, refusing the coalition, refusing the dossier, closing with the market and defending
+// enforcement: honourable, and not enough votes.
+const LOSING = ["left", "right", "right", "right", "right"];
+const WINNING = ["right", "left", "left", "left", "left"];
 
 function run(choices) {
   return postGame(

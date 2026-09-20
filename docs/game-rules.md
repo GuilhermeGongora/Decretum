@@ -121,6 +121,29 @@ It no longer does.
   inauguration is replaced by another election, and the player returns to the registration with the
   same draft and a clean campaign.
 
+#### How often a campaign is lost
+
+Of the thirty-two campaigns the Brazilian pack allows, **three are defeats** and twenty are decided
+in the first round. Losing takes refusing nearly everything, which is the intended shape and not an
+accident — but it is deliberately recorded here, because it is the one number worth revisiting. The
+cliff sits at a first round of **46.5**, and `campaign.runoff.base` is the single value that moves
+it: lowering it makes defeat commoner without touching a question, an option or a test.
+
+### The debates, and the promises they set
+
+- **Five debates**, the fifth added with the Meio Ambiente portfolio: a road through protected forest
+  against the enforcement that would stop it. Licensing buys the frontier states and costs the
+  institutions; defending enforcement costs votes outright.
+- **The pack decides how many there are.** Tests complete a campaign to whatever length the country
+  declares, so a sixth debate needs no test rewritten — only the arithmetic re-measured.
+- **Headlines run in eight descending bands**, from a landslide down to a wide defeat. The resolver
+  takes the first band the margin reaches, so the order is enforced by content validation.
+- **A promise is called in.** The candidate's platform sets one of four pledges during the campaign;
+  four cards hold the government to the one it made, and each reaches only the government that made
+  it. Keeping the promise costs what it always cost — the fiscal one buys the market and spends the
+  people, the social one the reverse. Breaking it records a flag of its own, so the archive
+  remembers which promise was abandoned and when.
+
 ## Characters
 
 - The GDD §17 cast was revised to match the approved character bible and artwork:

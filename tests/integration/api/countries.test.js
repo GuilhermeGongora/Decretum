@@ -13,7 +13,9 @@ const CANDIDATE = {
   coalition: "ampla",
   promise: "social",
 };
-const CHOICES = ["right", "left", "right", "left"];
+// One choice per debate the pack declares. This campaign wins outright, which the tests below rely
+// on: they assert a government was created.
+const CHOICES = ["right", "left", "right", "left", "right"];
 
 function createGame(body) {
   return postGame(postRequest("/api/v1/games", body));
@@ -217,7 +219,9 @@ describe("POST /api/v1/games rejects", () => {
     ["a candidate without a campaign", { candidate: CANDIDATE }, 400, "INVALID_PAYLOAD"],
     [
       "a campaign side that does not exist",
-      { candidate: CANDIDATE, campaign: { choices: ["left", "up", "left", "right"] } },
+      // Full length on purpose: a short campaign would be refused for its length before anybody
+      // looked at the side.
+      { candidate: CANDIDATE, campaign: { choices: ["left", "up", "left", "right", "right"] } },
       422,
       "INVALID_CAMPAIGN_CHOICE",
     ],

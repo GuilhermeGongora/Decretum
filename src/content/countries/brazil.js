@@ -744,6 +744,33 @@ export const brazil = {
           },
         },
       },
+      {
+        id: "environment_debate",
+        kicker: "Sabatina ambiental · Setembro",
+        text: "Uma estrada cortaria floresta protegida e abriria escoamento para três estados. Perguntam se você licencia a obra ou mantém a fiscalização como está.",
+        options: {
+          left: {
+            id: "promise_licensing",
+            label: "Prometer o licenciamento",
+            note: "Obra liberada no primeiro ano de governo.",
+            share: 2.0,
+            turnout: 0.2,
+            meters: { market: 4, people: 1, institutions: -4 },
+            flags: ["campaign_licensing_promised"],
+            regions: { Norte: 3, "Centro-Oeste": 3 },
+          },
+          right: {
+            id: "defend_enforcement",
+            label: "Defender a fiscalização",
+            note: "Nenhuma flexibilização prometida no palanque.",
+            share: -0.8,
+            turnout: 0.6,
+            meters: { institutions: 5, market: -3 },
+            flags: ["campaign_environment_pledge"],
+            regions: { Sudeste: 2, Sul: 1 },
+          },
+        },
+      },
     ],
     // Authored, never generated at runtime: the resolver picks by margin band.
     headlines: [
@@ -751,6 +778,11 @@ export const brazil = {
         minMargin: 14,
         text: "Vitória folgada no primeiro turno dá à Presidência eleita o maior mandato popular em uma década",
         summary: "A margem larga cria autoridade, e todos os aliados já cobram a fatura.",
+      },
+      {
+        minMargin: 10,
+        text: "Presidência eleita com ampla maioria promete governar sem depender de um centro fragmentado",
+        summary: "A margem dá fôlego, e o Congresso eleito ainda cobra cadeira por cadeira.",
       },
       {
         minMargin: 6,
@@ -774,6 +806,12 @@ export const brazil = {
         minMargin: -3,
         text: "Segundo turno termina sem mandato para a candidatura, por diferença de menos de dois pontos",
         summary: "Faltou pouco, e o pouco que faltou foi recusado na campanha.",
+      },
+      {
+        minMargin: -8,
+        text: "Candidatura é derrotada no segundo turno e a oposição chega ao Palácio com folga",
+        summary:
+          "A diferença passou de quatro pontos, e o discurso da virada não convenceu ninguém.",
       },
       {
         minMargin: -100,
