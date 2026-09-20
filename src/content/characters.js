@@ -27,6 +27,8 @@ export const characters = {
     role: "Secretário do Tesouro Nacional",
     sphere: "market",
     initials: "CF",
+    portrait: "/assets/characters/caio-ferraz.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["fazenda"] },
   },
   "livia-nogueira": {
@@ -43,6 +45,8 @@ export const characters = {
     role: "Ministra da Educação",
     sphere: "people",
     initials: "MV",
+    portrait: "/assets/characters/mara-vilar.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["educacao"] },
   },
   "icaro-nunes": {
@@ -50,6 +54,8 @@ export const characters = {
     role: "Ministro da Saúde",
     sphere: "people",
     initials: "ÍN",
+    portrait: "/assets/characters/icaro-nunes.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["saude"] },
   },
   // An explicit career change, not an implicit one: the general left the Estado-Maior to take a post
@@ -69,6 +75,8 @@ export const characters = {
     role: "Ministra do Meio Ambiente",
     sphere: "people",
     initials: "SA",
+    portrait: "/assets/characters/sofia-amaral.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["meio_ambiente"] },
   },
   // Nobody in the original cast could hold the Justice portfolio, so it starts vacant and these two
@@ -78,6 +86,8 @@ export const characters = {
     role: "Procurador de carreira",
     sphere: "institutions",
     initials: "BT",
+    portrait: "/assets/characters/bruno-tavares.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["justica"] },
   },
   "dalva-moreno": {
@@ -85,6 +95,8 @@ export const characters = {
     role: "Advogada criminalista",
     sphere: "people",
     initials: "DM",
+    portrait: "/assets/characters/dalva-moreno.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["justica"] },
   },
   "renata-pires": {
@@ -92,6 +104,8 @@ export const characters = {
     role: "Reitora da Universidade Federal",
     sphere: "people",
     initials: "RP",
+    portrait: "/assets/characters/renata-pires.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["educacao"] },
   },
   "helio-barbosa": {
@@ -99,6 +113,8 @@ export const characters = {
     role: "Sanitarista",
     sphere: "people",
     initials: "HB",
+    portrait: "/assets/characters/helio-barbosa.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: true, ministries: ["saude"] },
   },
   "raul-mendonca": {
@@ -118,6 +134,8 @@ export const characters = {
     role: "Presidente do Supremo Tribunal Federal",
     sphere: "institutions",
     initials: "TA",
+    portrait: "/assets/characters/tomas-azevedo.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Preside o Supremo e julga o próprio governo" },
   },
   "nina-vale": {
@@ -125,6 +143,8 @@ export const characters = {
     role: "Jornalista do Correio Cívico",
     sphere: "institutions",
     initials: "NV",
+    portrait: "/assets/characters/nina-vale.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Cobre o governo que teria de servir" },
   },
   "tomas-gade": {
@@ -132,6 +152,8 @@ export const characters = {
     role: "Presidente da Federação Industrial",
     sphere: "market",
     initials: "TG",
+    portrait: "/assets/characters/tomas-gade.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Representa o setor que o ministério regula" },
   },
   "joana-reis": {

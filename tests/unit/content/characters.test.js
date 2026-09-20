@@ -32,11 +32,24 @@ describe("character registry", () => {
       .map(([id]) => id)
       .sort();
 
+    // Everyone with artwork in the archive. The five still on initials are the ones nobody has
+    // drawn yet: Joana Reis, Yuri Salcedo, Amira Sol, Celina Braga and André Furtado.
     expect(withPortrait).toEqual([
+      "bruno-tavares",
+      "caio-ferraz",
+      "dalva-moreno",
       "helena-vasque",
+      "helio-barbosa",
+      "icaro-nunes",
       "livia-nogueira",
+      "mara-vilar",
+      "nina-vale",
       "otavio-leme",
       "raul-mendonca",
+      "renata-pires",
+      "sofia-amaral",
+      "tomas-azevedo",
+      "tomas-gade",
     ]);
   });
 
@@ -75,9 +88,11 @@ describe("toSpeakerView", () => {
   });
 
   it("keeps a registered character without artwork on initials", () => {
-    const view = toSpeakerView({ id: "mara-vilar", name: "Mara Vilar", title: "Ministra" });
+    // Joana Reis is one of the five nobody has drawn yet, so she is the honest example here: Mara
+    // Vilar used to be, and now has artwork.
+    const view = toSpeakerView({ id: "joana-reis", name: "Joana Reis", title: "Líder sindical" });
 
-    expect(view).toMatchObject({ portrait: null, initials: "MV" });
+    expect(view).toMatchObject({ portrait: null, initials: "JR" });
   });
 
   it("never looks a portrait up by display name", () => {

@@ -11,14 +11,20 @@
 //      emblem is derived from the flat-navy plate instead, which mattes cleanly. Same artwork, no
 //      redrawing: only the background is removed, and the navy tint is unmultiplied out of the edge
 //      pixels so nothing haloes on a dark page.
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
 const SOURCE = "docs/design/decretum-v2/source/branding";
+const CHARACTER_SOURCE = "docs/design/decretum-v2/source/characters";
 const SCENES = "public/assets/scenes";
 const BRAND = "public/assets/brand";
+const CHARACTERS = "public/assets/characters";
 const APP = "app";
+
+// The dossier frames a portrait 4:5. Sources are generated at that ratio already; the resize is a
+// guard, so a source that arrives at another size is cropped instead of distorting the face.
+const PORTRAIT = { width: 1122, height: 1402 };
 
 // The navy plate behind the emblem, measured from the corners of logo-bg.png.
 const PLATE = { r: 4, g: 19, b: 38 };
@@ -150,8 +156,27 @@ async function buildBrand() {
   );
 }
 
+// Every portrait in the archive becomes the served WebP the registry points at, by id. A character
+// with no source keeps their initials: nothing here invents a face.
+async function buildCharacters() {
+  const sources = (await readdir(CHARACTER_SOURCE)).filter((file) => file.endsWith(".png")).sort();
+
+  for (const file of sources) {
+    const id = path.basename(file, ".png");
+    await emit(
+      `${CHARACTERS}/${id}.webp`,
+      await sharp(`${CHARACTER_SOURCE}/${file}`)
+        .resize(PORTRAIT.width, PORTRAIT.height, { fit: "cover" })
+        .webp({ quality: 80 })
+        .toBuffer(),
+      `retrato ${id}`,
+    );
+  }
+}
+
 await buildScene();
 await buildBrand();
+await buildCharacters();
 
 let total = 0;
 for (const { file, size, note } of built) {
