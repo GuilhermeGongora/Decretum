@@ -149,7 +149,7 @@ export const cardDefinitions = [
   {
     slug: "palace_secrecy",
     type: "common",
-    speaker: "nina-vale",
+    speaker: "geovana-sales",
     category: "media",
     text: "A imprensa exige as agendas de ministros após reuniões não registradas com empresários.",
     leftChoice: {
@@ -666,7 +666,7 @@ export const cardDefinitions = [
   {
     slug: "leaked_dossier",
     type: "conditional",
-    speaker: "nina-vale",
+    speaker: "geovana-sales",
     category: "scandal",
     text: "Documentos vazados ligam seu gabinete a decisões reservadas. O país espera uma resposta até o fim do dia.",
     leftChoice: {
@@ -894,7 +894,7 @@ export const cardDefinitions = [
   {
     slug: "impeachment_grounds",
     type: "chained",
-    speaker: "nina-vale",
+    speaker: "geovana-sales",
     category: "scandal",
     text: "O Correio Cívico reuniu documentos que sustentam uma denúncia de responsabilidade. A reportagem sai no domingo, com ou sem a versão do Planalto.",
     leftChoice: {
@@ -1291,7 +1291,7 @@ export const cardDefinitions = [
   {
     slug: "security_pledge_called_in",
     type: "conditional",
-    speaker: "nina-vale",
+    speaker: "geovana-sales",
     category: "security",
     text: "Uma chacina na região metropolitana volta a cobrar o plano de segurança prometido. O Correio Cívico pede a data de início.",
     leftChoice: {

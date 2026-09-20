@@ -155,6 +155,9 @@ it: lowering it makes defeat commoner without touching a question, an option or 
     (previously Helena) and `interest_rate_pressure` (previously Caio Ferraz). Her reactions in
     `inheritance_tax` were rewritten for the new role.
   - **Tomás Gade** (Federação Industrial) is a different person and was not changed.
+  - **Nina Vale → Geovana Sales** (`geovana-sales`), same desk at the Correio Cívico and the same
+    four cards. The GDD still carries the old name; this file is where the cast's deviations from it
+    are recorded, and decisions signed before the rename keep the name shown at the time.
 - The cabinet phase settled the ministerial canon, because two characters claimed economic authority
   and no declared pasta matched either of them:
   - **Lívia Nogueira** is the **Ministra da Fazenda**. "Economia" was a card role, never a portfolio

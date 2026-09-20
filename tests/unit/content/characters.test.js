@@ -26,31 +26,21 @@ describe("character registry", () => {
     },
   );
 
-  it("gives artwork only to the characters with approved portraits", () => {
+  it("gives every character their own artwork, by id", () => {
     const withPortrait = Object.entries(characters)
       .filter(([, character]) => character.portrait)
       .map(([id]) => id)
       .sort();
 
-    // Everyone with artwork in the archive. The five still on initials are the ones nobody has
-    // drawn yet: Joana Reis, Yuri Salcedo, Amira Sol, Celina Braga and André Furtado.
-    expect(withPortrait).toEqual([
-      "bruno-tavares",
-      "caio-ferraz",
-      "dalva-moreno",
-      "helena-vasque",
-      "helio-barbosa",
-      "icaro-nunes",
-      "livia-nogueira",
-      "mara-vilar",
-      "nina-vale",
-      "otavio-leme",
-      "raul-mendonca",
-      "renata-pires",
-      "sofia-amaral",
-      "tomas-azevedo",
-      "tomas-gade",
-    ]);
+    // The whole cast is drawn now: twenty ids, twenty sources in the archive, twenty served files.
+    expect(withPortrait).toEqual(Object.keys(characters).sort());
+    expect(withPortrait).toHaveLength(20);
+
+    // And each one points at their own face. Sixteen of these paths were written by hand, and a
+    // copy-paste that aimed one character at another's portrait would read perfectly in a list.
+    for (const [id, character] of Object.entries(characters)) {
+      expect(character.portrait).toBe(`/assets/characters/${id}.webp`);
+    }
   });
 
   it("points every portrait to an existing public WebP file", () => {
@@ -64,7 +54,9 @@ describe("character registry", () => {
   it("is referenced by cards through ids, never through former names", () => {
     const source = JSON.stringify(cardDefinitions);
 
-    expect(source).not.toMatch(/Arcos|Ornelas|Serpa|helena_arcos|livia_ornelas|raul_serpa/);
+    expect(source).not.toMatch(
+      /Arcos|Ornelas|Serpa|helena_arcos|livia_ornelas|raul_serpa|nina-vale|Nina Vale/,
+    );
     for (const card of cardDefinitions) expect(getCharacter(card.speaker)).not.toBeNull();
   });
 });
@@ -87,12 +79,19 @@ describe("toSpeakerView", () => {
     });
   });
 
-  it("keeps a registered character without artwork on initials", () => {
-    // Joana Reis is one of the five nobody has drawn yet, so she is the honest example here: Mara
-    // Vilar used to be, and now has artwork.
-    const view = toSpeakerView({ id: "joana-reis", name: "Joana Reis", title: "Líder sindical" });
+  it("takes the artwork and the initials from the registry, not from what it was handed", () => {
+    // Nobody is left to stand for "registered but undrawn": the whole cast has artwork now. What
+    // this guarded is still worth guarding — which side of the call each field comes from. The name
+    // and title are the caller's, because a decision snapshot keeps what the player read; the
+    // initials and the portrait are the record's.
+    const view = toSpeakerView({ id: "joana-reis", name: "Outro Nome", title: "Outro Cargo" });
 
-    expect(view).toMatchObject({ portrait: null, initials: "JR" });
+    expect(view).toMatchObject({
+      name: "Outro Nome",
+      title: "Outro Cargo",
+      initials: "JR",
+      portrait: { src: "/assets/characters/joana-reis.webp" },
+    });
   });
 
   it("never looks a portrait up by display name", () => {

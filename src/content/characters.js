@@ -138,12 +138,12 @@ export const characters = {
     portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Preside o Supremo e julga o próprio governo" },
   },
-  "nina-vale": {
-    name: "Nina Vale",
+  "geovana-sales": {
+    name: "Geovana Sales",
     role: "Jornalista do Correio Cívico",
     sphere: "institutions",
-    initials: "NV",
-    portrait: "/assets/characters/nina-vale.webp",
+    initials: "GS",
+    portrait: "/assets/characters/geovana-sales.webp",
     portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Cobre o governo que teria de servir" },
   },
@@ -161,6 +161,8 @@ export const characters = {
     role: "Líder da Central dos Trabalhadores",
     sphere: "people",
     initials: "JR",
+    portrait: "/assets/characters/joana-reis.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Negocia com o governo em nome dos sindicatos" },
   },
   "yuri-salcedo": {
@@ -168,6 +170,8 @@ export const characters = {
     role: "Governador do Norte",
     sphere: "congress",
     initials: "YS",
+    portrait: "/assets/characters/yuri-salcedo.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Tem mandato próprio e um estado para governar" },
   },
   // Chanceler is a ministerial post, but Relações Exteriores is not one of the portfolios the
@@ -177,6 +181,8 @@ export const characters = {
     role: "Chanceler",
     sphere: "institutions",
     initials: "AS",
+    portrait: "/assets/characters/amira-sol.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Chefia uma pasta que este pacote ainda não declara" },
   },
   // The constitutional chain needs two offices nobody in the cast holds: whoever presides the
@@ -186,6 +192,8 @@ export const characters = {
     role: "Presidente da Câmara dos Deputados",
     sphere: "congress",
     initials: "CB",
+    portrait: "/assets/characters/celina-braga.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Preside a Casa que autoriza o impeachment" },
   },
   "andre-furtado": {
@@ -193,6 +201,8 @@ export const characters = {
     role: "Líder da oposição",
     sphere: "congress",
     initials: "AF",
+    portrait: "/assets/characters/andre-furtado.webp",
+    portraitPosition: "50% 22%",
     cabinet: { eligible: false, reason: "Lidera a oposição ao governo" },
   },
 };
