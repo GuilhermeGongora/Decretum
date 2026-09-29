@@ -10,13 +10,18 @@ const POOL_KEY = Symbol.for("decretum.pg-pool");
 // each time, so a generous size multiplies by the number of live instances and exhausts the database.
 // Behind a transaction-mode pooler, one connection per instance is the right size.
 //
-// Read from the environment, so the size is configuration rather than a guess about the host. The
-// default only has to be safe for whoever did not set it.
+// A managed host also suspends the database when nobody is playing, and then the first connection
+// after a pause pays for waking it. Five seconds is plenty for a database that is already up and too
+// little for one that has to start: better a slow first request than a failed one.
+//
+// Both are read from the environment, so they are configuration rather than a guess about the host.
+// The defaults only have to be safe for whoever did not set them.
 const DEFAULT_POOL_MAX = process.env.VERCEL ? 1 : 10;
+const DEFAULT_CONNECT_TIMEOUT_MS = process.env.VERCEL ? 15_000 : 5_000;
 
-function poolMax() {
-  const configured = Number(process.env.DATABASE_POOL_MAX);
-  return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_POOL_MAX;
+function positiveInteger(value, fallback) {
+  const configured = Number(value);
+  return Number.isInteger(configured) && configured > 0 ? configured : fallback;
 }
 
 export function getPool() {
@@ -30,9 +35,12 @@ export function getPool() {
 
     const pool = new Pool({
       connectionString,
-      max: poolMax(),
+      max: positiveInteger(process.env.DATABASE_POOL_MAX, DEFAULT_POOL_MAX),
       idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
+      connectionTimeoutMillis: positiveInteger(
+        process.env.DATABASE_CONNECT_TIMEOUT_MS,
+        DEFAULT_CONNECT_TIMEOUT_MS,
+      ),
     });
 
     // Without a listener, an error on an idle client would crash the process.

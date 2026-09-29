@@ -107,3 +107,28 @@ A deployment that renders the home page proves only that the build succeeded.
   first, and `games` and `decisions` grow together.
 - **Limits are per address**, so they bound accidents and crawlers rather than somebody determined who
   has many addresses.
+
+## 7. What the free tiers actually bound
+
+Neon's free plan meters **how long the database is awake**, not how many queries it answers: 100
+CU-hours a month, with scale-to-zero after five minutes of silence that cannot be switched off. At the
+free tier's compute size that is roughly 400 awake hours out of the month's ~730.
+
+That makes player count the wrong thing to watch. A thousand people playing across one weekend costs
+far fewer CU-hours than a hundred trickling in over thirty days, because the second pattern never lets
+the database sleep. Concentrate a test rather than spreading it thin.
+
+Exhausting either Neon limit stops the game instead of slowing it: past 0.5 GB writes are blocked, and
+out of CU-hours the compute is suspended until the next billing period. Watch both in the Neon
+dashboard through the first week of any public test.
+
+Storage is the comfortable one. A completed 48-month mandate is about 100 KB including indexes, so
+0.5 GB is on the order of five thousand of them.
+
+Vercel's Hobby allotments — a million function invocations, 100 GB of transfer, four hours of Active
+CPU — are far from binding here, because Active CPU excludes the time a request spends waiting on the
+database, which is most of what these routes do.
+
+**Hobby is non-commercial use only.** Donations are allowed; advertising and paid tiers are not, and
+require Pro. That is a licensing rule rather than a quota: the day the game carries ads or sells
+anything, the deployment has to move to a paid plan.
