@@ -111,6 +111,7 @@ const ERROR_MESSAGES = {
   GAME_NOT_FOUND: "Não encontramos este governo.",
   GAME_STILL_ACTIVE: "O governo atual ainda está em andamento.",
   SUCCESSOR_ALREADY_EXISTS: "Este governo já tem um sucessor.",
+  RATE_LIMITED: "Muitas requisições deste endereço. Aguarde alguns minutos e tente novamente.",
 };
 
 const TREND_WORDS = {

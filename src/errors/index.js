@@ -42,3 +42,9 @@ export class NoEligibleCardError extends AppError {
     super(message, { code: "NO_ELIGIBLE_CARD", statusCode: 500, cause });
   }
 }
+
+export class RateLimitError extends AppError {
+  constructor(message = "Too many requests", { code = "RATE_LIMITED", cause } = {}) {
+    super(message, { code, statusCode: 429, cause });
+  }
+}

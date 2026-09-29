@@ -64,11 +64,28 @@ character, a new card — will not appear until `db:seed` runs again.
 Do not move these into the Vercel build command. A build runs on every deploy, and two concurrent
 deploys would race.
 
-## 4. Deployment protection
+## 4. Opening it to the public
 
-The game has **no accounts and no rate limiting**. Until it does, keep the deployment behind
-protection: Vercel Settings → Deployment Protection. Availability depends on the plan — Password
-Protection is a paid feature — so if it is not offered, gate the app in the code before opening it.
+The game has no accounts, so the only thing a limit can be keyed to is the address a request arrives
+from. Writes are limited per address per hour, counted in the database rather than in memory: every
+serverless instance holds its own memory and would only ever see its own share of the traffic.
+
+| Variable                        | Default | Guards                               |
+| ------------------------------- | ------: | ------------------------------------ |
+| `RATE_LIMIT_GAMES_PER_HOUR`     |      20 | opening a government, and successors |
+| `RATE_LIMIT_DECISIONS_PER_HOUR` |     400 | deciding a month                     |
+| `RATE_LIMIT_CABINET_PER_HOUR`   |     200 | appointing and dismissing a minister |
+| `RATE_LIMIT_DISABLED`           |   unset | set to `1` to switch all of it off   |
+
+The defaults are generous on purpose — a whole mandate is 48 decisions — so they bound a loop or a
+crawler without ever being reached by somebody playing. Leave them unset unless you have a reason.
+
+Requests arriving with no `x-forwarded-for` share a single bucket. Behind Vercel that does not happen;
+it would matter only if the app were run somewhere that does not set the header.
+
+If you would rather not be public yet, Vercel Settings → Deployment Protection puts a password in
+front of everything. It is a paid feature, so on the free plan the limits above are the protection you
+have.
 
 ## 5. Verifying a deployment
 
@@ -82,10 +99,11 @@ answers from a build-time snapshot.
 Then play, do not just load: start a campaign, answer a month, open the cabinet, open the chronicle.
 A deployment that renders the home page proves only that the build succeeded.
 
-## 6. Known gaps before opening to the public
+## 6. Known gaps
 
-- **No authentication.** Any visitor can create any number of games.
-- **No rate limiting.** Nothing bounds how fast rows are written.
-- **No cleanup.** Abandoned games are kept forever.
-
-The first two are what protection in section 4 stands in for.
+- **No authentication.** A government belongs to nobody: whoever holds its id can read it and play it.
+  The id is a v4 uuid and is never listed anywhere, but it is not a secret either.
+- **No cleanup.** Abandoned games are kept forever. On a free database tier this is the quota to watch
+  first, and `games` and `decisions` grow together.
+- **Limits are per address**, so they bound accidents and crawlers rather than somebody determined who
+  has many addresses.
