@@ -2,10 +2,14 @@
 
 > _Salus Populi Suprema Lex_ — "the welfare of the people shall be the supreme law."
 
-A server-authoritative political card game with a Latin, Roman-inspired tone. You govern the
-fictional Republic of Aurória for 48 months; each month a card brings a dilemma, and every decision
-shifts four pillars of power: **Povo, Mercado, Congresso e Instituições**. Both extremes of any pillar
-end the government.
+A server-authoritative political card game in Brazilian Portuguese, with a Latin, Roman-inspired
+tone. You are elected President of Brazil and govern for 48 months; each month a dossier brings a
+dilemma, and every decision shifts four pillars of power: **Povo, Mercado, Congresso e
+Instituições**. Both extremes of any pillar end the government.
+
+The campaign can be lost before the mandate begins. Ministers are appointed and dismissed at a
+political cost, Congress can open an impeachment and remove the president, and the Supreme Court
+rules on the record the government leaves behind.
 
 The game design is defined in [Decretum_GDD_v1.0.md](Decretum_GDD_v1.0.md). Implementation choices
 where the GDD needed interpretation are recorded in [docs/game-rules.md](docs/game-rules.md).
@@ -36,7 +40,7 @@ app/                     Next.js App Router
   api/v1/                Thin HTTP route handlers
 src/
   domain/                Pure game engine: effects, endings, flags, selection, turns, score, succession
-  content/               The 30 cards, characters, flags, endings and epithets + content validator
+  content/               The cards, characters, flags, endings and epithets + content validator
   services/              Use cases (transactions) and API views
   repositories/          All SQL
   database/              Pool and transaction helper
@@ -129,7 +133,7 @@ To wipe local data completely: `docker compose down -v`.
 
 ```bash
 npm run db:migrate                          # apply pending migrations
-npm run db:seed                             # load/update the 30 cards and endings (idempotent)
+npm run db:seed                             # load/update the cards and endings (idempotent)
 npm run db:rollback                         # revert the last migration
 npm run db:create-migration -- add-something # create migrations/<timestamp>_add-something.js
 ```
