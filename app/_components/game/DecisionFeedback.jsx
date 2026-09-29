@@ -49,7 +49,15 @@ function PowerMovement({ decision, effects, game }) {
 export function DecisionFeedback({ result, game, gameOver, onContinue }) {
   const headingId = useId();
   const continueRef = useRef(null);
-  const { decision, effects, resultText, consequence, cabinetChanges = [] } = result;
+  const {
+    decision,
+    effects,
+    resultText,
+    consequence,
+    cabinetChanges = [],
+    // An institutional act of its own: the court decided, and the decree the player signed did not.
+    courtRuling = null,
+  } = result;
   const signedOn = formatDossierDate(decision.calendar);
   // Only flags this decision set; nothing is shown when no new condition was created.
   const newConditions = decision.flagChanges.filter((change) => change.type === "set");
@@ -92,6 +100,7 @@ export function DecisionFeedback({ result, game, gameOver, onContinue }) {
               .join(" ")}
           </p>
         ) : null}
+        {courtRuling ? <p className={styles.consequence}>{courtRuling.summary}</p> : null}
         {movement}
         {continueButton}
       </section>
@@ -164,6 +173,18 @@ export function DecisionFeedback({ result, game, gameOver, onContinue }) {
                     {change.ministryName}: {change.holder} deixou a pasta, que está vaga.
                   </li>
                 ))}
+              </ul>
+            </>
+          ) : null}
+          {/* The court acted on its own this month. It is not a consequence of the decree, so it is
+              never folded into the decree's own wording. */}
+          {courtRuling ? (
+            <>
+              <p className={`${styles.noteLabel} ${styles.noteSection}`}>
+                Decisão do {courtRuling.courtShortName}
+              </p>
+              <ul className={styles.noteList}>
+                <li>{courtRuling.summary}</li>
               </ul>
             </>
           ) : null}

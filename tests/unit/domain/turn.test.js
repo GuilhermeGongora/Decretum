@@ -402,6 +402,108 @@ describe("the cabinet across a month", () => {
   });
 });
 
+// The bench judges the record the month leaves behind. The real Brazilian pack is used rather than an
+// invented one, so these are the eleven justices the game actually ships.
+describe("the court", () => {
+  const country = countries.BR;
+  const quiet = buildCard({
+    slug: "quiet",
+    choices: { left: { effects: {} }, right: { effects: {} } },
+  });
+  const filler = Array.from({ length: 4 }, (_, index) => buildCard({ slug: `filler_${index}` }));
+
+  function month({ flags = {}, meters = buildMeters(), ...overrides } = {}) {
+    return resolveTurn({
+      state: buildActiveState({ currentCardSlug: "quiet", meters, flags }),
+      cards: [quiet, ...filler],
+      choice: "left",
+      appearances: [{ turn: 5, cardSlug: "quiet" }],
+      scheduledEvents: [],
+      rng: sequenceRng([0]),
+      country,
+      ...overrides,
+    });
+  }
+
+  const documented = {
+    documents_withheld: buildFlag(),
+    press_intimidated: buildFlag(),
+  };
+
+  it("rules against a government whose own record documents the case", () => {
+    const result = month({
+      flags: documented,
+      meters: buildMeters({ institutions: 10, people: 20 }),
+    });
+
+    expect(result.courtRuling).toMatchObject({ upheld: true, votes: 7 });
+    expect(result.courtRuling.matter.key).toBe("records_withheld");
+  });
+
+  it("makes the ruling cost what the country declared, and nothing else", () => {
+    const result = month({
+      flags: documented,
+      meters: buildMeters({ institutions: 10, people: 20 }),
+    });
+
+    // institutions +6, congress -3, market -1, straight from the pack.
+    expect(result.state.meters).toMatchObject({ institutions: 16, congress: 47, market: 49 });
+    expect(result.state.flags.court_ruled_against).toBeDefined();
+    expect(result.state.flags.court_ruled_records).toBeDefined();
+  });
+
+  // The decision belongs to the court, not to the card the player answered.
+  it("never rewrites what the month's own decision recorded", () => {
+    const result = month({
+      flags: documented,
+      meters: buildMeters({ institutions: 10, people: 20 }),
+    });
+
+    expect(result.decision.metersAfter.institutions).toBe(10);
+  });
+
+  it("closes a case the bench throws out, without charging the government for it", () => {
+    const result = month({
+      flags: { national_data_registry: buildFlag() },
+      meters: buildMeters({ institutions: 80, people: 80 }),
+    });
+
+    expect(result.courtRuling.upheld).toBe(false);
+    expect(result.state.flags.court_ruled_data).toBeDefined();
+    expect(result.state.flags.court_ruled_against).toBeUndefined();
+    expect(result.state.meters).toMatchObject({ institutions: 80, people: 80 });
+  });
+
+  it("does not judge the same case a second time", () => {
+    const first = month({
+      flags: documented,
+      meters: buildMeters({ institutions: 10, people: 20 }),
+    });
+    const second = month({
+      flags: first.state.flags,
+      meters: buildMeters({ institutions: 10, people: 20 }),
+    });
+
+    expect(second.courtRuling.matter.key).toBe("press_pressure");
+    expect(second.courtRuling.matter.key).not.toBe(first.courtRuling.matter.key);
+  });
+
+  it("leaves a country that declares no court alone", () => {
+    const result = month({ flags: documented, country: countries.US });
+
+    expect(result.courtRuling).toBeNull();
+  });
+
+  // A field that exists on only some paths is how an interface loses something after a decision.
+  it("reports no ruling, rather than no field, on the month a government falls", () => {
+    const result = month({ flags: documented, meters: buildMeters({ people: 0 }) });
+
+    expect(result.gameOver).toBe(true);
+    expect(result.courtRuling).toBeNull();
+    expect(Object.hasOwn(result, "courtRuling")).toBe(true);
+  });
+});
+
 describe("applyEventChanges", () => {
   it("adds created events and updates fired and cancelled statuses", () => {
     const events = [

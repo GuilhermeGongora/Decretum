@@ -690,54 +690,55 @@ function validateCountryCampaign(campaign, context, report) {
   }
 }
 
-// A house that removes a president is a composition, not a dial: the blocs divide it exactly once,
-// and every weight has to name a driver the engine knows. Shares that do not add up to one would
-// silently shrink or inflate the parliament on every count.
-function validateRemovalHouse(house, label, report) {
-  if (!isPlainObject(house)) return report(`removal.${label} must be an object`);
-  if (!isIntegerAtLeast(house.seats, 1)) {
-    report(`removal.${label}.seats must be a positive integer`);
+// A body that votes in blocs — a house that removes a president, a bench that judges one — is a
+// composition, not a dial: the blocs divide it exactly once, and every weight has to name a driver
+// the engine knows. Shares that do not add up to one would silently shrink or inflate the body on
+// every count. The caller names the path, so one rule serves the parliament and the court alike.
+function validateBench(body, path, report) {
+  if (!isPlainObject(body)) return report(`${path} must be an object`);
+  if (!isIntegerAtLeast(body.seats, 1)) {
+    report(`${path}.seats must be a positive integer`);
   }
-  if (!Array.isArray(house.blocs) || house.blocs.length === 0) {
-    return report(`removal.${label}.blocs must be a non-empty array`);
+  if (!Array.isArray(body.blocs) || body.blocs.length === 0) {
+    return report(`${path}.blocs must be a non-empty array`);
   }
 
   const keys = new Set();
   let shares = 0;
 
-  for (const bloc of house.blocs) {
+  for (const bloc of body.blocs) {
     if (!isPlainObject(bloc)) {
-      report(`removal.${label} has a bloc that is not an object`);
+      report(`${path} has a bloc that is not an object`);
       continue;
     }
     const name = isNonEmptyString(bloc.key) ? bloc.key : "?";
-    if (!isNonEmptyString(bloc.key)) report(`removal.${label} has a bloc without a key`);
-    else if (keys.has(bloc.key)) report(`removal.${label} repeats the bloc "${bloc.key}"`);
+    if (!isNonEmptyString(bloc.key)) report(`${path} has a bloc without a key`);
+    else if (keys.has(bloc.key)) report(`${path} repeats the bloc "${bloc.key}"`);
     else keys.add(bloc.key);
 
     if (!(Number.isFinite(bloc.share) && bloc.share > 0 && bloc.share <= 1)) {
-      report(`removal.${label} bloc "${name}" needs a share between 0 and 1`);
+      report(`${path} bloc "${name}" needs a share between 0 and 1`);
     } else {
       shares += bloc.share;
     }
     if (!Number.isFinite(bloc.intercept)) {
-      report(`removal.${label} bloc "${name}" needs a numeric intercept`);
+      report(`${path} bloc "${name}" needs a numeric intercept`);
     }
     if (bloc.weights !== undefined && !isPlainObject(bloc.weights)) {
-      report(`removal.${label} bloc "${name}" weights must be an object`);
+      report(`${path} bloc "${name}" weights must be an object`);
       continue;
     }
     for (const [driver, weight] of Object.entries(bloc.weights ?? {})) {
       if (!LEGISLATIVE_DRIVERS.includes(driver)) {
-        report(`removal.${label} bloc "${name}" weighs unknown driver "${driver}"`);
+        report(`${path} bloc "${name}" weighs unknown driver "${driver}"`);
       } else if (!Number.isFinite(weight)) {
-        report(`removal.${label} bloc "${name}" weight for "${driver}" must be a number`);
+        report(`${path} bloc "${name}" weight for "${driver}" must be a number`);
       }
     }
   }
 
   if (Math.abs(shares - 1) > 0.001) {
-    report(`removal.${label} bloc shares must add up to 1 (they add up to ${shares.toFixed(3)})`);
+    report(`${path} bloc shares must add up to 1 (they add up to ${shares.toFixed(3)})`);
   }
 }
 
@@ -745,8 +746,8 @@ function validateRemoval(removal, report) {
   if (removal === undefined) return;
   if (!isPlainObject(removal)) return report("removal must be an object");
 
-  validateRemovalHouse(removal.chamber, "chamber", report);
-  validateRemovalHouse(removal.senate, "senate", report);
+  validateBench(removal.chamber, "removal.chamber", report);
+  validateBench(removal.senate, "removal.senate", report);
 
   // A threshold nobody can reach, or one already met by an empty house, is a broken procedure.
   const thresholds = [
@@ -763,6 +764,92 @@ function validateRemoval(removal, report) {
 
   if (!isIntegerAtLeast(removal.suspensionTurns, 1)) {
     report("removal.suspensionTurns must be a positive integer");
+  }
+}
+
+// The court as the country declares it: a bench that votes in blocs, the majority a ruling needs,
+// and the matters it can decide. A matter is evidenced by flags exactly as a removal ground is, and
+// what a ruling costs is declared here rather than invented by the engine. A matter no flag can
+// document would never reach the bench, and a majority larger than the bench could never be reached.
+function validateCourt(court, context, characters, report) {
+  if (court === undefined) return;
+  if (!isPlainObject(court)) return report("court must be an object");
+
+  validateBench(court, "court", report);
+
+  if (!isIntegerAtLeast(court.majority, 1)) {
+    report("court.majority must be a positive integer");
+  } else if (Number.isInteger(court.seats) && court.majority > court.seats) {
+    report(
+      `court.majority (${court.majority}) cannot exceed the ${court.seats} seats of the bench`,
+    );
+  }
+
+  if (court.presidedBy !== undefined && !Object.hasOwn(characters, court.presidedBy)) {
+    report(`court is presided by the unknown character "${court.presidedBy}"`);
+  }
+
+  if (!Array.isArray(court.matters) || court.matters.length === 0) {
+    return report("court.matters must be a non-empty array");
+  }
+
+  const keys = new Set();
+
+  for (const matter of court.matters) {
+    if (!isPlainObject(matter)) {
+      report("court has a matter that is not an object");
+      continue;
+    }
+    const name = isNonEmptyString(matter.key) ? matter.key : "?";
+    if (!isNonEmptyString(matter.key)) report("court has a matter without a key");
+    else if (keys.has(matter.key)) report(`court repeats the matter "${matter.key}"`);
+    else keys.add(matter.key);
+
+    if (!isNonEmptyString(matter.label)) report(`court matter "${name}" needs a label`);
+    if (!isIntegerAtLeast(matter.weight, 1)) {
+      report(`court matter "${name}" needs a positive integer weight`);
+    }
+
+    if (!Array.isArray(matter.flags) || matter.flags.length === 0) {
+      report(`court matter "${name}" must be evidenced by at least one flag`);
+    } else {
+      for (const key of matter.flags) {
+        if (!Object.hasOwn(context.flags, key)) {
+          report(`court matter "${name}" is evidenced by unknown flag "${key}"`);
+        }
+      }
+    }
+
+    // Without a marker of its own, a decided matter would come back before the bench every month.
+    if (!isNonEmptyString(matter.ruledFlag)) {
+      report(`court matter "${name}" needs a ruledFlag to mark it decided`);
+    } else if (!Object.hasOwn(context.flags, matter.ruledFlag)) {
+      report(`court matter "${name}" is marked decided by unknown flag "${matter.ruledFlag}"`);
+    }
+
+    if (matter.setFlags !== undefined && !Array.isArray(matter.setFlags)) {
+      report(`court matter "${name}" setFlags must be an array`);
+    } else {
+      for (const key of matter.setFlags ?? []) {
+        if (!Object.hasOwn(context.flags, key)) {
+          report(`court matter "${name}" sets unknown flag "${key}"`);
+        }
+      }
+    }
+
+    if (matter.effects !== undefined) {
+      if (!isPlainObject(matter.effects)) {
+        report(`court matter "${name}" effects must be an object`);
+      } else {
+        for (const [meter, delta] of Object.entries(matter.effects)) {
+          if (!METERS.includes(meter)) {
+            report(`court matter "${name}" has unknown pillar "${meter}"`);
+          } else if (!Number.isInteger(delta)) {
+            report(`court matter "${name}" effect on ${meter} must be an integer`);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -1045,6 +1132,7 @@ function validateCountries(countries, characters, flags, errors) {
       }
     }
     validateRemoval(country.removal, report);
+    validateCourt(country.court, context, characters, report);
     validateCabinet(country.cabinet, country, characters, report);
     validateCountryCampaign(country.campaign, context, report);
   }

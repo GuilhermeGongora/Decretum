@@ -27,9 +27,14 @@ actors to read, and it is the cheapest way to make every existing card matter mo
 1. **Cabinet**: ministers as people with their own loyalty and cost, appointments and dismissals as
    decisions, and a minister who can be handed over to survive a crisis. Today "sacrificing a
    minister" is a flag, not a person.
-2. **The Supreme Court as an independent body**: eleven fictional justices with tenure that outlives
-   the mandate, and rulings that constrain the Executive. Never subordinate to the player. Today the
-   court presides the trial as a name and nothing more.
+2. **The Supreme Court as an independent body**: the bench now rules. Eleven seats divided between
+   institutionalists, pragmatists and justices named by earlier governments; it judges the matters
+   the country declares, evidenced by the government's own record, and its rulings move the pillars
+   and leave a mark that outlives them. Never subordinate to the player: nothing the Presidency can
+   sign improves its standing before the court, and the only way to face a softer bench is to leave a
+   lighter record. Each matter is decided exactly once, whichever way it goes.
+   Still missing: the justices are a composition and not people — no tenure that outlives the
+   mandate, no faces, and no card that lets one of them read the ruling aloud.
 3. **Governors and the federation**: regional pressure tied to the election's own `strongholds`, so
    a government's map has weight between elections and not only during them.
 4. **The procedure's own art**: the chain reuses the ordinary dossier and the archive's paper. A

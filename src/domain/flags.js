@@ -20,12 +20,16 @@ export function applyFlagOperations(flags, { setFlags = [], removeFlags = [] }, 
     const expiresAtTurn =
       definition.expiresAfterTurns == null ? null : turn + definition.expiresAfterTurns;
 
+    // Defaulted here, not left to the caller. Content-compiled flags arrive with this metadata
+    // already filled in from the catalog, but a flag the engine sets itself — a court ruling, say —
+    // has no catalog entry behind it, and an undefined legacy priority reaches the database as a null
+    // in a NOT NULL column. The contract belongs where the flag is built.
     next[definition.key] = {
       value: definition.value,
       label: definition.label,
-      legacy: definition.legacy,
-      legacyPriority: definition.legacyPriority,
-      successorEffects: definition.successorEffects,
+      legacy: definition.legacy ?? false,
+      legacyPriority: definition.legacyPriority ?? 0,
+      successorEffects: definition.successorEffects ?? null,
       setAtTurn: turn,
       expiresAtTurn,
       inherited: false,

@@ -388,6 +388,57 @@ screen: there is no appointment, no dismissal as a player decision, and no inter
   that stored none at all — giving one of those a single empty chair would make the engine read
   "seats are stored" and hand it seven vacancies instead of the cabinet its country describes.
 
+### The Supreme Court
+
+The GDD names the court as an institution but never as one that decides. It is modelled here as a
+body that rules on the government's own record, and never as an actor the Presidency can influence.
+
+#### The bench
+
+- The court is a composition, not a cast: eleven seats divided into blocs by share, apportioned by
+  the same largest-remainder rule the houses use. Only a justice a card makes speak has a face.
+- It reuses the legislature's bloc model unchanged — an eleven-seat bench is simply another house —
+  and the frozen `DRIVERS` list is not extended for it. A court weighs how documented the matter is
+  and how little credit the presidency still has, and only weakly the streets; hostility in
+  parliament and a coalition falling apart are the legislature's business, so the bench declares no
+  weight for them. Adding court-only drivers would have widened what a _removal_ bloc may weigh, and
+  that balance is already calibrated.
+- The bloc named for justices seated by earlier governments rests far below its tipping point, so a
+  unanimous court stays possible in principle and unreachable in practice.
+
+#### What reaches it, and what a ruling does
+
+- The country declares the matters it can rule on, each evidenced by flags, exactly as the removal
+  grounds are. Several open cases read as a heavier record; the heaviest is the one decided.
+- A ruling needs an absolute majority of the bench (6 of 11 in Brazil). What it costs is declared by
+  the country and applied through the same arithmetic a card's effects go through, so a ruling can
+  never move a pillar in a way a decision could not.
+- Each matter is decided exactly once, whichever way it goes: a case the bench throws out does not
+  return the following month. Each matter carries its own marker flag for that, because the shared
+  `court_ruled_against` says only that the court has ruled against the government at least once —
+  one marker for all of them would have silenced every other case after the first ruling.
+- The ruling is an institutional act of its own, never folded into the decision the player signed:
+  `decision.metersAfter` keeps recording what the decree did, and the ruling travels beside it as
+  `courtRuling`, the way a procedure event and a cabinet change already do.
+- It is evaluated after the removal grounds are weighed, so a ruling never changes whether a
+  procedure opened in the very month it was handed down.
+- Nothing the Presidency can sign improves its standing before the court. The only way to face a
+  softer bench is to leave a lighter record.
+
+#### Not modelled yet
+
+- Tenure that outlives the mandate, individual justices with names and histories, appointments to the
+  court, and any card that lets a justice read a ruling aloud.
+- The ruling is not stored as a row of its own. Its consequences persist in the pillars and the
+  flags; the narration is derived per decision, as `procedureEvent` is.
+
+#### A contract this uncovered
+
+- `applyFlagOperations` now defaults `legacy`, `legacyPriority` and `successorEffects`. Flags set by
+  content arrive with that metadata copied from the catalog, but a flag the engine sets itself has no
+  catalog entry behind it, and an undefined priority reached a NOT NULL column as a null. The default
+  belongs where the flag is built, not in the repository that writes it.
+
 ### API
 
 - `GET /api/v1/games/:id/chronicle` was added as the separate chronicle resource suggested by §27.3.

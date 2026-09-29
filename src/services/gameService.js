@@ -43,6 +43,7 @@ import {
   toCabinetChronicleView,
   toCabinetView,
   toCardView,
+  toCourtRulingView,
   toDecisionView,
   toEndingView,
   toGameView,
@@ -531,6 +532,10 @@ export async function decide(gameId, { choice, expectedTurn }) {
       result.cabinetChanges,
       findCountry(snapshot.game.country?.code),
     ),
+    // What the court decided this month, or null on the months it had nothing before it — which is
+    // most of them. Always present, never omitted: a field that appears on only some responses is
+    // how the interface loses something after a decision and finds it again on reload.
+    courtRuling: toCourtRulingView(result.courtRuling, findCountry(snapshot.game.country?.code)),
     gameOver: result.gameOver,
   };
 

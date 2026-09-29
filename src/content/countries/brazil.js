@@ -286,6 +286,87 @@ export const brazil = {
     ],
   },
 
+  // The Supreme Court as a body that decides, not as a name that presides. Eleven justices with
+  // tenure that outlives the mandate, so the Presidency neither appoints them nor commands them: the
+  // bench is a composition, and only whoever speaks in a card has a face.
+  //
+  // It weighs what a court answers to — how documented the matter is, and how little credit the
+  // presidency still has with the institutions. Hostility in parliament and a coalition falling
+  // apart are the legislature's business, so no bench here declares a weight for them.
+  court: {
+    name: "Supremo Tribunal Federal",
+    shortName: "STF",
+    seats: 11,
+    // A ruling needs an absolute majority of the eleven.
+    majority: 6,
+    presidedBy: "tomas-azevedo",
+    blocs: [
+      {
+        key: "institutionalists",
+        label: "Institucionalistas",
+        share: 0.45,
+        intercept: -1.4,
+        weights: { evidence: 4.2, credibilityLoss: 2.2 },
+      },
+      {
+        key: "pragmatists",
+        label: "Pragmáticos",
+        share: 0.36,
+        intercept: -3.2,
+        weights: { evidence: 3.4, publicPressure: 1.2 },
+      },
+      // Named by earlier governments and still grateful. They move only when the file is
+      // overwhelming, which is what keeps a court from ever ruling unanimously.
+      {
+        key: "aligned",
+        label: "Alinhados a governos anteriores",
+        share: 0.19,
+        intercept: -5.2,
+        weights: { evidence: 2.0 },
+      },
+    ],
+    // What can reach the bench, and what it costs when the court decides against the government.
+    // The same shape the removal grounds use: the country names the flags, the engine only matches.
+    matters: [
+      {
+        key: "records_withheld",
+        label: "Recusa de entregar documentos ao Tribunal",
+        weight: 38,
+        flags: ["documents_withheld", "palace_secrecy_kept"],
+        ruledFlag: "court_ruled_records",
+        effects: { institutions: 6, congress: -3, market: -1 },
+        setFlags: ["court_ruled_against"],
+      },
+      {
+        key: "data_registry",
+        label: "Limites do cadastro nacional de dados",
+        weight: 26,
+        flags: ["national_data_registry"],
+        ruledFlag: "court_ruled_data",
+        effects: { institutions: 4, market: -2 },
+        setFlags: ["court_ruled_against"],
+      },
+      {
+        key: "emergency_contracts",
+        label: "Contratação sem licitação",
+        weight: 30,
+        flags: ["emergency_procurement", "questioned_contractor"],
+        ruledFlag: "court_ruled_contracts",
+        effects: { institutions: 5, market: -3, people: -1 },
+        setFlags: ["court_ruled_against"],
+      },
+      {
+        key: "press_pressure",
+        label: "Pressão do Palácio sobre a imprensa",
+        weight: 34,
+        flags: ["press_intimidated"],
+        ruledFlag: "court_ruled_press",
+        effects: { institutions: 7, people: 2, congress: -2 },
+        setFlags: ["court_ruled_against"],
+      },
+    ],
+  },
+
   // Impeachment as the Constitution describes it (art. 51, 52 and 86): the Chamber authorises by two
   // thirds, the Senate opens the trial by an absolute majority and suspends the president for up to
   // 180 days, and conviction needs two thirds of the senators. The thresholds live here, in the

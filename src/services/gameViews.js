@@ -200,6 +200,36 @@ export function toCabinetChangeViews(changes, country) {
   }));
 }
 
+/**
+ * A ruling as the country reads it in the paper: which matter, the court's own name, how the bench
+ * divided in plain numbers, and whether the government lost.
+ *
+ * The bloc breakdown never appears. The engine holds it, and telling the player which wing of the
+ * court moved would turn a bench into a whip count — the same reason a vote in Congress is published
+ * as a band and not as a list of names.
+ */
+export function toCourtRulingView(ruling, country) {
+  if (!ruling || !country?.court) return null;
+
+  const court = country.court;
+  const shortName = court.shortName ?? court.name;
+  const against = court.seats - ruling.votes;
+
+  return {
+    matterKey: ruling.matter.key,
+    matter: ruling.matter.label,
+    courtName: court.name,
+    courtShortName: shortName,
+    seats: court.seats,
+    votes: ruling.votes,
+    majority: court.majority,
+    upheld: ruling.upheld,
+    summary: ruling.upheld
+      ? `O ${shortName} decidiu contra o governo: ${ruling.matter.label}. Placar: ${ruling.votes} a ${against}.`
+      : `O ${shortName} não acolheu o caso: ${ruling.matter.label}. Placar: ${against} a ${ruling.votes}.`,
+  };
+}
+
 export function toGameView(game, country) {
   return {
     id: game.id,

@@ -241,6 +241,51 @@ describe("country validation", () => {
       (content) => delete content.countries.BR.cabinet.defaultLoyalty,
       /cabinet.defaultLoyalty must be an integer between 0 and 100/,
     ],
+    [
+      "a bench whose blocs do not divide it exactly once",
+      (content) => (content.countries.BR.court.blocs[0].share = 0.9),
+      /court bloc shares must add up to 1/,
+    ],
+    [
+      "a majority larger than the bench that has to reach it",
+      (content) => (content.countries.BR.court.majority = 12),
+      /court.majority \(12\) cannot exceed the 11 seats of the bench/,
+    ],
+    [
+      "a bench moved by something the engine does not measure",
+      (content) => (content.countries.BR.court.blocs[0].weights.loyalty = 2),
+      /court bloc "institutionalists" weighs unknown driver "loyalty"/,
+    ],
+    [
+      "a matter no flag in the catalog can document",
+      (content) => content.countries.BR.court.matters[0].flags.push("ghost_flag"),
+      /is evidenced by unknown flag "ghost_flag"/,
+    ],
+    [
+      "a ruling that leaves a mark the catalog never declared",
+      (content) => content.countries.BR.court.matters[0].setFlags.push("ghost_flag"),
+      /court matter "records_withheld" sets unknown flag "ghost_flag"/,
+    ],
+    [
+      "a ruling that costs something which is not a pillar",
+      (content) => (content.countries.BR.court.matters[0].effects.popularity = 3),
+      /court matter "records_withheld" has unknown pillar "popularity"/,
+    ],
+    [
+      "a court presided by somebody the registry does not know",
+      (content) => (content.countries.BR.court.presidedBy = "ghost-justice"),
+      /court is presided by the unknown character "ghost-justice"/,
+    ],
+    [
+      "a matter with no marker to say it was already decided",
+      (content) => delete content.countries.BR.court.matters[0].ruledFlag,
+      /court matter "records_withheld" needs a ruledFlag to mark it decided/,
+    ],
+    [
+      "a matter marked decided by a flag the catalog never declared",
+      (content) => (content.countries.BR.court.matters[0].ruledFlag = "ghost_flag"),
+      /court matter "records_withheld" is marked decided by unknown flag "ghost_flag"/,
+    ],
   ])("rejects %s", (_, mutate, message) => {
     expect(errorsAfter(mutate)).toContainEqual(expect.stringMatching(message));
   });

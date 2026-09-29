@@ -107,6 +107,15 @@ export const flagCatalog = {
   impeachment_petition_filed: { label: "A oposição protocolou um pedido de impeachment." },
   documents_released: { label: "O governo liberou os documentos pedidos pela investigação." },
   documents_withheld: { label: "O governo recusou-se a entregar os documentos pedidos." },
+  // The mark a ruling leaves on the record. Not a legacy flag: carrying it past the mandate would
+  // mean declaring successor effects this slice has not designed.
+  court_ruled_against: { label: "O Supremo decidiu contra o governo." },
+  // One marker per matter: the case is closed, while the shared flag above says only that the court
+  // has ruled at least once.
+  court_ruled_records: { label: "O Supremo decidiu sobre a entrega dos documentos." },
+  court_ruled_data: { label: "O Supremo decidiu sobre o cadastro nacional de dados." },
+  court_ruled_contracts: { label: "O Supremo decidiu sobre as contratações sem licitação." },
+  court_ruled_press: { label: "O Supremo decidiu sobre a pressão à imprensa." },
   minister_sacrificed: { label: "Um ministro foi entregue para conter a crise." },
   minister_shielded: { label: "O governo protegeu o ministro citado na denúncia." },
   defense_institutional: { label: "A defesa do governo foi conduzida pelo rito, sem ataques." },

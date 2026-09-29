@@ -11,6 +11,7 @@ import {
 } from "./constants.js";
 import { applyCabinetOperations } from "./cabinet.js";
 import { getChoiceConsequence } from "./consequence.js";
+import { courtRuling } from "./court.js";
 import { applyDeltas, resolveChoiceDeltas } from "./effects.js";
 import { evaluateCollapse } from "./endings.js";
 import { applyFlagOperations, expireFlags } from "./flags.js";
@@ -91,7 +92,15 @@ function createScheduledEvents(schedule, existingEvents, turn) {
 
 function finishedResult(
   state,
-  { decision, created, ending, procedure = null, cabinet = null, cabinetChanges = [] },
+  {
+    decision,
+    created,
+    ending,
+    procedure = null,
+    cabinet = null,
+    cabinetChanges = [],
+    ruling = null,
+  },
 ) {
   return {
     state,
@@ -99,6 +108,9 @@ function finishedResult(
     procedure,
     cabinet,
     cabinetChanges,
+    // Always present, on every path. A field that exists only on some responses is how the interface
+    // loses a button after a decision and gets it back on reload.
+    courtRuling: ruling,
     expiredFlags: [],
     eventChanges: { created, firedSequence: null, cancelledSequences: [] },
     appearance: null,
@@ -385,12 +397,38 @@ export function resolveTurn({
     }
   }
 
+  // The court judges the record the month leaves behind. Guarded like the removal chain: a pack with
+  // no court is valid content, and asking it for a bench it never declared is how a month ends in a
+  // crash instead of a card. It rules after the grounds are weighed, so a decision never changes
+  // whether a procedure opened in the very month it was handed down.
+  let courtMeters = meters;
+  let courtFlags = flags;
+  const ruling = country?.court ? courtRuling({ country, flags, meters }) : null;
+
+  if (ruling) {
+    // Decided either way: a case the bench threw out must not return every month. Only a ruling
+    // against the government costs it anything.
+    const marks = [{ key: ruling.matter.ruledFlag, value: true, label: ruling.matter.label }];
+    if (ruling.upheld) {
+      for (const key of ruling.matter.setFlags ?? []) {
+        marks.push({ key, value: true, label: ruling.matter.label });
+      }
+      // The same arithmetic a card's effects go through, so a ruling can never move a pillar in a way
+      // a decision could not.
+      courtMeters = applyDeltas(
+        meters,
+        resolveChoiceDeltas({ effects: ruling.matter.effects }, meters),
+      ).meters;
+    }
+    courtFlags = applyFlagOperations(flags, { setFlags: marks }, nextTurn).flags;
+  }
+
   const selection = selectCard({
     cards,
     role: state.role,
     turn: nextTurn,
-    flags,
-    meters,
+    flags: courtFlags,
+    meters: courtMeters,
     procedure:
       nextProcedure && nextProcedure.status === PROCEDURE_STATUS.ACTIVE ? nextProcedure : null,
     appearances,
@@ -400,10 +438,17 @@ export function resolveTurn({
   });
 
   return {
-    state: { ...decided, turn: nextTurn, flags, currentCardSlug: selection.card.slug },
+    state: {
+      ...decided,
+      turn: nextTurn,
+      meters: courtMeters,
+      flags: courtFlags,
+      currentCardSlug: selection.card.slug,
+    },
     decision,
     procedure: nextProcedure,
     procedureVotes,
+    courtRuling: ruling,
     cabinet: nextCabinet,
     cabinetChanges,
     expiredFlags: expired,

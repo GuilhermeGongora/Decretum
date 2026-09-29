@@ -209,6 +209,9 @@ export default function DecretumApp() {
         procedureEvent: response.procedureEvent ?? null,
         // Who left the government because of this decision, already in public words.
         cabinetChanges: response.cabinetChanges ?? [],
+        // What the court decided this month, in the words the server composed. Null on the months it
+        // had nothing before it, which is most of them.
+        courtRuling: response.courtRuling ?? null,
       });
       setSnapshot(toSnapshot(response));
       setInheritance(null);

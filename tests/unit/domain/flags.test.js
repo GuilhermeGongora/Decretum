@@ -70,6 +70,23 @@ describe("applyFlagOperations", () => {
     });
   });
 
+  // Every other test here builds its definition through the catalog fixture, which fills this
+  // metadata in. A flag the engine sets itself — a court ruling — has no catalog entry behind it, and
+  // an undefined priority reaches a NOT NULL column as a null.
+  it("fills in the metadata a flag set by the engine has no catalog for", () => {
+    const { flags } = applyFlagOperations(
+      {},
+      { setFlags: [{ key: "court_ruled_against", value: true, label: "O Supremo decidiu." }] },
+      7,
+    );
+
+    expect(flags.court_ruled_against).toMatchObject({
+      legacy: false,
+      legacyPriority: 0,
+      successorEffects: null,
+    });
+  });
+
   it("overwrites an existing flag and reports the previous value", () => {
     const current = { mood: buildFlag({ value: "calm" }) };
 
